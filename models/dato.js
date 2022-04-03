@@ -11,8 +11,8 @@ const DatoSchema = Schema({
     },
     fecha_nacimiento: {
         type: Date,
-        required: [true, 'La fecha de nacimiento es obligatoria']
+        required: false
     }
 });
 
-module.exports = model( 'dato', DatoSchema );
+module.exports = model( 'Dato', DatoSchema );

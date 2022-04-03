@@ -22,9 +22,14 @@ const ClienteSchema = Schema({
         required: [true, 'El correo es obligatorio'],
         unique: true
     },
-    datos: {
+    //Datos de primer registro
+    datoInicial: {
         type: Schema.ObjectId, ref: 'dato'
     },
+    //Datos que se actualizan semanalmente
+    datoConstante:[ {
+        type: Schema.ObjectId, ref: 'dato'
+    }],
     extra1: {
         type: Schema.ObjectId, ref: 'extra'
     },
@@ -36,14 +41,31 @@ const ClienteSchema = Schema({
         default: false
     },
     verDatos: {
-        type: Boolean,
+        type: Boolean, 
         default: true
     },
-    metodo_pago: [{ type: Object, required: false }]
+    metodo_pago: [{ type: Schema.ObjectId, ref: 'metodo_pago' }],
+    puntajeBaneo: {
+        type: Number,
+        default: 0
+    },
+    reportes: [{
+        type: Schema.ObjectId, ref:'reporte'
+    }],
+    fecha_registro: {
+        type: Date,
+        required: true
+    },
+    ultima_conexion: {
+        type: Date
+    },
+    historial: [{
+        type: Schema.ObjectId, ref:'historial'
+    }]
 });
 
 ClienteSchema.methods.toJSON = function(){
-    const { __v, password, ...cliente } = this.toObject();
+    const { __v, ...cliente } = this.toObject();
     return cliente;
 }
 

@@ -30,11 +30,41 @@ const NutrilogoSchema = Schema({
         type: Date,
         required: [true, 'La fecha de registro es obligatoria']
     },
+    predeterminados: [{
+        type: Schema.ObjectId, ref:'preterminado'
+    }],
     especialidades: {
         type: Array,
-        required: [false, 'Las especialidades son obligatorias']
+        required: [true, 'Las especialidades son obligatorias']
     },
-    pacientes: [{ type: Object, required: false}]
+    pacientes: [{ type: Schema.ObjectId, required: false}],
+    puntajeBaneo: {
+        type: Number,
+        default: 0
+    },
+    baneado: { 
+        type: Boolean,
+        default: false
+    },
+    calificacion: [{ 
+        type: Number, 
+        default: 0
+    }],
+    fechaDisponible: [{ 
+        type: Date, 
+        required: [true, 'Las fechas disponibles del nutriologo son obligatorias']
+    }],
+    reportes: [{
+        type: Schema.ObjectId, ref:'reporte'
+    }],
+    ultima_conexion: {
+        type: Date
+    }
 });
+
+NutrilogoSchema.methods.toJSON = function(){
+    const { __v, ...nutriologo } = this.toObject();
+    return nutriologo;
+}
 
 module.exports = model( 'Nutriologo', NutrilogoSchema );

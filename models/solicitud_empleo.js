@@ -1,5 +1,4 @@
 const { Schema, model } = require('mongoose');
-const { FleetList } = require('twilio/lib/rest/supersim/v1/fleet');
 
 const SolicitudEmpleoSchema = Schema({
     nombre: {
@@ -13,7 +12,11 @@ const SolicitudEmpleoSchema = Schema({
     estado: {
         type: Boolean,
         default: null
+    },
+    correo: {
+        type: String,
+        required: [true, 'El correo es obligatorio']
     }
 });
 
-module.exports = model( 'Solicitud_Empleo', SolicitudEmpleoSchema );
+module.exports = model( 'Solicitud_empleo', SolicitudEmpleoSchema );

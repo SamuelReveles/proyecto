@@ -11,5 +11,5 @@ const MetodoPagoSchema = Schema({
     }
 });
 
-module.exports = model('metodo_pago', MetodoPagoSchema);
+module.exports = model('Metodo_pago', MetodoPagoSchema);
 
