@@ -4,16 +4,15 @@ const { dbConnection } = require('../database/config');
 
 class Server{
     constructor(){
-        //Se usa el frameword de express
+        //Se usa el framework de express
         this.app = express();
-        this.app.use(express.static('../public/index.html'))
+        this.app.use(express.static('../public/index.html'));
         //Numero de puerto (.env)
         this.port = process.env.PORT;
         //Dirección de pruebas
         this.usuariosPath = '/api/usuarios';
         this.adminPath = '/api/administrador';
         this.nutriologoPath = '/api/nutriologo';
-
         //Conectar a base de datos
         this.conectarDB();
         //Middlewares
