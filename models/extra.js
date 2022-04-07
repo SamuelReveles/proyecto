@@ -22,7 +22,7 @@ const ExtraSchema = mongoose.Schema({
         default: true
     },
     historial: [{
-        type: Schema.ObjectId, ref:'historial'
+        type: mongoose.Schema.ObjectId, ref:'historial'
     }]
 });
 

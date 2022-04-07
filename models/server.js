@@ -35,7 +35,7 @@ class Server{
     }
 
     routes() {
-        //Middleware condicional
+        //Rutas
         this.app.use(this.usuariosPath, require('../routes/usuarios'));
         this.app.use(this.adminPath, require('../routes/administrador'));
         this.app.use(this.nutriologoPath, require('../routes/nutriologo'));

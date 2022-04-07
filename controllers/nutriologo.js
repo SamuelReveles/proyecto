@@ -1,6 +1,8 @@
 //Librerías externas
 const { response } = require('express');
 const mongoose = require('mongoose');
+
+//API externas
 const client = require('twilio')(process.env.TWILIO_SSID, process.env.TWILIO_AUTH_TOKEN);
 
 //Helpers
@@ -68,7 +70,7 @@ const sendCode = async(req, res = response) => {
 //Verificar que el código es correcto
 const verifyCode = async (req, res = response) => {
 
-    //Cliente de ttwsdawitw
+    //Cliente de twilio
     client  
         .verify
         .services(process.env.ServiceID)

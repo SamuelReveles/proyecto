@@ -57,6 +57,10 @@ const NutrilogoSchema = Schema({
     reportes: [{
         type: Schema.ObjectId, ref:'reporte'
     }],
+    descripcion: {
+        type: String,
+        required: false
+    },
     ultima_conexion: {
         type: Date
     }

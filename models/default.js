@@ -1,6 +1,6 @@
 const { Schema, model } = require('mongoose');
 
-const reportesScema = Schema({
+const reportesSchema = Schema({
     puntos: {
         type: Number,
         required: true
@@ -11,4 +11,4 @@ const reportesScema = Schema({
     }
 });
 
-module.exports = model('Default', reportesScema);
+module.exports = model('Default', reportesSchema);

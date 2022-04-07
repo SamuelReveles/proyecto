@@ -13,12 +13,9 @@ const Default = require('../models/default');
 //Buscar un usuario
 const getUser = async(req, res = response) => {
     try {
-        const clientes = await Cliente.findOne({
-            correo: req.query.correo
-        });
+        const clientes = await Cliente.findById(req.query.id);
         res.status(200).json({
             success: true,
-            msg: "Cliente disponibles",
             clientes
         });
     } catch (error) {
@@ -60,14 +57,6 @@ const getAllUsers = async(req, res = response) => {
     //Se establece el límite default
     const {limit = 10, start = 0} = req.query;
     let resultado;
-    
-    // //Se buscan dentro de la DB
-    // const [total, users] = await Promise.all([
-    //     Cliente.count(),
-    //     Cliente.find()
-    //         .skip(Number(start))
-    //         .limit(Number(limit))
-    // ]);
 
     //Ordenes
 
@@ -75,21 +64,50 @@ const getAllUsers = async(req, res = response) => {
     if(req.query.puntaje){
         resultado = await Cliente.aggregate([
             {$sort: {'puntajeBaneo': 1}},
-            {$skip: start},
-            {$limit: limit},
+            {$skip: Number(start)},
+            {$limit: Number(limit)},
             {$match: {'puntajeBaneo': {$gt: 6}}}
-        ]).catch(() => {
-            res.status(400).json({
-                success: false,
-                msg: 'Fallo al buscar'
-            });
-        });
+            //{$and: [{'puntajeBaneo': {$gt: 5}}, {'baneado': false}]}
+        ])
     }
 
     //Tiempo de inactividad
 
+    else if(req.query.inactividad){
+        console.log('Buscando por inactividad');
+        resultado = await Cliente.aggregate([
+            {$sort: {'ultima_conexion': -1}},
+            {$skip: Number(start)},
+            {$limit: Number(limit)},
+            {$match: {'baneado': false}}
+        ])
+    }
 
-    //
+    //Tiempo en plataforma o antiguedad
+
+    else if(req.query.antiguedad){
+        resultado = await Cliente.aggregate([
+            {$sort: {'fecha_registro': 1}},
+            {$skip: Number(start)},
+            {$limit: Number(limit)},
+            {$match: {'baneado': false}}
+        ])
+    }
+
+    else {
+        resultado = await Cliente.aggregate([
+            {$skip: Number(start)},
+            {$limit: Number(limit)}
+        ])
+    }
+
+    if(!resultado) {
+        res.status(400).json({
+            success: false,
+            msg: 'Fallo al buscar'
+        });
+        return;
+    }
 
     res.status(200).json({
         success: true,
@@ -101,16 +119,16 @@ const getAllUsers = async(req, res = response) => {
 const getNutriologo = async(req, res = response) => {
 
     try {
-        const nutriologos = await Nutriologo.findOne({
-            correo: req.body.correo
-        });
+        const nutriologos = await Nutriologo.findById(req.query.id);
+        if(!nutriologos) throw new Error('No coincide');
         res.status(200).json({
             success: true,
             nutriologos
         });
     } catch (error) {
         res.status(400).json({
-            success: false
+            success: false,
+            msg: 'Error al encontrar nutriólogo'
         });
     }
 };
@@ -119,31 +137,58 @@ const getNutriologo = async(req, res = response) => {
 //Enlistar todos los nutriólogos
 const getAllNutri = async(req, res = response) => {
     
+    //Se establece el límite default
     const {limit = 10, start = 0} = req.query;
     let resultado;
-    // const [total, users] = await Promise.all([
-    //     Nutriologo.count(),
-    //     Nutriologo.find()
-    //         .skip(Number(start))
-    //         .limit(Number(limit))
-    // ]);
 
     //Ordenes
 
     //Puntaje
     if(req.query.puntaje){
-        console.log('Buscando por puntaje');
         resultado = await Nutriologo.aggregate([
             {$sort: {'puntajeBaneo': 1}},
+            {$skip: Number(start)},
+            {$limit: Number(limit)},
+            {$match: {'puntajeBaneo': {$gt: 5}}}
+        ])
+    }
+
+    //Tiempo de inactividad
+
+    if(req.query.inactividad){
+        console.log('Buscando por inactividad');
+        resultado = await Nutriologo.aggregate([
+            {$sort: {'ultima_conexion': -1}},
             {$skip: start},
             {$limit: limit},
-            {$match: {'puntajeBaneo': {$gt: 6}}}
-        ]).catch(() => {
-            res.status(400).json({
-                success: false,
-                msg: 'Fallo al buscar'
-            });
+            {$match: {'baneado': false}}
+        ])
+    }
+
+    //Tiempo en plataforma o antiguedad
+
+    if(req.query.antiguedad){
+        resultado = await Nutriologo.aggregate([
+            {$sort: {'fecha_registro': 1}},
+            {$skip: start},
+            {$limit: limit},
+            {$match: {'baneado': false}}
+        ])
+    }
+
+    else {
+        resultado = await Nutriologo.aggregate([
+            {$skip: Number(start)},
+            {$limit: Number(limit)}
+        ]);
+    }
+
+    if(!resultado) {
+        res.status(400).json({
+            success: false,
+            msg: 'Fallo al buscar'
         });
+        return;
     }
 
     res.status(200).json({
@@ -438,6 +483,52 @@ const reportesUsuario = async (req, res = response) => {
 
 }
 
+const borrarReporte = async (req, res = response) => {
+    const id = req.query.id;
+
+    const reporte = await Reporte.findById(id);
+
+    if(reporte.borrado === true) res.status(200).json({
+        success: false,
+        msg: 'El reporte ya ha sido eliminado'
+    })
+
+    reporte.borrado = true;
+
+    const {para, tipo} = reporte;
+
+    //Extraer objeto del reportado
+    let to = await Nutriologo.findById(para);
+    let esCliente = false;
+    if(!to){
+        to = await Cliente.findById(para);
+        esCliente = true;
+    }
+
+    //Extraer el tipo de reporte
+    const report = await Default.findById(tipo);
+
+    //Reducir los puntos
+    to.puntajeBaneo -= report.puntos;
+
+    try {
+        //Actualizar objetos
+        await Reporte.findByIdAndUpdate(id, reporte);
+        if(esCliente) await Cliente.findByIdAndUpdate(para, to);
+        else await Nutriologo.findByIdAndUpdate(para, to);
+        res.status(201).json({
+            success: true,
+            msg: 'Reporte eliminado'
+        })
+    } catch(error) {
+        res.status(401).json({
+            success: false,
+            msg: 'No se pudo actualizar el objeto'
+        })
+    }
+
+}
+
 const banear = async (req, res = response) => {
     //Id del usuario
     const id = req.query.id;
@@ -486,5 +577,6 @@ module.exports = {
     updateReporte,
     reportesUsuario,
     banear,
-    postAdmin
+    postAdmin,
+    borrarReporte
 }

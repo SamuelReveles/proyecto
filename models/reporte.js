@@ -3,22 +3,24 @@ const { Schema, model } = require('mongoose');
 const reporteScema = Schema({
     emisor: {
         type: Schema.ObjectId,
-        ref: 'nutriologo',
         required: true
     },
     para: {
         type: Schema.ObjectId,
-        ref: 'cliente',
         required: true
     },
     tipo: {
         type: Schema.ObjectId,
-        ref: 'reportes',
+        ref: 'default',
         required: true
     },
     msg: {
         type: String,
         required: false
+    },
+    borrado: {
+        type: Boolean,
+        default: false
     },
     fecha: {
         type: Date,

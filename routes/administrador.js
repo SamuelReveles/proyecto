@@ -18,7 +18,8 @@ const {
     updateReporte,
     reportesUsuario,
     banear,
-    postAdmin
+    postAdmin,
+    borrarReporte
 } = require('../controllers/administrador')
 
 //Router instance
@@ -71,6 +72,9 @@ router.put('/reporte', updateReporte);
 
 //Ver reportes de un usuario
 router.get('/reporte/user', reportesUsuario);
+
+//Eliminar un reporte
+router.put('/reporte/quitar', borrarReporte);
 
 //Exportar instancia
 module.exports = router;

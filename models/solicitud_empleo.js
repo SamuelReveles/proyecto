@@ -5,10 +5,14 @@ const SolicitudEmpleoSchema = Schema({
         type: String,
         required: [true, 'El nombre es obligatorio'],
     },
-    cv: {
-        type: Array,
+    // cv: {
+    //     type: Array,
+    //     required: [true, 'El cv es obligatorio']
+    // },
+    cv: [{
+        type: String,
         required: [true, 'El cv es obligatorio']
-    },
+    }],
     estado: {
         type: Boolean,
         default: null

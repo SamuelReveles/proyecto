@@ -1,6 +1,8 @@
 //Librerías externas
 const { response } = require('express');
 const bcryptjs = require('bcryptjs');
+
+//API externas
 const client = require('twilio')(process.env.TWILIO_SSID, process.env.TWILIO_AUTH_TOKEN);
 
 //Modelos
@@ -102,7 +104,7 @@ const busqueda = async (req, res = response) => {
         users =  await Nutriologo.aggregate([
             {$skip: start},
             {$limit: limit},
-            {$match: {$and: [{'nombreCompleto': nombre}]} }
+            {$match: {'nombreCompleto': nombre}}
         ]);
     }
 
@@ -116,7 +118,10 @@ const busqueda = async (req, res = response) => {
     }
 
     else {
-        users = await Nutriologo.find({baneado: false});
+        users = await Nutriologo.aggregate([
+            {$skip: start},
+            {$limit: limit}
+        ]);
     }
 
     //Modificar calificaciones (enviar promedio)
@@ -202,7 +207,7 @@ const altaExtras = async (req, res = response) => {
             });
         } catch (error) {
             console.log(error);
-            res.status(400).json({
+            res.status(401).json({
                 success: false,
                 msg: 'Error al guardar el usuario'
             });
@@ -279,11 +284,11 @@ const reportar = async (req, res = response) => {
     await reporte.save();
 
     //Extraer tipo de reporte para saber el puntaje
-    const { puntos } = await Default.findById(idReporte);
+    const report = await Default.findById(idReporte);
     const nutriologo = await Nutriologo.findById(idNutriologo);
 
     //Agregar los puntos y push a arreglo de reportes
-    nutriologo.puntajeBaneo += puntos;
+    nutriologo.puntajeBaneo += report.puntos;
 
     let reportes = [];
     if(!nutriologo.reportes){
@@ -320,7 +325,7 @@ const calificar = async (req, res = response) => {
 
     //Validar que esté dentro del rango
     if(calificacion > 5 || calificacion < 0) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Calificación fuera del rango'
         });
