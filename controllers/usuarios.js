@@ -46,13 +46,7 @@ const verifyCode = async (req, res = response) => {
 
 const usuariosPost = async (req, res = response) => {
     
-    //Crear datos del cliente
-    const datos = new Dato({
-        peso: 78.50,
-        altura: 180,
-        fecha_nacimiento: new Date(2003, 05, 28)
-    });
-
+    //Creando objeto
     const user = new Cliente({
         nombre: req.body.nombre,
         apellidos: req.body.apellidos,
@@ -61,10 +55,15 @@ const usuariosPost = async (req, res = response) => {
     });
 
     await user.save()
-        .then(await datos.save());
+        .then(await datos.save())
+        .catch(
+            res.status(401).json({
+                succes: false
+            })
+        )
     
     res.status(201).json({
-        ok: true,
+        succes: true,
         user
     });
 }
@@ -106,22 +105,28 @@ const busqueda = async (req, res = response) => {
             {$limit: limit},
             {$match: {'nombreCompleto': nombre}}
         ]);
+
+        total = await Nutriologo.count({nombreCompleto: nombre});
     }
 
     else if (categoria) {
-        //users = await Nutriologo.find({especialidades: categoria});
+        //Extraer los resultados
         users =  await Nutriologo.aggregate([
             {$skip: start},
             {$limit: limit},
             {$match: {'especialidades': categoria}}
         ]);
+
+        total = await Nutriologo.count({especialidades: categoria});
     }
 
     else {
-        users = await Nutriologo.aggregate([
+        users =  await Nutriologo.aggregate([
             {$skip: start},
             {$limit: limit}
         ]);
+
+        total = await Nutriologo.count();
     }
 
     //Modificar calificaciones (enviar promedio)
@@ -164,8 +169,26 @@ const busqueda = async (req, res = response) => {
         }
     }
 
-    //Total de la búsqueda filtrada
-    total = users.length;
+    //Ordenes
+
+    //Por calificacion
+    if(req.query.estrellas == true){
+        if(req.query.mayor == true) resultados.sort((a, b) => b.calificacion - a.calificacion);
+        else resultados.sort((a, b) => a.calificacion - b.calificacion);
+    }
+
+    //Por precio
+    if(req.query.precio == true){
+        if(req.query.mayor == true) resultados.sort((a, b) => b.precio - a.precio);
+        else resultados.sort((a, b) => a.precio - b.precio);
+    }
+
+    if(!resultados) {
+        res.status(400).json({
+            success: false
+        });
+        return;
+    }
 
     //Responder con los resultados
     res.status(200).json({

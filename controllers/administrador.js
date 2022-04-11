@@ -37,18 +37,16 @@ const postAdmin = async (req, res = response) => {
 
     try {
         await admin.save();
+        res.status(201).json({
+            success: true,
+            admin
+        })
     } catch (error) {
         res.status(401).json({
             success: false,
             msg: 'Registro inválido'
         });
-        return;
     }
-
-    res.status(201).json({
-        success: true,
-        admin
-    })
 }
 
 //Buscar todos los usuarios (Con límite e inicio)
@@ -58,47 +56,55 @@ const getAllUsers = async(req, res = response) => {
     const {limit = 10, start = 0} = req.query;
     let resultado;
 
-    //Ordenes
+    if(req.query.mayor) orden = 1; //De mayor a menor
+    else orden = -1; //De menor a mayor
 
     //Puntaje
     if(req.query.puntaje){
         resultado = await Cliente.aggregate([
-            {$sort: {'puntajeBaneo': 1}},
             {$skip: Number(start)},
             {$limit: Number(limit)},
             {$match: {'puntajeBaneo': {$gt: 6}}}
-            //{$and: [{'puntajeBaneo': {$gt: 5}}, {'baneado': false}]}
-        ])
+        ]);
+
+        //Ordenar
+        if(req.query.mayor == true)  resultado.sort((a, b) => b.puntajeBaneo - a.puntajeBaneo);
+        else resultado.sort((a, b) => a.puntajeBaneo - b.puntajeBaneo);
     }
 
     //Tiempo de inactividad
 
     else if(req.query.inactividad){
-        console.log('Buscando por inactividad');
         resultado = await Cliente.aggregate([
-            {$sort: {'ultima_conexion': -1}},
             {$skip: Number(start)},
             {$limit: Number(limit)},
             {$match: {'baneado': false}}
-        ])
+        ]);
+
+        //Ordenar
+        if(req.query.mayor == true)  resultado.sort((a, b) => b.ultima_conexion - a.ultima_conexion);
+        else resultado.sort((a, b) => a.ultima_conexion - b.ultima_conexion);
     }
 
     //Tiempo en plataforma o antiguedad
 
     else if(req.query.antiguedad){
         resultado = await Cliente.aggregate([
-            {$sort: {'fecha_registro': 1}},
             {$skip: Number(start)},
             {$limit: Number(limit)},
             {$match: {'baneado': false}}
-        ])
+        ]);
+
+        //Ordenar
+        if(req.query.mayor == true)  resultado.sort((a, b) => b.fecha_registro - a.fecha_registro);
+        else resultado.sort((a, b) => a.fecha_registro - b.fecha_registro);
     }
 
     else {
         resultado = await Cliente.aggregate([
             {$skip: Number(start)},
             {$limit: Number(limit)}
-        ])
+        ]);
     }
 
     if(!resultado) {
@@ -201,15 +207,24 @@ const getAllNutri = async(req, res = response) => {
 const getSolicitudes = async(req, res = response) => {
 
     const {limit = 10, start = 0} = req.query;
-    const [total, solicitudes] = await Promise.all([
-        Solicitud_empleo.count(),
-        Solicitud_empleo.find({ estado:null })
-            .skip(Number(start))
-            .limit(Number(limit))
-    ]);
+
+    const solicitudes = await Solicitud_empleo.aggregate([
+        {$skip: start},
+        {$limit: limit},
+        {$match: {'estado': null}}
+    ])
+
+    if(!solicitudes) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se encontraron solicitudes'
+        });
+        return;
+    }
 
     res.status(200).json({
-        total,
+        success: true,
+        total: solicitudes.length,
         solicitudes
     });
 };
@@ -222,9 +237,13 @@ const postSolicitud = async(req, res = response) => {
         correo: req.body.correo
     });
 
-    await soli.save();
+    await soli.save()
+        .catch(
+            res.status(401).json({
+            success: false
+        }))
 
-    res.status(200).json({
+    res.status(201).json({
         success: true,
         soli
     });
@@ -252,7 +271,7 @@ const putResponderSolicitud = async(req, res = response) => {
         });
     } catch (error) {
         res.status(400).json({
-            success: true,
+            success: false,
             solicitud,
             respuesta
         });
@@ -284,7 +303,9 @@ const solicitudAccepted = async (req, res = response) => {
     sgMail
     .send(msg)
     .then(() => {
-        console.log('Email sent');
+        res.status(200).json({
+            success: true
+        });
     })
     .catch((error) => {
         console.error(error);
@@ -294,9 +315,6 @@ const solicitudAccepted = async (req, res = response) => {
         return;
     })
 
-    res.status(200).json({
-        success: true
-    });
 }
 
 //Denegar la solicitud
@@ -318,41 +336,36 @@ const solicitudDenied = async (req, res = response) => {
         html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido denegada',
     }
     
-    try {
-        //Enviar correo de respuesta
-        sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
-        sgMail
-            .send(msg)
-            .then(() => {
-                console.log('Email sent');
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-        
+    //Enviar el correo de respuesta
+    sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
+    sgMail
+    .send(msg)
+    .then(() => {
         res.status(200).json({
-            success: true,
-            solicitud
+            success: true
         });
-    } catch (error) {
+    })
+    .catch((error) => {
+        console.error(error);
         res.status(400).json({
-            success: false,
-            solicitud
-        })
-    }
+            success: false
+            });
+        return;
+    })
+
 }
 
 //Update de los datos del administrador
 const adminUpdate = async(req, res = response) => {
     //Recibir parmetros del body
-    const {
-        id, 
-        nombre,
-        apellidos,
-        imagen
-    } = req.body;
+    const { id, nombre, apellidos, imagen } = req.body;
 
-    const admin = await Administrador.findById(id);
+    const admin = await Administrador.findById(id)
+        .catch(
+            res.status(400).json({
+            success: false,
+            msg: 'No fue posible encontrar al admnistrador'
+        }))
 
     try{
         //Actualizar los datos que se llenaron
@@ -362,16 +375,15 @@ const adminUpdate = async(req, res = response) => {
 
         await Administrador.findByIdAndUpdate(id, admin);
 
-        res.status(200).json({
+        res.status(201).json({
             success: true,
             msg: 'Actualizado correctamente'
         });
     } catch (error) {
-        res.status(400).json({
+        res.status(401).json({
             success: false,
             msg: 'No fue posible actualizar'
         });
-        console.log(error);
     }
 }
 
@@ -384,7 +396,13 @@ const addReporte = async(req, res = response) => {
         descripcion: req.body.descripcion
     });
 
-    await reporte.save();
+    await reporte.save()
+        .catch(
+            res.status(401).json({
+                success: false,
+                msg: 'No fue posible guardar el reporte'
+            })
+        )
 
     res.status(201).json({
         success: true,
@@ -436,7 +454,7 @@ const updateReporte = async (req, res = response) => {
             reporte
         });
     } catch (error) {
-        res.status(400).json({
+        res.status(401).json({
             success: false,
             msg: 'Error al actualizar el reporte'
         });
@@ -529,35 +547,44 @@ const borrarReporte = async (req, res = response) => {
 
 }
 
-const banear = async (req, res = response) => {
+const UnBanear = async (req, res = response) => {
     //Id del usuario
     const id = req.query.id;
 
     //Extraer usuario
     let user = await Cliente.findById(id);
-    if(user) {
-        //Cambiar bandera de baneo
-        user.baneado = true;
-
-        //Actualizar usuario
-        await Cliente.findByIdAndUpdate(id, user);
+    
+    try {
+        if(user) {
+            //Cambiar bandera de baneo
+            user.baneado = false;
+    
+            //Actualizar usuario
+            await Cliente.findByIdAndUpdate(id, user);
+        }
+        else if(!user) {
+            //Cambiar a usuario nutriólogo
+            user = await Nutriologo.findById(id);
+    
+            //Cambiar bandera de baneo
+            user.baneado = false;
+    
+            //Actualizar usuario
+            await Nutriologo.findByIdAndUpdate(id, user);
+        }
+    
+        res.status(201).json({
+            success: true,
+            user,
+            msg: 'Usuario baneado correctamente'
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: true,
+            user,
+            msg: 'No se ha podido desbanear'
+        });
     }
-    else if(!user) {
-        //Cambiar a usuario nutriólogo
-        user = await Nutriologo.findById(id);
-
-        //Cambiar bandera de baneo
-        user.baneado = true;
-
-        //Actualizar usuario
-        await Nutriologo.findByIdAndUpdate(id, user);
-    }
-
-    res.status(200).json({
-        success: true,
-        user,
-        msg: 'Usuario baneado correctamente'
-    });
 
 }
 
@@ -576,7 +603,7 @@ module.exports = {
     getReportes,
     updateReporte,
     reportesUsuario,
-    banear,
+    UnBanear,
     postAdmin,
     borrarReporte
 }

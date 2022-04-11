@@ -10,8 +10,31 @@ const DatoSchema = Schema({
         required: [true, 'La altura es obligatoria']
     },
     fecha_nacimiento: {
-        type: Date,
-        required: false
+        type: Date
+    },
+    brazo: {
+        type: Number
+    },
+    cuello: {
+        type: Number
+    },
+    abdomen: {
+        type: Number
+    },
+    ombligo: {
+        type: Number
+    },
+    cadera: {
+        type: Number
+    },
+    muslos: {
+        type: Number
+    },
+    costillas: {
+        type: Number
+    },
+    busto: {
+        type: Number
     }
 });
 

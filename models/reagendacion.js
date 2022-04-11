@@ -9,9 +9,13 @@ const ReagendacionSchema = Schema({
         type: Date,
         required: [true, 'La nueva fecha es obligatoria']
     },
-    texto: {
+    msg: {
         type: String,
         required: [true, 'El texto es obligatorio']
+    },
+    aceptada: {
+        type: Boolean,
+        default: null
     }
 });
 

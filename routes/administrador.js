@@ -17,7 +17,7 @@ const {
     getReportes,
     updateReporte,
     reportesUsuario,
-    banear,
+    UnBanear,
     postAdmin,
     borrarReporte
 } = require('../controllers/administrador')
@@ -32,7 +32,7 @@ router.post('/', postAdmin);
 router.get('/user/one', getUser);
 
 //Banear a un usuario
-router.put('/banear', banear);
+router.put('/desbanear', UnBanear);
 
 //Listado de todos los usuarios
 router.get('/user', getAllUsers);
