@@ -28,6 +28,7 @@ const nutriologoPost = async (req, res = response) => {
         celular: req.body.celular,
         correo: req.body.correo,
         fecha_registro: Date.now(),
+        precio: req.body.precio,
         especialidades: [
             "Vegano",
             "General"
@@ -42,6 +43,7 @@ const nutriologoPost = async (req, res = response) => {
         });
     }
     catch (err) {
+        console.log(err);
         res.status(400).json({
             success: false,
             msg: 'Error al agregar a la DB'
@@ -86,7 +88,10 @@ const verifyCode = async (req, res = response) => {
 }
 
 // Crear un nuevo alimento predeterminado
-const putPredeterminado = async (req, res = response) => {
+const postPredeterminado = async (req, res = response) => {
+
+    //id del nutriólogo
+    const id = req.body.id;
 
     //Crear objeto
     const predeterminado = new Predeterminado({
@@ -95,17 +100,28 @@ const putPredeterminado = async (req, res = response) => {
     });
 
     try {
-        //Guardar en la DB
+        
+        //Guardar en la DB de predeterminados
         await predeterminado.save();
+
+        //Guardar dentro del arreglo del nutriólogo
+        const nutriologo = await Nutriologo.findById(id); 
+
+        let predeterminados = nutriologo.predeterminados;
+
+        predeterminados.push(predeterminado);
+        nutriologo.predeterminados = predeterminados;
+
+        //Actualizar el objeto
+        await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
         res.status(201).json({
             success: true,
             predeterminado
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            predeterminado
+        res.status(401).json({
+            success: false
         });
     }
 }
@@ -117,14 +133,19 @@ const getPredeterminados = async (req, res = response) => {
 
     try {
         //Buscar al nutriologo
-        const nutriologo = await Nutriologo.findById(id);
+        const { predeterminados } = await Nutriologo.findById(id);
 
-        //Extraer los predeterminados
-        const predeterminados = nutriologo.predeterminados;
+        //Guardar arreglo con los resultados
+        let resultados = [];
+
+        for await (const _id of predeterminados){
+            const predeterminado = await Predeterminado.findById(_id);
+            resultados.push(predeterminado);
+        }
 
         res.status(200).json({
             success: true,
-            predeterminados
+            resultados
         });
     } catch (error) {
         res.status(400).json({
@@ -136,20 +157,61 @@ const getPredeterminados = async (req, res = response) => {
 //Mostrar un solo alimento predeterminado
 const getPredeterminado = async (req, res = response) => {
 
-    //Falta: buscar dentro de un arreglo de parte del nutriologo, no dentro de la DB de predeterminados
+    const id = req.query.id;
+
+    let resultado;
+
     try {
-        const predeterminados = await Predeterminado.findOne({
-            nombre: req.body.nombre
-        });
+        const { predeterminados } = await Nutriologo.findById(id);
+
+        for await (const _id of predeterminados){
+            const predeterminado = await Predeterminado.findById(_id);
+            if(predeterminado.nombre == req.query.nombre) {
+                resultado = predeterminado;
+                break;
+            }
+        }
+
+        if(!resultado) throw new Error();
         res.status(200).json({
             success: true,
-            predeterminados
+            resultado
         });
     } catch (error) {
         res.status(400).json({
-            success: false
+            success: false,
+            msg: 'No se encontró el predeterminado'
         });
     }
+}
+
+//Actualizar alimento predeterminado
+const putPredeterminado = async (req, res = response) => {
+
+    //id del predeterminado
+    const id = req.body.id;
+
+    //Extraer objeto
+    const predeterminado = await Predeterminado.findById(id);
+
+    //Actualizar el objeto
+    if(req.body.nombre) predeterminado.nombre = req.body.nombre;
+    if(req.body.texto) predeterminado.texto = req.body.texto;
+
+    //Actualizar en la base de datos
+    await Predeterminado.findByIdAndUpdate(id, predeterminado)
+    .catch(err => {
+        res.status(401).json({
+            success: false,
+            msg: 'No se pudo actualizar el predeterminado'
+        });
+        return;
+    });
+
+    res.status(201).json({
+        success: true,
+        predeterminado
+    });
 }
 
 //Actualizar datos del nutriólogo
@@ -427,8 +489,9 @@ const reportar = async (req, res = response) => {
 
 module.exports = {
     nutriologoPost,
-    putPredeterminado,
+    postPredeterminado,
     getPredeterminados,
+    putPredeterminado,
     getPredeterminado,
     putActualizarDatos,
     putAgregarEvento,

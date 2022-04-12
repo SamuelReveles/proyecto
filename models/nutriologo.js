@@ -31,7 +31,8 @@ const NutrilogoSchema = Schema({
         required: [true, 'La fecha de registro es obligatoria']
     },
     predeterminados: [{
-        type: Schema.ObjectId, ref:'preterminado'
+        type: Schema.ObjectId, 
+        ref:'preterminado'
     }],
     especialidades: {
         type: Array,

@@ -7,10 +7,11 @@ const { validarCampos } = require('../middlewares/validar-campos');
 
 const { 
     nutriologoPost,
-    putPredeterminado,
+    postPredeterminado,
     getPredeterminados,
     getPredeterminado,
     putActualizarDatos,
+    putPredeterminado,
     putAgregarEvento,
     putActualizarEvento,
     getClientData,
@@ -42,6 +43,9 @@ router.get('/pacientes', getPacientes);
 router.put('/updateClientData', updateClientData);
 
 //Crear alimento predeterminado
+router.post('/predeterminado', postPredeterminado);
+
+//Actualizar predeterminado
 router.put('/predeterminado', putPredeterminado);
 
 //Obtener los predeterminados
