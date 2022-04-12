@@ -11,7 +11,7 @@ const reporteScema = Schema({
     },
     tipo: {
         type: Schema.ObjectId,
-        ref: 'default',
+        ref: 'motivo',
         required: true
     },
     msg: {
