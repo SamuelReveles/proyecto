@@ -6,6 +6,7 @@ class Server{
     constructor(){
         //Se usa el framework de express
         this.app = express();
+        //Página principal
         this.app.use(express.static('../public/index.html'));
         //Numero de puerto (.env)
         this.port = process.env.PORT;
