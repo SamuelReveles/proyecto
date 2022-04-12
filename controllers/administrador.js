@@ -73,7 +73,6 @@ const getAllUsers = async(req, res = response) => {
     }
 
     //Tiempo de inactividad
-
     else if(req.query.inactividad){
         resultado = await Cliente.aggregate([
             {$skip: Number(start)},
@@ -87,7 +86,6 @@ const getAllUsers = async(req, res = response) => {
     }
 
     //Tiempo en plataforma o antiguedad
-
     else if(req.query.antiguedad){
         resultado = await Cliente.aggregate([
             {$skip: Number(start)},
@@ -99,7 +97,7 @@ const getAllUsers = async(req, res = response) => {
         if(req.query.mayor == true)  resultado.sort((a, b) => b.fecha_registro - a.fecha_registro);
         else resultado.sort((a, b) => a.fecha_registro - b.fecha_registro);
     }
-//XD
+
     else {
         resultado = await Cliente.aggregate([
             {$skip: Number(start)},
