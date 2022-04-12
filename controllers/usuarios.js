@@ -11,7 +11,7 @@ const Dato = require('../models/dato');
 const Nutriologo = require('../models/nutriologo');
 const Extra = require('../models/extra');
 const Reporte = require('../models/reporte');
-const Default = require('../models/default');
+const Motivo = require('../models/motivo');
 
 //Enviar código al celular
 const sendCode = async (req, res = response) => {
@@ -307,7 +307,7 @@ const reportar = async (req, res = response) => {
     await reporte.save();
 
     //Extraer tipo de reporte para saber el puntaje
-    const report = await Default.findById(idReporte);
+    const report = await Motivo.findById(idReporte);
     const nutriologo = await Nutriologo.findById(idNutriologo);
 
     //Agregar los puntos y push a arreglo de reportes

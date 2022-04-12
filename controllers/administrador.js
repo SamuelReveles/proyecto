@@ -8,7 +8,7 @@ const Solicitud_empleo = require('../models/solicitud_empleo');
 const Nutriologo = require('../models/nutriologo');
 const Administrador = require('../models/administrador');
 const Reporte = require('../models/reporte');
-const Default = require('../models/default');
+const Motivo = require('../models/motivo');
 
 //Buscar un usuario
 const getUser = async(req, res = response) => {
@@ -52,7 +52,7 @@ const postAdmin = async (req, res = response) => {
 //Buscar todos los usuarios (Con límite e inicio)
 const getAllUsers = async(req, res = response) => {
 
-    //Se establece el límite default
+    //Se establece el límite Motivo
     const {limit = 10, start = 0} = req.query;
     let resultado;
 
@@ -143,7 +143,7 @@ const getNutriologo = async(req, res = response) => {
 //Enlistar todos los nutriólogos
 const getAllNutri = async(req, res = response) => {
     
-    //Se establece el límite default
+    //Se establece el límite Motivo
     const {limit = 10, start = 0} = req.query;
     let resultado;
 
@@ -391,7 +391,7 @@ const adminUpdate = async(req, res = response) => {
 const addReporte = async(req, res = response) => {
     
     //Crear el reporte
-    const reporte = new Default({
+    const reporte = new Motivo({
         puntos: req.body.puntos,
         descripcion: req.body.descripcion
     });
@@ -415,8 +415,8 @@ const getReportes = async (req, res = response) => {
     
     try {
         const [total, reportes] = await Promise.all([
-            Default.count(),
-            Default.find()
+            Motivo.count(),
+            Motivo.find()
         ]);
 
         res.status(200).json({
@@ -441,14 +441,14 @@ const updateReporte = async (req, res = response) => {
     const {puntos, descripcion} = req.body;
 
     //Extraer el objeto del reporte
-    const reporte = await Default.findById(id);
+    const reporte = await Motivo.findById(id);
 
     //Modificar
     if(puntos) reporte.puntos = puntos;
     if(descripcion) reporte.descripcion = descripcion;
 
     try {
-        await Default.findByIdAndUpdate(id, reporte);
+        await Motivo.findByIdAndUpdate(id, reporte);
         res.status(201).json({
             success: true,
             reporte
@@ -482,7 +482,7 @@ const reportesUsuario = async (req, res = response) => {
             const {para, tipo, msg} = await Reporte.findById(_id);
 
             //Extraer el tipo de reporte
-            const reporte = await Default.findById(tipo);
+            const reporte = await Motivo.findById(tipo);
 
             //Agrego al arreglo
             listadoReportes.push({para, reporte, msg});
@@ -524,7 +524,7 @@ const borrarReporte = async (req, res = response) => {
     }
 
     //Extraer el tipo de reporte
-    const report = await Default.findById(tipo);
+    const report = await Motivo.findById(tipo);
 
     //Reducir los puntos
     to.puntajeBaneo -= report.puntos;

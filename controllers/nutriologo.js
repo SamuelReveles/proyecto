@@ -15,7 +15,7 @@ const Extra = require('../models/extra');
 const Nutriologo = require('../models/nutriologo');
 const Predeterminado = require('../models/predeterminado');
 const Reporte = require('../models/reporte');
-const Default = require('../models/default');
+const Motivo = require('../models/motivo');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
@@ -388,7 +388,7 @@ const reportar = async (req, res = response) => {
     });
 
     //Extraer tipo de reporte para saber el puntaje
-    const { puntos } = await Default.findById(idReporte);
+    const { puntos } = await Motivo.findById(idReporte);
     const cliente = await Cliente.findById(idCliente);
 
     //Agregar los puntos y push a arreglo de reportes
