@@ -2,9 +2,6 @@
 const { response } = require('express');
 const mongoose = require('mongoose');
 
-//API externas
-const client = require('twilio')(process.env.TWILIO_SSID, process.env.TWILIO_AUTH_TOKEN);
-
 //Helpers
 const { emailExiste, celularExiste } = require('../helpers/db-validator');
 
@@ -16,27 +13,28 @@ const Nutriologo = require('../models/nutriologo');
 const Predeterminado = require('../models/predeterminado');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
-const { countDocuments } = require('../models/dato');
+const nutriologo = require('../models/nutriologo');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
 
-    //Crear el objeto
-    const nutri = new Nutriologo({
-        nombre: req.body.nombre,
-        apellidos: req.body.apellidos,
-        nombreCompleto: req.body.nombre + ' ' + req.body.apellidos,
-        celular: req.body.celular,
-        correo: req.body.correo,
-        fecha_registro: Date.now(),
-        precio: req.body.precio,
-        especialidades: [
-            "Vegano",
-            "General"
-        ]
-    });
-
     try {
+            
+        //Crear el objeto
+        const nutri = new Nutriologo({
+            nombre: req.body.nombre,
+            apellidos: req.body.apellidos,
+            nombreCompleto: req.body.nombre + ' ' + req.body.apellidos,
+            celular: req.body.celular,
+            correo: req.body.correo,
+            fecha_registro: Date.now(),
+            precio: req.body.precio,
+            especialidades: [
+                "Vegano",
+                "General"
+            ]
+        });
+
         await nutri.save();
         res.status(201).json({
             success: true,
@@ -52,41 +50,6 @@ const nutriologoPost = async (req, res = response) => {
     }
 }
 
-//Enviar código de verificación
-const sendCode = async(req, res = response) => {
-
-    //Cliente de twiliio
-    client
-        .verify
-        .services(process.env.ServiceID)
-        .verifications
-        .create({
-            to: '+' + req.query.celular,
-            channel: 'sms'
-        })
-        .then(data => {
-            res.status(200).send(data);
-        })
-
-}
-
-//Verificar que el código es correcto
-const verifyCode = async (req, res = response) => {
-
-    //Cliente de twilio
-    client  
-        .verify
-        .services(process.env.ServiceID)
-        .verificationChecks
-        .create({
-            to: '+' + req.query.celular,
-            code: req.query.code
-        })
-        .then(data => {
-            res.status(200).send(data);
-        })
-
-}
 
 // Crear un nuevo alimento predeterminado
 const postPredeterminado = async (req, res = response) => {
@@ -94,18 +57,9 @@ const postPredeterminado = async (req, res = response) => {
     //id del nutriólogo
     const id = req.body.id;
 
-    //Crear objeto
-    // const predeterminado = new Predeterminado({
-    //     nombre: req.body.nombre,
-    //     texto: req.body.texto,
-    // });
-
     const predeterminado = new Predeterminado(req.body.nombre, req.body.texto);
 
     try {
-        
-        //Guardar en la DB de predeterminados
-        //await predeterminado.save();
 
         //Guardar dentro del arreglo del nutriólogo
         const nutriologo = await Nutriologo.findById(id); 
@@ -137,14 +91,6 @@ const getPredeterminados = async (req, res = response) => {
     try {
         //Buscar al nutriologo
         const { predeterminados } = await Nutriologo.findById(id);
-
-        // //Guardar arreglo con los resultados
-        // let resultados = [];
-
-        // for await (const _id of predeterminados){
-        //     const predeterminado = await Predeterminado.findById(_id);
-        //     resultados.push(predeterminado);
-        // }
 
         res.status(200).json({
             success: true,
@@ -191,29 +137,46 @@ const getPredeterminado = async (req, res = response) => {
 //Actualizar alimento predeterminado
 const putPredeterminado = async (req, res = response) => {
 
-    //id del predeterminado
-    const id = req.body.id;
+    const { id, nombreAnterior, nuevoNombre, texto } = req.body;
 
-    //Extraer objeto
-    const predeterminado = await Predeterminado.findById(id);
+    const nutriologo = await Nutriologo.findById(id);
 
-    //Actualizar el objeto
-    if(req.body.nombre) predeterminado.nombre = req.body.nombre;
-    if(req.body.texto) predeterminado.texto = req.body.texto;
+    let resultado, anterior;
 
-    //Actualizar en la base de datos
-    await Predeterminado.findByIdAndUpdate(id, predeterminado)
-    .catch(() => {
+    //Extraer el objeto del arreglo
+    for await (const alimento of nutriologo.predeterminados){
+        if(alimento.nombre == nombreAnterior) {
+            anterior = alimento;
+            resultado = alimento;
+            break;
+        }
+    }
+
+    if(!resultado){
         res.status(401).json({
             success: false,
-            msg: 'No se pudo actualizar el predeterminado'
+            msg: 'No se ha encontrado el alimento predeterminado ' + nombreAnterior
         });
         return;
-    });
+    }
+
+    //Actualizar el objeto
+    if(nuevoNombre) resultado.nombre = nuevoNombre;
+    if(texto) resultado.texto = texto;
+
+    const predeterminados = nutriologo.predeterminados;
+
+    //Actualizar el objeto del arreglo
+    let index = predeterminados.indexOf(anterior);
+    predeterminados[index] = resultado;
+
+    //Actualizar el objeto del nutriologo
+    nutriologo.predeterminados = predeterminados;
+    await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
     res.status(201).json({
         success: true,
-        predeterminado
+        resultado
     });
 }
 
@@ -233,13 +196,22 @@ const deletePredeterminado = async (req, res = response) => {
     let predeterminados = nutriologo.predeterminados;
 
     let index = 0;
+    let encontrado = false;
 
     //Indice del arreglo que se quiere eliminar
     for await (const alimento of predeterminados) {
         if (alimento.nombre == nombre) {
+            encontrado = true;
             break;
         }
         index++;
+    }
+
+    if(!encontrado) {
+        res.status(401).json({
+            success: false,
+            msg: 'No se ha encontrado el alimento predeterminado'
+        });
     }
 
     //Eliminar del objeto del nutriólogo
@@ -548,8 +520,6 @@ module.exports = {
     putAgregarEvento,
     putActualizarEvento,
     getClientData,
-    sendCode,
-    verifyCode,
     getPacientes,
     updateClientData,
     reportar

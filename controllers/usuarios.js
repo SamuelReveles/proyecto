@@ -2,9 +2,6 @@
 const { response } = require('express');
 const bcryptjs = require('bcryptjs');
 
-//API externas
-const client = require('twilio')(process.env.TWILIO_SSID, process.env.TWILIO_AUTH_TOKEN);
-
 //Modelos
 const Cliente = require('../models/cliente');
 const Dato = require('../models/dato');
@@ -13,36 +10,6 @@ const Extra = require('../models/extra');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 
-//Enviar código al celular
-const sendCode = async (req, res = response) => {
-    //Cliente / servicio de twilio
-    client
-        .verify
-        .services(process.env.ServiceID)
-        .verifications
-        .create({
-            to: '+' + req.query.celular,
-            channel: 'sms'
-        })
-        .then(data => {
-            res.status(200).send(data);
-        });
-}
-
-//Verificar el código de mensaje
-const verifyCode = async (req, res = response) => {
-    client  
-        .verify
-        .services(process.env.ServiceID)
-        .verificationChecks
-        .create({
-            to: '+' + req.query.celular,
-            code: req.query.code
-        })
-        .then(data => {
-            res.status(200).send(data);
-        });
-}
 
 const usuariosPost = async (req, res = response) => {
     
@@ -371,15 +338,82 @@ const calificar = async (req, res = response) => {
     )
 }
 
+const getNutriologo = async (req, res = response) => {
+
+    //Id del nutriologo
+    const id = req.query.id;
+
+    try {
+        const nutriologo = await Nutriologo.findById(id);
+
+        //No mostrar datos de alguien baneado
+        if(nutriologo.baneado) throw new Error();
+
+        res.status(200).json({
+            success: true,
+            nutriologo
+        });
+
+    } catch (error) {
+        res.status(400).json({ 
+            success: false,
+            msg: 'No fue posible encontrar la información'
+        });
+    }
+
+}
+
+const generarTicket = async (req, res = response) => {
+    
+    //Id del nutriologo
+    const { id, fecha_cita } = req.query;
+
+    //Objeto del nutriólogo
+    const nutriologo = await Nutriologo.findById(id);
+
+
+}
+
+//Ver extras del cliente
+const getExtras = async (req, res = response)  => {
+
+    //Id del cliente
+    const id = req.query.id;
+
+    try {    
+        //Objeto del cliente
+        const cliente = await Cliente.findById(id);
+
+        let extra1, extra2;
+
+        if(cliente.extra1) extra1 = await Extra.findById(cliente.extra1);
+        if(cliente.extra2) extra2 =  await Extra.findById(cliente.extra2);
+
+        res.status(200).json({
+            success: true,
+            extra1,
+            extra2
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error: ' + error.message
+        })
+    }
+
+}
+
+
 module.exports = {
-    sendCode,
-    verifyCode,
     usuariosPost,
     usuariosDelete,
     usuariosPatch,
     busqueda,
+    getNutriologo,
     getProgreso,
     altaExtras,
+    getExtras,
     reportar,
     calificar
 }

@@ -16,12 +16,16 @@ const {
     putAgregarEvento,
     putActualizarEvento,
     getClientData,
-    sendCode,
-    verifyCode,
     getPacientes,
     updateClientData,
     reportar
 } = require('../controllers/nutriologo');
+
+//Verificacion de celular
+const {
+    verifyCode,
+    sendCode,
+} = require('../helpers/verificacion');
 
 const router = Router();
 
