@@ -21,20 +21,17 @@ const DatoSchema = Schema({
     abdomen: {
         type: Number
     },
-    ombligo: {
-        type: Number
-    },
     cadera: {
         type: Number
     },
     muslos: {
         type: Number
     },
-    costillas: {
+    pectoral: {
         type: Number
     },
-    busto: {
-        type: Number
+    notas: {
+        type: String
     }
 });
 

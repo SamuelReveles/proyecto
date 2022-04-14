@@ -16,6 +16,7 @@ const Nutriologo = require('../models/nutriologo');
 const Predeterminado = require('../models/predeterminado');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
+const { countDocuments } = require('../models/dato');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
@@ -94,15 +95,17 @@ const postPredeterminado = async (req, res = response) => {
     const id = req.body.id;
 
     //Crear objeto
-    const predeterminado = new Predeterminado({
-        nombre: req.body.nombre,
-        texto: req.body.texto,
-    });
+    // const predeterminado = new Predeterminado({
+    //     nombre: req.body.nombre,
+    //     texto: req.body.texto,
+    // });
+
+    const predeterminado = new Predeterminado(req.body.nombre, req.body.texto);
 
     try {
         
         //Guardar en la DB de predeterminados
-        await predeterminado.save();
+        //await predeterminado.save();
 
         //Guardar dentro del arreglo del nutriólogo
         const nutriologo = await Nutriologo.findById(id); 
@@ -135,17 +138,17 @@ const getPredeterminados = async (req, res = response) => {
         //Buscar al nutriologo
         const { predeterminados } = await Nutriologo.findById(id);
 
-        //Guardar arreglo con los resultados
-        let resultados = [];
+        // //Guardar arreglo con los resultados
+        // let resultados = [];
 
-        for await (const _id of predeterminados){
-            const predeterminado = await Predeterminado.findById(_id);
-            resultados.push(predeterminado);
-        }
+        // for await (const _id of predeterminados){
+        //     const predeterminado = await Predeterminado.findById(_id);
+        //     resultados.push(predeterminado);
+        // }
 
         res.status(200).json({
             success: true,
-            resultados
+            predeterminados
         });
     } catch (error) {
         res.status(400).json({
@@ -164,10 +167,10 @@ const getPredeterminado = async (req, res = response) => {
     try {
         const { predeterminados } = await Nutriologo.findById(id);
 
-        for await (const _id of predeterminados){
-            const predeterminado = await Predeterminado.findById(_id);
-            if(predeterminado.nombre == req.query.nombre) {
-                resultado = predeterminado;
+        for await (const alimento of predeterminados){
+            //const predeterminado = await Predeterminado.findById(_id);
+            if(alimento.nombre == req.query.nombre) {
+                resultado = alimento;
                 break;
             }
         }
@@ -200,7 +203,7 @@ const putPredeterminado = async (req, res = response) => {
 
     //Actualizar en la base de datos
     await Predeterminado.findByIdAndUpdate(id, predeterminado)
-    .catch(err => {
+    .catch(() => {
         res.status(401).json({
             success: false,
             msg: 'No se pudo actualizar el predeterminado'
@@ -212,6 +215,52 @@ const putPredeterminado = async (req, res = response) => {
         success: true,
         predeterminado
     });
+}
+
+//Eliminar un alimento predeterminado
+const deletePredeterminado = async (req, res = response) => {
+
+    //id del nutriólogo
+    const id = req.query.id;
+
+    //Nombre del alimento predeterminado
+    const nombre = req.query.nombre;
+
+    //Objeto del nutriologo
+    const nutriologo = await Nutriologo.findById(id);
+
+    //Extraer el arreglo del nutriólogo
+    let predeterminados = nutriologo.predeterminados;
+
+    let index = 0;
+
+    //Indice del arreglo que se quiere eliminar
+    for await (const alimento of predeterminados) {
+        if (alimento.nombre == nombre) {
+            break;
+        }
+        index++;
+    }
+
+    //Eliminar del objeto del nutriólogo
+    predeterminados.splice(index, 1);
+
+    nutriologo.predeterminados = predeterminados;
+
+    await Nutriologo.findByIdAndUpdate(id, nutriologo)
+        .catch(err =>{
+            res.status(401).json({
+                success: false,
+                msg: 'No se pudo eliminar el predeterminado dentro del arreglo del nutriólogo'
+            });
+            return;
+        })
+
+    res.status(201).json({
+        success: true,
+        msg: 'Eliminado correctamente'
+    });
+
 }
 
 //Actualizar datos del nutriólogo
@@ -436,6 +485,7 @@ const getPacientes = async (req, res  = response) => {
     });
 }
 
+//Reportar a un paciente
 const reportar = async (req, res = response) => {
     //Extraer datos del reporte
     const { idCliente, idNutriologo, idReporte, msg } = req.body;
@@ -493,6 +543,7 @@ module.exports = {
     getPredeterminados,
     putPredeterminado,
     getPredeterminado,
+    deletePredeterminado,
     putActualizarDatos,
     putAgregarEvento,
     putActualizarEvento,

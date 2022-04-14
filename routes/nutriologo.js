@@ -12,6 +12,7 @@ const {
     getPredeterminado,
     putActualizarDatos,
     putPredeterminado,
+    deletePredeterminado,
     putAgregarEvento,
     putActualizarEvento,
     getClientData,
@@ -53,6 +54,9 @@ router.get('/predeterminado', getPredeterminados);
 
 //Buscar un solo predeterminado
 router.get('/predeterminado/uno', getPredeterminado);
+
+//Eliminar un alimento predeterminado
+router.delete('/predeterminado', deletePredeterminado);
 
 //Actualizar datos de la cuenta
 router.put('/update', putActualizarDatos);

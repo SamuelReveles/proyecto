@@ -31,7 +31,7 @@ const NutrilogoSchema = Schema({
         required: [true, 'La fecha de registro es obligatoria']
     },
     predeterminados: [{
-        type: Schema.ObjectId, 
+        type: Object, 
         ref:'preterminado'
     }],
     especialidades: {
@@ -68,6 +68,9 @@ const NutrilogoSchema = Schema({
     precio: {
         type: Number,
         required: true
+    },
+    indicaciones: {
+        type: String
     }
 });
 

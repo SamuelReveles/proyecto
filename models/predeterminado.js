@@ -1,14 +1,8 @@
-const { Schema, model} = require('mongoose');
-
-const PredeterminadoSchema = Schema({
-    nombre: {
-        type: String,
-        required: [true, 'El nombre es obligatorio']
-    },
-    texto: {
-        type: String,
-        required: [true, 'El texto es obligatorio']
+class Predeterminado {
+    constructor(nombre = '', texto = '') {
+        this.nombre = nombre;
+        this.texto = texto;
     }
-});
+}
 
-module.exports = model( 'Predeterminado', PredeterminadoSchema );
+module.exports = Predeterminado;
