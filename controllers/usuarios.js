@@ -139,14 +139,14 @@ const busqueda = async (req, res = response) => {
     //Ordenes
 
     //Por calificacion
-    if(req.query.estrellas == true){
-        if(req.query.mayor == true) resultados.sort((a, b) => b.calificacion - a.calificacion);
+    if(req.query.estrellas){
+        if(req.query.mayor) resultados.sort((a, b) => b.calificacion - a.calificacion);
         else resultados.sort((a, b) => a.calificacion - b.calificacion);
     }
 
     //Por precio
-    if(req.query.precio == true){
-        if(req.query.mayor == true) resultados.sort((a, b) => b.precio - a.precio);
+    if(req.query.precio){
+        if(req.query.mayor) resultados.sort((a, b) => b.precio - a.precio);
         else resultados.sort((a, b) => a.precio - b.precio);
     }
 
