@@ -14,8 +14,8 @@ const {
     solicitudDenied,
     adminUpdate,
     addMotivo,
-    getReportes,
-    updateReporte,
+    getMotivos,
+    updateMotivo,
     reportesUsuario,
     UnBanear,
     postAdmin,
@@ -65,10 +65,10 @@ router.put('/update', adminUpdate);
 router.post('/reporte/nuevo', addMotivo);
 
 //Ver los reportes existentes
-router.get('/reporte', getReportes);
+router.get('/reporte', getMotivos);
 
 //Modificar un reporte
-router.put('/reporte', updateReporte);
+router.put('/reporte', updateMotivo);
 
 //Ver reportes de un usuario
 router.get('/reporte/user', reportesUsuario);

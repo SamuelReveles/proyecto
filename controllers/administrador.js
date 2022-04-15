@@ -409,30 +409,30 @@ const addMotivo = async(req, res = response) => {
     
     try {
          //Crear el reporte
-        const reporte = new Motivo({
+        const motivo = new Motivo({
             puntos: req.body.puntos,
             descripcion: req.body.descripcion
         });
 
-        await reporte.save();
+        await motivo.save();
 
         res.status(201).json({
             success: true,
-            reporte
+            motivo
         });
     } catch (error) {
         res.status(401).json({
             success: false,
-            msg: 'No fue posible guardar el reporte'
+            msg: 'No fue posible guardar el motivo'
         })
     }
 }
 
-//Mostrar todos los reportes
-const getReportes = async (req, res = response) => {
+//Mostrar todos los motivos
+const getMotivos = async (req, res = response) => {
     
     try {
-        const [total, reportes] = await Promise.all([
+        const [total, motivos] = await Promise.all([
             Motivo.count(),
             Motivo.find()
         ]);
@@ -440,55 +440,58 @@ const getReportes = async (req, res = response) => {
         res.status(200).json({
             success: true,
             total,
-            reportes
+            motivos
         })
     } catch(error) {
         res.status(400).json({
             success: false,
-            msg: 'Error al encontrar reportes'
+            msg: 'Error al encontrar motivos'
         });
     }
 }
 
-const updateReporte = async (req, res = response) => {
-    
-    //ID del reporte
-    const id = req.body.id;
-
-    //Datos del reporte
-    const {puntos, descripcion} = req.body;
-
-    //Extraer el objeto del reporte
-    const reporte = await Motivo.findById(id);
-
-    //Modificar
-    if(puntos) reporte.puntos = puntos;
-    if(descripcion) reporte.descripcion = descripcion;
+//Actualizar el motivo
+const updateMotivo = async (req, res = response) => {
 
     try {
-        await Motivo.findByIdAndUpdate(id, reporte);
+
+        //ID del motivo
+        const id = req.body.id;
+
+        //Datos del motivo
+        const {puntos, descripcion} = req.body;
+
+        //Extraer el objeto del motivo
+        const motivo = await Motivo.findById(id);
+
+        //Modificar
+        if(puntos) motivo.puntos = puntos;
+        if(descripcion) motivo.descripcion = descripcion;
+
+        await Motivo.findByIdAndUpdate(id, motivo);
         res.status(201).json({
             success: true,
-            reporte
+            motivo
         });
     } catch (error) {
         res.status(401).json({
             success: false,
-            msg: 'Error al actualizar el reporte'
+            msg: 'Error al actualizar el motivo'
         });
     }
 }
 
 const reportesUsuario = async (req, res = response) => {
-    
-    //Id del usuario
-    const id = req.query.id;
-
-    //Extraer usuario
-    let user = await Cliente.findById(id);
-    if(!user) user = await Nutriologo.findById(id);
 
     try {
+
+        //Id del usuario
+        const id = req.query.id;
+
+        //Extraer usuario
+        let user = await Cliente.findById(id);
+        if(!user) user = await Nutriologo.findById(id);
+
         //Extraer ID's de reportes
         const reportes = user.reportes;
 
@@ -624,8 +627,8 @@ module.exports = {
     solicitudDenied,
     adminUpdate,
     addMotivo,
-    getReportes,
-    updateReporte,
+    getMotivos,
+    updateMotivo,
     reportesUsuario,
     UnBanear,
     postAdmin,
