@@ -58,9 +58,6 @@ const getAllUsers = async(req, res = response) => {
     const {limit = 10, start = 0} = req.query;
     let resultado;
 
-    if(req.query.mayor) orden = 1; //De mayor a menor
-    else orden = -1; //De menor a mayor
-
     //Puntaje
     if(req.query.puntaje){
         resultado = await Cliente.aggregate([
@@ -70,7 +67,7 @@ const getAllUsers = async(req, res = response) => {
         ]);
 
         //Ordenar
-        if(req.query.mayor == true)  resultado.sort((a, b) => b.puntajeBaneo - a.puntajeBaneo);
+        if(req.query.mayor)  resultado.sort((a, b) => b.puntajeBaneo - a.puntajeBaneo);
         else resultado.sort((a, b) => a.puntajeBaneo - b.puntajeBaneo);
     }
 
@@ -83,7 +80,7 @@ const getAllUsers = async(req, res = response) => {
         ]);
 
         //Ordenar
-        if(req.query.mayor == true)  resultado.sort((a, b) => b.ultima_conexion - a.ultima_conexion);
+        if(req.query.mayor)  resultado.sort((a, b) => b.ultima_conexion - a.ultima_conexion);
         else resultado.sort((a, b) => a.ultima_conexion - b.ultima_conexion);
     }
 
@@ -143,64 +140,68 @@ const getNutriologo = async(req, res = response) => {
 //Enlistar todos los nutriólogos
 const getAllNutri = async(req, res = response) => {
     
-    //Se establece el límite Motivo
-    const {limit = 10, start = 0} = req.query;
-    let resultado;
+   //Se establece el límite Motivo
+   const {limit = 10, start = 0} = req.query;
+   let resultado;
 
-    //Ordenes
+   //Puntaje
+   if(req.query.puntaje){
+       resultado = await Nutriologo.aggregate([
+           {$skip: Number(start)},
+           {$limit: Number(limit)},
+           {$match: {'puntajeBaneo': {$gt: 6}}}
+       ]);
 
-    //Puntaje
-    if(req.query.puntaje){
-        resultado = await Nutriologo.aggregate([
-            {$sort: {'puntajeBaneo': 1}},
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'puntajeBaneo': {$gt: 5}}}
-        ])
-    }
+       //Ordenar
+       if(req.query.mayor)  resultado.sort((a, b) => b.puntajeBaneo - a.puntajeBaneo);
+       else resultado.sort((a, b) => a.puntajeBaneo - b.puntajeBaneo);
+   }
 
-    //Tiempo de inactividad
+   //Tiempo de inactividad
+   else if(req.query.inactividad){
+       resultado = await Nutriologo.aggregate([
+           {$skip: Number(start)},
+           {$limit: Number(limit)},
+           {$match: {'baneado': false}}
+       ]);
 
-    if(req.query.inactividad){
-        console.log('Buscando por inactividad');
-        resultado = await Nutriologo.aggregate([
-            {$sort: {'ultima_conexion': -1}},
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'baneado': false}}
-        ])
-    }
+       //Ordenar
+       if(req.query.mayor)  resultado.sort((a, b) => b.ultima_conexion - a.ultima_conexion);
+       else resultado.sort((a, b) => a.ultima_conexion - b.ultima_conexion);
+   }
 
-    //Tiempo en plataforma o antiguedad
+   //Tiempo en plataforma o antiguedad
+   else if(req.query.antiguedad){
+       resultado = await Nutriologo.aggregate([
+           {$skip: Number(start)},
+           {$limit: Number(limit)},
+           {$match: {'baneado': false}}
+       ]);
 
-    if(req.query.antiguedad){
-        resultado = await Nutriologo.aggregate([
-            {$sort: {'fecha_registro': 1}},
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'baneado': false}}
-        ])
-    }
+       //Ordenar
+       if(req.query.mayor == true)  resultado.sort((a, b) => b.fecha_registro - a.fecha_registro);
+       else resultado.sort((a, b) => a.fecha_registro - b.fecha_registro);
+   }
 
-    else {
-        resultado = await Nutriologo.aggregate([
-            {$skip: Number(start)},
-            {$limit: Number(limit)}
-        ]);
-    }
+   else {
+       resultado = await Nutriologo.aggregate([
+           {$skip: Number(start)},
+           {$limit: Number(limit)}
+       ]);
+   }
 
-    if(!resultado) {
-        res.status(400).json({
-            success: false,
-            msg: 'Fallo al buscar'
-        });
-        return;
-    }
+   if(!resultado) {
+       res.status(400).json({
+           success: false,
+           msg: 'Fallo al buscar'
+       });
+       return;
+   }
 
-    res.status(200).json({
-        success: true,
-        resultado
-    });
+   res.status(200).json({
+       success: true,
+       resultado
+   });
 };
 
 //Ver todas las solicitudes de empleo

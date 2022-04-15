@@ -42,7 +42,7 @@ const usuariosPatch = (req, res = response) => {
     });
 };
 
-const usuariosDelete = (req, res = response) => {
+const usuariosDelete = async (req, res = response) => {
    
     //Id del cliente
    const id = req.query.id;
