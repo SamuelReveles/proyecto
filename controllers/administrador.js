@@ -27,15 +27,17 @@ const getUser = async(req, res = response) => {
 
 //Crear un administrador
 const postAdmin = async (req, res = response) => {
-    const admin = new Administrador({
-        nombre: req.body.nombre,
-        apellidos: req.body.apellidos,
-        imagen: req.body.imagen,
-        celular: req.body.celular,
-        correo: req.body.correo
-    });
 
     try {
+
+        const admin = new Administrador({
+            nombre: req.body.nombre,
+            apellidos: req.body.apellidos,
+            imagen: req.body.imagen,
+            celular: req.body.celular,
+            correo: req.body.correo
+        });
+
         await admin.save();
         res.status(201).json({
             success: true,
@@ -212,6 +214,8 @@ const getSolicitudes = async(req, res = response) => {
         {$match: {'estado': null}}
     ])
 
+    const total = await Solicitud_empleo.count({estado: null});
+
     if(!solicitudes) {
         res.status(400).json({
             success: false,
@@ -222,43 +226,47 @@ const getSolicitudes = async(req, res = response) => {
 
     res.status(200).json({
         success: true,
-        total: solicitudes.length,
+        total,
         solicitudes
     });
 };
 
 const postSolicitud = async(req, res = response) => {
 
-    const soli = new Solicitud_empleo({
-        nombre: req.body.nombre,
-        cv: req.body.cv,
-        correo: req.body.correo
-    });
-
-    await soli.save()
-        .catch(
-            res.status(401).json({
-            success: false
-        }))
-
-    res.status(201).json({
-        success: true,
-        soli
-    });
+    try {
+        const soli = new Solicitud_empleo({
+            nombre: req.body.nombre,
+            cv: req.body.cv,
+            correo: req.body.correo
+        });
+    
+        await soli.save();
+    
+        res.status(201).json({
+            success: true,
+            soli
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            msg: 'No se ha podido crear la solicitud'
+        });
+    }
 };
 
 //Cambiar de estado la solicitud de empleo
 const putResponderSolicitud = async(req, res = response) => {
 
-    const { id, respuesta } = req.body;
-
-    //Extraer la solicitud de la base de datos
-    const solicitud = await Solicitud_empleo.findById(id);
-
-    //Cambiar respuesta
-    solicitud.estado = respuesta;
-
     try {
+
+        const { id, respuesta } = req.body;
+
+        //Extraer la solicitud de la base de datos
+        const solicitud = await Solicitud_empleo.findById(id);
+    
+        //Cambiar respuesta
+        solicitud.estado = respuesta;
+
         // Actualizar el objeto
         await Solicitud_empleo.findByIdAndUpdate(id);
 
@@ -281,7 +289,15 @@ const solicitudAccepted = async (req, res = response) => {
 
     const id = req.body.id;
 
-    const solicitud = await Solicitud_empleo.findById(id);
+    const solicitud = await Solicitud_empleo.findById(id)
+        .catch(() => {
+            res.status(400).json({
+                success: false,
+                msg: 'No se ha encontrado la solicitud con id ' + id
+            });
+        })
+
+    if(!solicitud) return;
 
     //Actualizar la solicitud
     solicitud.estado = true;
@@ -309,8 +325,7 @@ const solicitudAccepted = async (req, res = response) => {
         console.error(error);
         res.status(400).json({
             success: false
-            });
-        return;
+        });
     })
 
 }
@@ -320,7 +335,15 @@ const solicitudDenied = async (req, res = response) => {
 
     const id = req.body.id;
 
-    const solicitud = await Solicitud.findById(id);
+    const solicitud = await Solicitud_empleo.findById(id)
+    .catch(() => {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha encontrado la solicitud con id ' + id
+        });
+    })
+
+    if(!solicitud) return;;
 
     //Actualizar la solicitud
     solicitud.estado = true;
@@ -347,8 +370,7 @@ const solicitudDenied = async (req, res = response) => {
         console.error(error);
         res.status(400).json({
             success: false
-            });
-        return;
+        });
     })
 
 }
@@ -358,14 +380,10 @@ const adminUpdate = async(req, res = response) => {
     //Recibir parmetros del body
     const { id, nombre, apellidos, imagen } = req.body;
 
-    const admin = await Administrador.findById(id)
-        .catch(
-            res.status(400).json({
-            success: false,
-            msg: 'No fue posible encontrar al admnistrador'
-        }))
-
     try{
+
+        const admin = await Administrador.findById(id);
+
         //Actualizar los datos que se llenaron
         if(nombre) admin.nombre = nombre;
         if(apellidos) admin.apellidos = apellidos;
@@ -375,7 +393,7 @@ const adminUpdate = async(req, res = response) => {
 
         res.status(201).json({
             success: true,
-            msg: 'Actualizado correctamente'
+            admin
         });
     } catch (error) {
         res.status(401).json({
@@ -385,27 +403,28 @@ const adminUpdate = async(req, res = response) => {
     }
 }
 
-//Crear un nuevo reporte
-const addReporte = async(req, res = response) => {
+//Crear un nuevo motivo
+const addMotivo = async(req, res = response) => {
     
-    //Crear el reporte
-    const reporte = new Motivo({
-        puntos: req.body.puntos,
-        descripcion: req.body.descripcion
-    });
+    try {
+         //Crear el reporte
+        const reporte = new Motivo({
+            puntos: req.body.puntos,
+            descripcion: req.body.descripcion
+        });
 
-    await reporte.save()
-        .catch(
-            res.status(401).json({
-                success: false,
-                msg: 'No fue posible guardar el reporte'
-            })
-        )
+        await reporte.save();
 
-    res.status(201).json({
-        success: true,
-        reporte
-    });
+        res.status(201).json({
+            success: true,
+            reporte
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            msg: 'No fue posible guardar el reporte'
+        })
+    }
 }
 
 //Mostrar todos los reportes
@@ -500,34 +519,39 @@ const reportesUsuario = async (req, res = response) => {
 }
 
 const borrarReporte = async (req, res = response) => {
-    const id = req.query.id;
-
-    const reporte = await Reporte.findById(id);
-
-    if(reporte.borrado === true) res.status(200).json({
-        success: false,
-        msg: 'El reporte ya ha sido eliminado'
-    })
-
-    reporte.borrado = true;
-
-    const {para, tipo} = reporte;
-
-    //Extraer objeto del reportado
-    let to = await Nutriologo.findById(para);
-    let esCliente = false;
-    if(!to){
-        to = await Cliente.findById(para);
-        esCliente = true;
-    }
-
-    //Extraer el tipo de reporte
-    const report = await Motivo.findById(tipo);
-
-    //Reducir los puntos
-    to.puntajeBaneo -= report.puntos;
 
     try {
+
+        const id = req.query.id;
+
+        const reporte = await Reporte.findById(id);
+
+        if(reporte.borrado === true) {
+            res.status(200).json({
+                success: false,
+                msg: 'El reporte ya ha sido eliminado'
+            });
+            return;
+        }
+    
+        reporte.borrado = true;
+    
+        const {para, tipo} = reporte;
+    
+        //Extraer objeto del reportado
+        let to = await Nutriologo.findById(para);
+        let esCliente = false;
+        if(!to){
+            to = await Cliente.findById(para);
+            esCliente = true;
+        }
+    
+        //Extraer el tipo de reporte
+        const report = await Motivo.findById(tipo);
+    
+        //Reducir los puntos
+        to.puntajeBaneo -= report.puntos;
+
         //Actualizar objetos
         await Reporte.findByIdAndUpdate(id, reporte);
         if(esCliente) await Cliente.findByIdAndUpdate(para, to);
@@ -548,11 +572,12 @@ const borrarReporte = async (req, res = response) => {
 const UnBanear = async (req, res = response) => {
     //Id del usuario
     const id = req.query.id;
-
-    //Extraer usuario
-    let user = await Cliente.findById(id);
     
     try {
+
+        //Extraer usuario
+        let user = await Cliente.findById(id);
+
         if(user) {
             //Cambiar bandera de baneo
             user.baneado = false;
@@ -597,7 +622,7 @@ module.exports = {
     solicitudAccepted,
     solicitudDenied,
     adminUpdate,
-    addReporte,
+    addMotivo,
     getReportes,
     updateReporte,
     reportesUsuario,

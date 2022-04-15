@@ -583,8 +583,28 @@ const getInfo = async (req, res = response) => {
 
 }
 
+const nutriologoDelete = async (req, res = response) => {
+    //Id del cliente
+    const id = req.query.id;
+
+    try {
+        await Nutriologo.findByIdAndDelete(id);
+        
+        res.status(201).json({
+            success: true,
+            msg: 'Usuario eliminado correctamente'
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            msg: 'No se ha podido eliminar al usuario ' + id
+        });
+    }
+}
+
 module.exports = {
     nutriologoPost,
+    nutriologoDelete,
     getInfo,
     postPredeterminado,
     getPredeterminados,

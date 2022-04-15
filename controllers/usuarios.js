@@ -43,10 +43,23 @@ const usuariosPatch = (req, res = response) => {
 };
 
 const usuariosDelete = (req, res = response) => {
-    res.json({
-        ok: true,
-        msg: 'delete API - controller'
-    });
+   
+    //Id del cliente
+   const id = req.query.id;
+
+   try {
+       await Cliente.findByIdAndDelete(id);
+       
+       res.status(201).json({
+           success: true,
+           msg: 'Usuario eliminado correctamente'
+       });
+   } catch (error) {
+       res.status(401).json({
+           success: false,
+           msg: 'No se ha podido eliminar al usuario ' + id
+       });
+   }
 };
 
 //Buscar nutriólogo por nombre

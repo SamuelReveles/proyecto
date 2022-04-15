@@ -13,7 +13,7 @@ const {
     solicitudAccepted,
     solicitudDenied,
     adminUpdate,
-    addReporte,
+    addMotivo,
     getReportes,
     updateReporte,
     reportesUsuario,
@@ -62,7 +62,7 @@ router.put('/soli', putResponderSolicitud);
 router.put('/update', adminUpdate);
 
 //Crear un nuevo reporte
-router.post('/reporte/nuevo', addReporte);
+router.post('/reporte/nuevo', addMotivo);
 
 //Ver los reportes existentes
 router.get('/reporte', getReportes);
