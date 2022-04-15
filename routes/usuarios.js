@@ -19,6 +19,7 @@ const {
     getProgreso,
     altaExtras,
     getExtras,
+    getInfo,
     reportar,
     calificar
 } = require('../controllers/usuarios');
@@ -46,6 +47,9 @@ router.get('/nutriologo', getNutriologo);
 
 //Extraer el progreso
 router.get('/progreso', getProgreso);
+
+//Ver datos de la cuenta
+router.get('/data', getInfo);
 
 //Calificar a un nutriólogo
 router.put('/calificar', calificar);

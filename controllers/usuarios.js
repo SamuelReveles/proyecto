@@ -404,6 +404,26 @@ const getExtras = async (req, res = response)  => {
 
 }
 
+//Ver información del cliente
+const getInfo = async (req, res = response)  => {
+
+    //Id del cliente
+    const id = req.query.id;
+
+    const cliente = await client.findById(id)
+        .catch(() => {
+            res.status(400).json({ 
+                success: false,
+                msg: 'Error al buscar cliente, verifique el ID'
+            });
+            return;
+        });
+    
+    res.status(200).json({
+        success: true,
+        cliente
+    });
+}
 
 module.exports = {
     usuariosPost,
@@ -414,6 +434,7 @@ module.exports = {
     getProgreso,
     altaExtras,
     getExtras,
+    getInfo,
     reportar,
     calificar
 }
