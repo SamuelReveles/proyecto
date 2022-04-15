@@ -172,22 +172,31 @@ const altaExtras = async (req, res = response) => {
     const id = req.body.id;
 
     //Extraer en objeto del cliente con el ID
-    const cliente = await Cliente.findById(id);
+    const cliente = await Cliente.findById(id)
+        .catch(() => {
+            res.status(401).json({
+                success: false,
+                msg: 'Error al encontrar al cliente'
+            });
+        });
+
+    if(!cliente) return;
 
     //Verificar que no están llenos los extras del cliente
     if(!cliente.extra1 || !cliente.extra2) { 
-        
-        //Crear el objeto
-        const extra = new Extra({
-            nombre: req.body.nombre,
-            apellidos: req.body.apellidos
-        });
-
-        //Guardar en extra1
-        if(!cliente.extra1) cliente.extra1 = extra;
-        else cliente.extra2 = extra;
 
         try {
+
+            //Crear el objeto
+            const extra = new Extra({
+                nombre: req.body.nombre,
+                apellidos: req.body.apellidos
+            });
+
+            //Guardar en extra1
+            if(!cliente.extra1) cliente.extra1 = extra;
+            else cliente.extra2 = extra;
+
             //Guardar
             await Cliente.findByIdAndUpdate(id, cliente)
             .then(await extra.save());
@@ -196,7 +205,6 @@ const altaExtras = async (req, res = response) => {
                 msg: 'Guardado correctamente'
             });
         } catch (error) {
-            console.log(error);
             res.status(401).json({
                 success: false,
                 msg: 'Error al guardar el usuario'
@@ -215,97 +223,105 @@ const altaExtras = async (req, res = response) => {
 //Mostrar el progreso
 const getProgreso = async (req, res = response) => {
 
-    //Extraer id
-    const id = req.query.id;
+    try {
+        //Extraer id
+        const id = req.query.id;
 
-    //Buscar entre usuarios y extras
-    let user = await Cliente.findById(id);
+        //Buscar entre usuarios y extras
+        let user = await Cliente.findById(id);
 
-    if (!user) {
-        user = await Extra.findById(id);
-    }
+        if (!user) {
+            user = await Extra.findById(id);
+        }
 
-    //Extraer inicio
-    const inicio = await Dato.findById(user.datoInicial);
+        //Extraer inicio
+        const inicio = await Dato.findById(user.datoInicial);
 
-    //Guardar datos en un arreglo
-    let datos = [];
+        //Guardar datos en un arreglo
+        let datos = [];
 
-    //Extraer todos los datos a un arreglo
-    for await (const _id of user.datoConstante) {
-        const dato = await Dato.findById(_id)
-        datos.push({peso: dato.peso, altura: dato.altura});
-    }
+        //Extraer todos los datos a un arreglo
+        for await (const _id of user.datoConstante) {
+            const dato = await Dato.findById(_id)
+            datos.push({peso: dato.peso, altura: dato.altura});
+        }
 
-    if(!inicio){
+        if(!inicio){
+            res.status(400).json({
+                success: false,
+                inicio: false,
+                constantes: false,
+                msg: 'Usuario sin datos registrados'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            inicio,
+            datos
+        });
+    } catch (error) {
         res.status(400).json({
             success: false,
-            inicio: false,
-            constantes: false,
-            msg: 'Usuario sin datos registrados'
+            msg: 'Error'
         });
-        return;
     }
-
-    res.status(200).json({
-        success: true,
-        msg: "Encontrado con el ID: " + id,
-        inicio,
-        datos
-    });
 
 }
 
 //Reportar
 const reportar = async (req, res = response) => {
-    //Extraer datos del reporte
-    const { idCliente, idNutriologo, idReporte, msg } = req.body;
+   
+    try {
+         //Extraer datos del reporte
+        const { idCliente, idNutriologo, idReporte, msg } = req.body;
 
-    //Crear el reporte
-    const reporte = new Reporte({
-        emisor: idCliente,
-        para: idNutriologo,
-        tipo: idReporte,
-        msg,
-        fecha: Date.now()
-    });
+        //Crear el reporte
+        const reporte = new Reporte({
+            emisor: idCliente,
+            para: idNutriologo,
+            tipo: idReporte,
+            msg,
+            fecha: Date.now()
+        });
 
-    //Guardar reporte
-    await reporte.save();
+        //Guardar reporte
+        await reporte.save();
 
-    //Extraer tipo de reporte para saber el puntaje
-    const report = await Motivo.findById(idReporte);
-    const nutriologo = await Nutriologo.findById(idNutriologo);
+        //Extraer tipo de reporte para saber el puntaje
+        const report = await Motivo.findById(idReporte);
+        const nutriologo = await Nutriologo.findById(idNutriologo);
 
-    //Agregar los puntos y push a arreglo de reportes
-    nutriologo.puntajeBaneo += report.puntos;
+        //Agregar los puntos y push a arreglo de reportes
+        nutriologo.puntajeBaneo += report.puntos;
 
-    let reportes = [];
-    if(!nutriologo.reportes){
-        console.log('Sin reportes');
+        let reportes = [];
+        if(!nutriologo.reportes){
+            console.log('Sin reportes');
+        }
+        else {
+            console.log('Con reportes');
+            reportes = nutriologo.reportes;
+        }
+        
+        reportes.push(reporte);
+        nutriologo.reportes = reportes;
+
+        await Nutriologo.findByIdAndUpdate(idNutriologo, nutriologo)
+
+        res.status(201).json({
+            success: true,
+            reporte,
+            msg: 'Reportado correctamente'
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            msg: 'No se ha logrado reportar'
+        });
     }
-    else {
-        console.log('Con reportes');
-        reportes = nutriologo.reportes;
-    }
-    
-    reportes.push(reporte);
-    nutriologo.reportes = reportes;
 
-    await Nutriologo.findByIdAndUpdate(idNutriologo, nutriologo)
-        .catch( () =>  {
-            res.status(401).json({
-                success: false,
-                msg: 'No se ha logrado reportar'
-            });
-            return;
-        })
-
-    res.status(201).json({
-        success: true,
-        reporte,
-        msg: 'Reportado correctamente'
-    });
 }
 
 //Calificar de 0 a 5 estrellas al nutriólogo
@@ -323,7 +339,15 @@ const calificar = async (req, res = response) => {
     }
 
     //Agregar al arreglo del nutriólogo
-    const nutriologo = await Nutriologo.findById(id);
+    const nutriologo = await Nutriologo.findById(id)
+        .catch(() => {
+            res.status(400).json({
+                success: false,
+                msg: 'Error al encontrar el nutriólogo, verifique el id'
+            });
+        });
+
+    if(!nutriologo) return;
 
     let calificaciones = nutriologo.calificacion;
     calificaciones.push(calificacion);
@@ -416,9 +440,10 @@ const getInfo = async (req, res = response)  => {
                 success: false,
                 msg: 'Error al buscar cliente, verifique el ID'
             });
-            return;
         });
     
+    if(!cliente) return;
+
     res.status(200).json({
         success: true,
         cliente
