@@ -78,7 +78,8 @@ const postPredeterminado = async (req, res = response) => {
         });
     } catch (error) {
         res.status(401).json({
-            success: false
+            success: false,
+            msg: 'No fue posible actualizar los alimentos predeterminados'
         });
     }
 }
@@ -98,7 +99,8 @@ const getPredeterminados = async (req, res = response) => {
         });
     } catch (error) {
         res.status(400).json({
-            success: false
+            success: false,
+            msg: 'No fue posible encontrar los predeterminados'
         })
     }
 }
@@ -113,8 +115,7 @@ const getPredeterminado = async (req, res = response) => {
     try {
         const { predeterminados } = await Nutriologo.findById(id);
 
-        for await (const alimento of predeterminados){
-            //const predeterminado = await Predeterminado.findById(_id);
+        for await (const alimento of predeterminados) {
             if(alimento.nombre == req.query.nombre) {
                 resultado = alimento;
                 break;

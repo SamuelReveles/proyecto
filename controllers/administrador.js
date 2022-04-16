@@ -55,50 +55,78 @@ const postAdmin = async (req, res = response) => {
 const getAllUsers = async(req, res = response) => {
 
     //Se establece el límite Motivo
-    const {limit = 10, start = 0} = req.query;
+    const {limit = 10, start = 0, baneado = false} = req.query;
     let resultado;
 
     //Puntaje
     if(req.query.puntaje){
-        resultado = await Cliente.aggregate([
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'puntajeBaneo': {$gt: 6}}}
-        ]);
+        
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Cliente.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Cliente.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
 
-        //Ordenar
-        if(req.query.mayor)  resultado.sort((a, b) => b.puntajeBaneo - a.puntajeBaneo);
-        else resultado.sort((a, b) => a.puntajeBaneo - b.puntajeBaneo);
     }
 
     //Tiempo de inactividad
     else if(req.query.inactividad){
-        resultado = await Cliente.aggregate([
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'baneado': false}}
-        ]);
 
         //Ordenar
-        if(req.query.mayor)  resultado.sort((a, b) => b.ultima_conexion - a.ultima_conexion);
-        else resultado.sort((a, b) => a.ultima_conexion - b.ultima_conexion);
+        if(Boolean(req.query.mayor) === true)  {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
     }
 
     //Tiempo en plataforma o antiguedad
     else if(req.query.antiguedad){
-        resultado = await Cliente.aggregate([
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'baneado': false}}
-        ]);
 
         //Ordenar
-        if(req.query.mayor == true)  resultado.sort((a, b) => b.fecha_registro - a.fecha_registro);
-        else resultado.sort((a, b) => a.fecha_registro - b.fecha_registro);
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
     }
 
     else {
         resultado = await Cliente.aggregate([
+            {$match: {'baneado': Boolean(baneado)}},
             {$skip: Number(start)},
             {$limit: Number(limit)}
         ]);
@@ -139,70 +167,98 @@ const getNutriologo = async(req, res = response) => {
 
 //Enlistar todos los nutriólogos
 const getAllNutri = async(req, res = response) => {
-    
-   //Se establece el límite Motivo
-   const {limit = 10, start = 0} = req.query;
-   let resultado;
 
-   //Puntaje
-   if(req.query.puntaje){
-       resultado = await Nutriologo.aggregate([
-           {$skip: Number(start)},
-           {$limit: Number(limit)},
-           {$match: {'puntajeBaneo': {$gt: 6}}}
-       ]);
+    //Se establece el límite Motivo
+    const {limit = 10, start = 0, baneado = false} = req.query;
+    let resultado;
 
-       //Ordenar
-       if(req.query.mayor)  resultado.sort((a, b) => b.puntajeBaneo - a.puntajeBaneo);
-       else resultado.sort((a, b) => a.puntajeBaneo - b.puntajeBaneo);
-   }
+    //Puntaje
+    if(req.query.puntaje){
+        
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Nutriologo.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Nutriologo.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
 
-   //Tiempo de inactividad
-   else if(req.query.inactividad){
-       resultado = await Nutriologo.aggregate([
-           {$skip: Number(start)},
-           {$limit: Number(limit)},
-           {$match: {'baneado': false}}
-       ]);
+    }
 
-       //Ordenar
-       if(req.query.mayor)  resultado.sort((a, b) => b.ultima_conexion - a.ultima_conexion);
-       else resultado.sort((a, b) => a.ultima_conexion - b.ultima_conexion);
-   }
+    //Tiempo de inactividad
+    else if(req.query.inactividad){
 
-   //Tiempo en plataforma o antiguedad
-   else if(req.query.antiguedad){
-       resultado = await Nutriologo.aggregate([
-           {$skip: Number(start)},
-           {$limit: Number(limit)},
-           {$match: {'baneado': false}}
-       ]);
+        //Ordenar
+        if(Boolean(req.query.mayor) === true)  {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+    }
 
-       //Ordenar
-       if(req.query.mayor == true)  resultado.sort((a, b) => b.fecha_registro - a.fecha_registro);
-       else resultado.sort((a, b) => a.fecha_registro - b.fecha_registro);
-   }
+    //Tiempo en plataforma o antiguedad
+    else if(req.query.antiguedad){
 
-   else {
-       resultado = await Nutriologo.aggregate([
-           {$skip: Number(start)},
-           {$limit: Number(limit)}
-       ]);
-   }
+        //Ordenar
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+    }
 
-   if(!resultado) {
-       res.status(400).json({
-           success: false,
-           msg: 'Fallo al buscar'
-       });
-       return;
-   }
+    else {
+        resultado = await Nutriologo.aggregate([
+            {$match: {'baneado': Boolean(baneado)}},
+            {$skip: Number(start)},
+            {$limit: Number(limit)}
+        ]);
+    }
 
-   res.status(200).json({
-       success: true,
-       resultado
-   });
-};
+    if(!resultado) {
+        res.status(400).json({
+            success: false,
+            msg: 'Fallo al buscar'
+        });
+        return;
+    }
+
+    res.status(200).json({
+        success: true,
+        resultado
+    });
+}
 
 //Ver todas las solicitudes de empleo
 const getSolicitudes = async(req, res = response) => {

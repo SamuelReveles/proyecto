@@ -51,6 +51,9 @@ const NutrilogoSchema = Schema({
         type: Number, 
         default: 0
     }],
+    promedio: {
+        type: Number
+    },
     fechaDisponible: [{ 
         type: Date, 
         required: [true, 'Las fechas disponibles del nutriologo son obligatorias']

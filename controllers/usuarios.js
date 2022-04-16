@@ -80,22 +80,107 @@ const busqueda = async (req, res = response) => {
     //Si se búsca por nombre
     if(nombre){
         //Extraer los resultados
-        users =  await Nutriologo.aggregate([
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'nombreCompleto': nombre}}
-        ]);
+        if(Boolean(req.query.estrellas) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$sort: {'promedio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$sort: {'promedio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else if(Boolean(req.query.precio) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$sort: {'precio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$sort: {'precio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else {
+            users =  await Nutriologo.aggregate([
+                {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
 
         total = await Nutriologo.count({nombreCompleto: nombre});
     }
 
     else if (categoria) {
+
         //Extraer los resultados
-        users =  await Nutriologo.aggregate([
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'especialidades': categoria}}
-        ]);
+        if(Boolean(req.query.estrellas) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$sort: {'promedio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$sort: {'promedio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else if(Boolean(req.query.precio) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$sort: {'precio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$sort: {'precio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else {
+            users =  await Nutriologo.aggregate([
+                {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
 
         total = await Nutriologo.count({especialidades: categoria});
     }
@@ -109,58 +194,22 @@ const busqueda = async (req, res = response) => {
         total = await Nutriologo.count();
     }
 
-    //Modificar calificaciones (enviar promedio)
-    for await (let calif of users){
-        //Extraer arreglo con calificaciones
-        const calificaciones = calif.calificacion;
-        
-        //Obtener el promedio de los elementos del arreglo
-        let promedio = 0;
-        if(calificaciones){
-            for (const number of calificaciones){
-                //Sumar los elementos
-                promedio += number;
-            }
-            
-            promedio /= calificaciones.length;
-                
-            //Guardar en el elemento de respuesta
-            calif.calificacion = promedio;
-        }
-    }  
-
     //Eliminar resultados e información innecesaria de nutriólogos baneados
     let resultados = [];
     for await (let nutriologo of users){
-        if(!nutriologo.baneado){
-            const {
-                fecha_registro, 
-                predeterminados, 
-                pacientes,
-                baneado,
-                reportes,
-                correo,
-                celular,
-                id,
-                __v,
-                puntajeBaneo,
-                ...resto} = nutriologo;
-            resultados.push(resto);
-        }
-    }
-
-    //Ordenes
-
-    //Por calificacion
-    if(req.query.estrellas){
-        if(req.query.mayor) resultados.sort((a, b) => b.calificacion - a.calificacion);
-        else resultados.sort((a, b) => a.calificacion - b.calificacion);
-    }
-
-    //Por precio
-    if(req.query.precio){
-        if(req.query.mayor) resultados.sort((a, b) => b.precio - a.precio);
-        else resultados.sort((a, b) => a.precio - b.precio);
+        const {
+            fecha_registro, 
+            predeterminados, 
+            pacientes,
+            baneado,
+            reportes,
+            correo,
+            celular,
+            id,
+            __v,
+            puntajeBaneo,
+            ...resto} = nutriologo;
+        resultados.push(resto);
     }
 
     if(!resultados) {
@@ -364,6 +413,19 @@ const calificar = async (req, res = response) => {
 
     let calificaciones = nutriologo.calificacion;
     calificaciones.push(calificacion);
+
+    //Actualizar promedio de calificaciones
+    let promedio = 0;
+    for (const number of calificaciones){
+        //Sumar los elementos
+        promedio += number;
+    }
+    
+    promedio /= calificaciones.length;
+        
+    //Guardar en el elemento de respuesta
+    nutriologo.promedio = promedio;
+    nutriologo.calificaciones = calificaciones;
 
     //Actualizar objeto
     await Nutriologo.findByIdAndUpdate(id, nutriologo)
