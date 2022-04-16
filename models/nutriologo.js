@@ -74,6 +74,10 @@ const NutrilogoSchema = Schema({
     },
     indicaciones: {
         type: String
+    },
+    activo: {
+        type: Boolean,
+        default: true
     }
 });
 

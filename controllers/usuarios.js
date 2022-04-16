@@ -84,7 +84,7 @@ const busqueda = async (req, res = response) => {
 
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'promedio': -1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -92,7 +92,7 @@ const busqueda = async (req, res = response) => {
             }
             else {
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'promedio': 1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -104,7 +104,7 @@ const busqueda = async (req, res = response) => {
 
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'precio': -1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -112,7 +112,7 @@ const busqueda = async (req, res = response) => {
             }
             else {
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'precio': 1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -122,13 +122,13 @@ const busqueda = async (req, res = response) => {
 
         else {
             users =  await Nutriologo.aggregate([
-                {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}]}},
+                {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                 {$skip: Number(start)},
                 {$limit: Number(limit)}
             ]);
         }
 
-        total = await Nutriologo.count({nombreCompleto: nombre});
+        total = await Nutriologo.count({nombreCompleto: nombre, activo: true, baneado: false});
     }
 
     else if (categoria) {
@@ -138,7 +138,7 @@ const busqueda = async (req, res = response) => {
 
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'promedio': -1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -146,7 +146,7 @@ const busqueda = async (req, res = response) => {
             }
             else {
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'promedio': 1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -158,7 +158,7 @@ const busqueda = async (req, res = response) => {
 
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'precio': -1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -166,7 +166,7 @@ const busqueda = async (req, res = response) => {
             }
             else {
                 users =  await Nutriologo.aggregate([
-                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'precio': 1}},
                     {$skip: Number(start)},
                     {$limit: Number(limit)}
@@ -176,13 +176,13 @@ const busqueda = async (req, res = response) => {
 
         else {
             users =  await Nutriologo.aggregate([
-                {$match: {$and: [{'especialidades': categoria}, {'baneado': false}]}},
+                {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
                 {$skip: Number(start)},
                 {$limit: Number(limit)}
             ]);
         }
 
-        total = await Nutriologo.count({especialidades: categoria});
+        total = await Nutriologo.count({especialidades: categoria, activo: true, baneado: false});
     }
 
     else {
@@ -208,6 +208,7 @@ const busqueda = async (req, res = response) => {
             id,
             __v,
             puntajeBaneo,
+            calificacion,
             ...resto} = nutriologo;
         resultados.push(resto);
     }
