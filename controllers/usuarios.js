@@ -209,6 +209,7 @@ const busqueda = async (req, res = response) => {
             __v,
             puntajeBaneo,
             calificacion,
+            activo,
             ...resto} = nutriologo;
         resultados.push(resto);
     }
