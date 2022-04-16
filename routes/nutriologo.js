@@ -7,6 +7,7 @@ const { validarCampos } = require('../middlewares/validar-campos');
 
 const { 
     nutriologoPost,
+    nutriologoUpdate,
     nutriologoDelete,
     getInfo,
     postPredeterminado,
@@ -33,6 +34,9 @@ const router = Router();
 
 //Crear un nuevo nutriólogo dentro de la DB
 router.post('/', nutriologoPost);
+
+//Actualizar datos básicos del nutriólogo
+router.put('/', nutriologoUpdate);
 
 //Eliminar al nutriólogo
 router.delete('/', nutriologoDelete);

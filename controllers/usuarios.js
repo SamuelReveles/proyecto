@@ -2,6 +2,9 @@
 const { response } = require('express');
 const bcryptjs = require('bcryptjs');
 
+const cloudinary = require('cloudinary').v2;
+cloudinary.config(process.env.CLOUDINARY_URL);
+
 //Modelos
 const Cliente = require('../models/cliente');
 const Dato = require('../models/dato');
@@ -13,26 +16,45 @@ const Motivo = require('../models/motivo');
 
 const usuariosPost = async (req, res = response) => {
     
-    //Creando objeto
-    const user = new Cliente({
-        nombre: req.body.nombre,
-        apellidos: req.body.apellidos,
-        celular: req.body.celular,
-        correo: req.body.email,
-    });
 
-    await user.save()
-        .then(await datos.save())
-        .catch(
-            res.status(401).json({
-                succes: false
-            })
-        )
-    
-    res.status(201).json({
-        succes: true,
-        user
-    });
+    try {
+        //Foto de perfil default
+        let linkImagen = ' ';
+
+        // let tempFilePath;
+
+        // if(req.files)
+        // tempFilePath = req.files.imagen.tempFilePath;
+
+        // if(tempFilePath){
+        //     //Subir a cloudinary y extraer el secure_url
+        //     const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+        //     linkImagen = secure_url;
+        // }
+        //Creando objeto
+        const user = new Cliente({
+            nombre: req.body.nombre,
+            apellidos: req.body.apellidos,
+            imagen: linkImagen,
+            celular: req.body.celular,
+            correo: req.body.correo,
+            fecha_registro: Date.now()
+        });
+
+        await user.save();
+
+        res.status(201).json({
+            succes: true,
+            user
+        });
+    } 
+    catch(error) {
+        console.log(error);
+        res.status(401).json({
+            succes: false,
+            msg: 'Registro inválido'
+        })
+    }
 }
 
 const usuariosPatch = (req, res = response) => {
@@ -527,8 +549,61 @@ const getInfo = async (req, res = response)  => {
     });
 }
 
+const usuariosUpdate = async (req, res = response) => {
+    try{
+
+        //Recibir parmetros del body
+        const { id, nombre, apellidos } = req.body;
+
+        let tempFilePath;
+
+        if(req.files)
+        tempFilePath = req.files.imagen.tempFilePath;
+
+        const user = await Cliente.findById(id);
+
+        //Actualizar los datos que se llenaron
+        if(tempFilePath){
+
+            //Si la foto de perfil NO es la default se borra
+            if(user.imagen != 'LINK DE FOTO DEFAULT'){
+                //Borrar la imagen anterior de cloudinary
+            
+                //Split del nombre de la imagen
+                const nombreArr = user.imagen.split('/');
+                const nombre = nombreArr[nombreArr.length - 1];
+                const [ public_id ] = nombre.split('.');
+
+                //Borrar la imagen
+                await cloudinary.uploader.destroy(public_id);
+            }
+
+            //Subir a cloudinary y extraer el secure_url
+            const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+            user.imagen = secure_url;
+        }
+        if(nombre) user.nombre = nombre;
+        if(apellidos) user.apellidos = apellidos;
+
+        await Cliente.findByIdAndUpdate(id, user);
+
+        res.status(201).json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({
+            error,
+            success: false,
+            msg: 'No fue posible actualizar'
+        });
+    }
+}
+
 module.exports = {
     usuariosPost,
+    usuariosUpdate,
     usuariosDelete,
     usuariosPatch,
     busqueda,

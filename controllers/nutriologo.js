@@ -2,6 +2,9 @@
 const { response } = require('express');
 const mongoose = require('mongoose');
 
+const cloudinary = require('cloudinary').v2;
+cloudinary.config(process.env.CLOUDINARY_URL);
+
 //Helpers
 const { emailExiste, celularExiste } = require('../helpers/db-validator');
 
@@ -20,6 +23,17 @@ const nutriologoPost = async (req, res = response) => {
 
     try {
             
+        //Foto de perfil default
+        let linkImagen = '';
+
+        // //Extraer ruta temporal
+        // const { tempFilePath } = req.files.imagen;
+        // if(tempFilePath){
+        //     //Subir a cloudinary y extraer el secure_url
+        //     const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+        //     linkImagen = secure_url;
+        // }
+
         //Crear el objeto
         const nutri = new Nutriologo({
             nombre: req.body.nombre,
@@ -27,8 +41,9 @@ const nutriologoPost = async (req, res = response) => {
             nombreCompleto: req.body.nombre + ' ' + req.body.apellidos,
             celular: req.body.celular,
             correo: req.body.correo,
-            fecha_registro: Date.now(),
             precio: req.body.precio,
+            imagen: linkImagen,
+            fecha_registro: Date.now(),
             especialidades: [
                 "Vegano",
                 "General"
@@ -36,20 +51,78 @@ const nutriologoPost = async (req, res = response) => {
         });
 
         await nutri.save();
+
         res.status(201).json({
             success: true,
             nutri
         });
     }
     catch (err) {
-        console.log(err);
         res.status(400).json({
+            err,
             success: false,
             msg: 'Error al agregar a la DB'
         });
     }
 }
 
+//Actualizar perfil
+const nutriologoUpdate = async (req, res = response) => {
+    try{
+
+        //Recibir parmetros del body
+        const { id, nombre, apellidos, precio, descripcion } = req.body;
+
+        const { tempFilePath } = req.files.imagen;
+
+        const nutriologo = await Nutriologo.findById(id);
+
+        //Actualizar los datos que se llenaron
+        if(tempFilePath){
+
+            //Si la foto de perfil NO es la default se borra
+            if(nutriologo.imagen != 'LINK FOTO DE PERFIL DEFAULT'){
+                //Borrar la imagen anterior de cloudinary
+            
+                //Split del nombre de la imagen
+                const nombreArr = nutriologo.imagen.split('/');
+                const nombre = nombreArr[nombreArr.length - 1];
+                const [ public_id ] = nombre.split('.');
+
+                //Borrar la imagen
+                await cloudinary.uploader.destroy(public_id);
+            }
+
+            //Subir a cloudinary y extraer el secure_url
+            const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+            nutriologo.imagen = secure_url;
+        }
+        if(nombre) {
+            nutriologo.nombre = nombre;
+            nutriologo.nombreCompleto = nutriologo.nombre + ' ' + nutriologo.apellidos;
+        }
+        if(apellidos) {
+            nutriologo.apellidos = apellidos;
+            nutriologo.nombreCompleto = nutriologo.nombre + ' ' + nutriologo.apellidos;
+        }
+        if(precio) nutriologo.precio = precio;
+        if(descripcion) nutriologo.descripcion = descripcion;
+
+        await Nutriologo.findByIdAndUpdate(id, nutriologo);
+
+        res.status(201).json({
+            success: true,
+            nutriologo
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({
+            error,
+            success: false,
+            msg: 'No fue posible actualizar'
+        });
+    }
+}
 
 // Crear un nuevo alimento predeterminado
 const postPredeterminado = async (req, res = response) => {
@@ -605,6 +678,7 @@ const nutriologoDelete = async (req, res = response) => {
 
 module.exports = {
     nutriologoPost,
+    nutriologoUpdate,
     nutriologoDelete,
     getInfo,
     postPredeterminado,

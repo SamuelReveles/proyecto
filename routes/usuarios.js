@@ -12,6 +12,7 @@ const { emailExiste, celularExiste } = require('../helpers/db-validator');
 //Rutas y tipos de "Acceso"
 const { 
     usuariosPost,
+    usuariosUpdate,
     usuariosDelete,
     usuariosPatch, 
     busqueda,
@@ -66,6 +67,9 @@ router.post('/', [
     check('celular').custom(celularExiste),
     validarCampos
 ], usuariosPost);
+
+//Actualizar datos
+router.put('/', usuariosUpdate);
 
 //Reportar
 router.put('/reportar', reportar);

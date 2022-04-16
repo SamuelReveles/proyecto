@@ -2,6 +2,9 @@
 const { response } = require('express');
 const sgMail = require('@sendgrid/mail');
 
+const cloudinary = require('cloudinary').v2;
+cloudinary.config(process.env.CLOUDINARY_URL);
+
 //Modelos
 const Cliente = require('../models/cliente');
 const Solicitud_empleo = require('../models/solicitud_empleo');
@@ -30,15 +33,31 @@ const postAdmin = async (req, res = response) => {
 
     try {
 
+        // let tempFilePath;
+
+        // if(req.files)
+        // tempFilePath = req.files.imagen.tempFilePath;
+
+        //Foto de perfil default
+        let linkImagen = ' ';
+
         const admin = new Administrador({
             nombre: req.body.nombre,
             apellidos: req.body.apellidos,
-            imagen: req.body.imagen,
+            imagen: linkImagen,
             celular: req.body.celular,
             correo: req.body.correo
         });
 
         await admin.save();
+
+        // if(tempFilePath){
+        //     //Subir a cloudinary y extraer el secure_url
+        //     admin.imagen = await cloudinary.uploader.upload(tempFilePath);
+        // }
+
+        await Administrador.findByIdAndUpdate(admin._id, admin);
+
         res.status(201).json({
             success: true,
             admin
@@ -434,17 +453,41 @@ const solicitudDenied = async (req, res = response) => {
 
 //Update de los datos del administrador
 const adminUpdate = async(req, res = response) => {
-    //Recibir parmetros del body
-    const { id, nombre, apellidos, imagen } = req.body;
 
     try{
+
+        //Recibir parmetros del body
+        const { id, nombre, apellidos } = req.body;
+
+        let tempFilePath;
+
+        if(req.files)
+        tempFilePath = req.files.imagen.tempFilePath;
 
         const admin = await Administrador.findById(id);
 
         //Actualizar los datos que se llenaron
+        if(tempFilePath){
+
+            //Si la foto de perfil NO es la default se borra
+            if(admin.imagen != 'LINK DE FOTO DE PERFIL DEFAULT'){
+                //Borrar la imagen anterior de cloudinary
+            
+                //Split del nombre de la imagen
+                const nombreArr = admin.imagen.split('/');
+                const nombre = nombreArr[nombreArr.length - 1];
+                const [ public_id ] = nombre.split('.');
+
+                //Borrar la imagen
+                await cloudinary.uploader.destroy(public_id);
+            }
+
+            //Subir a cloudinary y extraer el secure_url
+            const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+            admin.imagen = secure_url;
+        }
         if(nombre) admin.nombre = nombre;
         if(apellidos) admin.apellidos = apellidos;
-        if(imagen) admin.imagen = imagen;
 
         await Administrador.findByIdAndUpdate(id, admin);
 
@@ -453,6 +496,7 @@ const adminUpdate = async(req, res = response) => {
             admin
         });
     } catch (error) {
+        console.log(error);
         res.status(401).json({
             success: false,
             msg: 'No fue posible actualizar'
