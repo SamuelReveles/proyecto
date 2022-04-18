@@ -7,9 +7,9 @@ cloudinary.config(process.env.CLOUDINARY_URL);
 
 //Modelos
 const Cliente = require('../models/cliente');
-const Solicitud_empleo = require('../models/solicitud_empleo');
 const Nutriologo = require('../models/nutriologo');
 const Administrador = require('../models/administrador');
+const Solicitud_empleo = require('../models/solicitud_empleo');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 

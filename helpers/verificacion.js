@@ -1,5 +1,6 @@
 //Librerías externas
 const { response } = require('express');
+const jwt = require('jsonwebtoken');
 
 //API externas
 const client = require('twilio')(process.env.TWILIO_SSID, process.env.TWILIO_AUTH_TOKEN);
@@ -35,7 +36,32 @@ const verifyCode = async (req, res = response) => {
         });
 }
 
+//Generar el JSONWebToken
+const generarJWT = ( id = '' ) => {
+
+    return new Promise( (resolve, reject) => {
+
+        const payload = { id };
+
+        jwt.sign(payload, process.env.SIGNJWT, {
+            expiresIn: '4h'
+        }, (err, token) => {
+
+            if(err) {
+                reject('No se pudo generar el JWT');
+            } 
+            else{
+                resolve(token);
+            }
+
+        });
+
+    })
+
+}
+
 module.exports = {
     verifyCode,
-    sendCode
+    sendCode,
+    generarJWT
 }

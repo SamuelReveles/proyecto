@@ -16,7 +16,6 @@ const Nutriologo = require('../models/nutriologo');
 const Predeterminado = require('../models/predeterminado');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
-const nutriologo = require('../models/nutriologo');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
@@ -170,7 +169,9 @@ const getPredeterminados = async (req, res = response) => {
             success: true,
             predeterminados
         });
+
     } catch (error) {
+        console.error(error);
         res.status(400).json({
             success: false,
             msg: 'No fue posible encontrar los predeterminados'
