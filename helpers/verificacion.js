@@ -44,7 +44,7 @@ const generarJWT = ( id = '' ) => {
         const payload = { id };
 
         jwt.sign(payload, process.env.SIGNJWT, {
-            expiresIn: '4h'
+            expiresIn: '8h'
         }, (err, token) => {
 
             if(err) {

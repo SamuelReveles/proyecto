@@ -13,13 +13,13 @@ const Solicitud_empleo = require('../models/solicitud_empleo');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 
-//Buscar un usuario
+//Obtener información de un usuario
 const getUser = async(req, res = response) => {
     try {
-        const clientes = await Cliente.findById(req.query.id);
+        const cliente = await Cliente.findById(req.query.id);
         res.status(200).json({
             success: true,
-            clientes
+            cliente
         });
     } catch (error) {
         res.status(400).json({
@@ -599,7 +599,7 @@ const reportesUsuario = async (req, res = response) => {
 
         for await (const _id of reportes) {
 
-            //Reporte dentro de el arreglo del usuario
+            //Reporte dentro del arreglo del usuario
             const {para, tipo, msg} = await Reporte.findById(_id);
 
             //Extraer el tipo de reporte
@@ -631,14 +631,14 @@ const borrarReporte = async (req, res = response) => {
         const reporte = await Reporte.findById(id);
 
         if(reporte.borrado === true) {
-            res.status(200).json({
+            res.status(400).json({
                 success: false,
                 msg: 'El reporte ya ha sido eliminado'
             });
             return;
         }
     
-        reporte.borrado = true;
+        else reporte.borrado = true;
     
         const {para, tipo} = reporte;
     
@@ -651,10 +651,10 @@ const borrarReporte = async (req, res = response) => {
         }
     
         //Extraer el tipo de reporte
-        const report = await Motivo.findById(tipo);
+        const { puntos } = await Motivo.findById(tipo);
     
         //Reducir los puntos
-        to.puntajeBaneo -= report.puntos;
+        to.puntajeBaneo -= puntos;
 
         //Actualizar objetos
         await Reporte.findByIdAndUpdate(id, reporte);
@@ -663,12 +663,12 @@ const borrarReporte = async (req, res = response) => {
         res.status(201).json({
             success: true,
             msg: 'Reporte eliminado'
-        })
+        });
     } catch(error) {
         res.status(401).json({
             success: false,
             msg: 'No se pudo actualizar el objeto'
-        })
+        });
     }
 
 }

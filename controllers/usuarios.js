@@ -260,7 +260,7 @@ const altaExtras = async (req, res = response) => {
     //Extraer en objeto del cliente con el ID
     const cliente = await Cliente.findById(id)
         .catch(() => {
-            res.status(401).json({
+            res.status(400).json({
                 success: false,
                 msg: 'Error al encontrar al cliente'
             });
@@ -372,15 +372,12 @@ const reportar = async (req, res = response) => {
             fecha: Date.now()
         });
 
-        //Guardar reporte
-        await reporte.save();
-
         //Extraer tipo de reporte para saber el puntaje
-        const report = await Motivo.findById(idReporte);
+        const { puntos } = await Motivo.findById(idReporte);
         const nutriologo = await Nutriologo.findById(idNutriologo);
 
         //Agregar los puntos y push a arreglo de reportes
-        nutriologo.puntajeBaneo += report.puntos;
+        nutriologo.puntajeBaneo += puntos;
 
         let reportes = [];
         if(!nutriologo.reportes){
@@ -394,7 +391,10 @@ const reportar = async (req, res = response) => {
         reportes.push(reporte);
         nutriologo.reportes = reportes;
 
-        await Nutriologo.findByIdAndUpdate(idNutriologo, nutriologo)
+        await Nutriologo.findByIdAndUpdate(idNutriologo, nutriologo);
+        
+        //Guardar reporte
+        await reporte.save();
 
         res.status(201).json({
             success: true,
@@ -454,13 +454,20 @@ const calificar = async (req, res = response) => {
     //Actualizar objeto
     await Nutriologo.findByIdAndUpdate(id, nutriologo)
     .then(
-        res.status(200).json({
+        res.status(201).json({
             success: true,
             msg: 'Calificado correctamente con ' + calificacion + ' estrellas'
         })
     )
+    .catch(() => {
+        res.status(401).json({
+            success: false,
+            msg: 'Error al actualizar el nutriólogo'
+        });
+    });
 }
 
+//Ver información de un nutriólogo
 const getNutriologo = async (req, res = response) => {
 
     //Id del nutriologo

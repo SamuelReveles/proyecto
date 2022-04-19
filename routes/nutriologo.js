@@ -30,7 +30,12 @@ const {
     sendCode,
 } = require('../helpers/verificacion');
 
+const { validarToken } = require('../middlewares/validar-jwt');
+
 const router = Router();
+
+//Verificar que exista sesión iniciada el token
+//router.use(validarToken);
 
 //Crear un nuevo nutriólogo dentro de la DB
 router.post('/', nutriologoPost);

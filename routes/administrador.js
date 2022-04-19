@@ -22,8 +22,14 @@ const {
     borrarReporte
 } = require('../controllers/administrador')
 
+//Helpers
+const { validarToken } = require('../middlewares/validar-jwt');
+
 //Router instance
 const router = Router();
+
+//Verificar que exista sesión iniciada el token
+//router.use(validarToken);
 
 //Crear administrador
 router.post('/', postAdmin);

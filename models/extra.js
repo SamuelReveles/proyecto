@@ -4,8 +4,7 @@ const datos = require('./dato');
 const ExtraSchema = mongoose.Schema({
     nombre: {
         type: String,
-        required: [true, 'El username es obligatorio'],
-        unique: true
+        required: [true, 'El username es obligatorio']
     },
     apellidos: {
         type: String,

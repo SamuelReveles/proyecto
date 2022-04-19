@@ -8,6 +8,7 @@ const { validarCampos } = require('../middlewares/validar-campos');
 
 //Validar campos correctos y sin repetir
 const { emailExiste, celularExiste } = require('../helpers/db-validator');
+const { validarToken } = require('../middlewares/validar-jwt');
 
 //Rutas y tipos de "Acceso"
 const { 
@@ -33,6 +34,9 @@ const {
 
 //Router instance
 const router = Router();
+
+//Verificar que exista sesión iniciada el token
+//router.use(validarToken);
 
 //Enviar código al celular
 router.get('/sendCode',  sendCode);

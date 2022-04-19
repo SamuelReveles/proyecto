@@ -236,7 +236,7 @@ const putPredeterminado = async (req, res = response) => {
     }
 
     if(!resultado){
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se ha encontrado el alimento predeterminado ' + nombreAnterior
         });
@@ -299,7 +299,7 @@ const deletePredeterminado = async (req, res = response) => {
     }
 
     if(!encontrado) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se ha encontrado el alimento predeterminado'
         });
@@ -318,11 +318,12 @@ const deletePredeterminado = async (req, res = response) => {
                 msg: 'No se pudo eliminar el predeterminado dentro del arreglo del nutriólogo'
             });
         })
-
-    res.status(201).json({
-        success: true,
-        msg: 'Eliminado correctamente'
-    });
+        .then(
+            res.status(201).json({
+                success: true,
+                msg: 'Eliminado correctamente'
+            })
+        )
 
 }
 
@@ -392,8 +393,8 @@ const getClientData = async (req, res = response) => {
         const id = req.query.id;
 
         //Buscar si es cliente o extra
-        const cliente = await Cliente.findById(id)
-        const extra = await Extra.findById(id)
+        const cliente = await Cliente.findById(id);
+        const extra = await Extra.findById(id);
 
         // Si es cliente
         if(cliente){
