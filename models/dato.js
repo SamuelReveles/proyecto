@@ -35,4 +35,9 @@ const DatoSchema = Schema({
     }
 });
 
+DatoSchema.methods.toJSON = function(){
+    const { __v, ...dato } = this.toObject();
+    return dato;
+}
+
 module.exports = model( 'Dato', DatoSchema );

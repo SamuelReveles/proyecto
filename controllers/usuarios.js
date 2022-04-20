@@ -21,16 +21,6 @@ const usuariosPost = async (req, res = response) => {
         //Foto de perfil default
         let linkImagen = ' ';
 
-        // let tempFilePath;
-
-        // if(req.files)
-        // tempFilePath = req.files.imagen.tempFilePath;
-
-        // if(tempFilePath){
-        //     //Subir a cloudinary y extraer el secure_url
-        //     const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
-        //     linkImagen = secure_url;
-        // }
         //Creando objeto
         const user = new Cliente({
             nombre: req.body.nombre,
@@ -49,7 +39,6 @@ const usuariosPost = async (req, res = response) => {
         });
     } 
     catch(error) {
-        console.log(error);
         res.status(401).json({
             succes: false,
             msg: 'Registro inválido'
@@ -228,7 +217,6 @@ const busqueda = async (req, res = response) => {
             correo,
             celular,
             id,
-            __v,
             puntajeBaneo,
             calificacion,
             activo,
@@ -556,11 +544,12 @@ const getInfo = async (req, res = response)  => {
     });
 }
 
+//Actualizar información de usuario
 const usuariosUpdate = async (req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { id, nombre, apellidos } = req.body;
+        const { id, nombre, apellidos, celular } = req.body;
 
         let tempFilePath;
 
@@ -591,6 +580,7 @@ const usuariosUpdate = async (req, res = response) => {
         }
         if(nombre) user.nombre = nombre;
         if(apellidos) user.apellidos = apellidos;
+        if(celular) user.celular = celular;
 
         await Cliente.findByIdAndUpdate(id, user);
 

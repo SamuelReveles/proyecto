@@ -62,22 +62,20 @@ const NutrilogoSchema = Schema({
         type: Schema.ObjectId, ref:'reporte'
     }],
     descripcion: {
-        type: String,
-        required: false
+        type: String
     },
     ultima_conexion: {
         type: Date
     },
     precio: {
         type: Number,
-        required: true
     },
     indicaciones: {
         type: String
     },
     activo: {
         type: Boolean,
-        default: true
+        default: false
     }
 });
 

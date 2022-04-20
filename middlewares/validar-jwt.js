@@ -6,7 +6,7 @@ const validarToken = (req = request, res = response, next) => {
 
     //Verificar que haya token en la request
     if(!token) {
-        return res.send(400).json({ 
+        return res.status(400).json({ 
             success: false,
             msg: 'No hay token en la petición'
         });
@@ -18,7 +18,7 @@ const validarToken = (req = request, res = response, next) => {
         jwt.verify(token, process.env.SIGNJWT);
 
     } catch (error) {
-        res.send(400).json({ 
+        res.status(400).json({ 
             success: false,
             msg: 'Token inválido'
         });

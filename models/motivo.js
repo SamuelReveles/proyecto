@@ -11,4 +11,9 @@ const motivoSchema = Schema({
     }
 });
 
+motivoSchema.methods.toJSON = function(){
+    const { __v, ...motivo } = this.toObject();
+    return motivo;
+}
+
 module.exports = model('Motivo', motivoSchema);

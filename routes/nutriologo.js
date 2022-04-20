@@ -2,13 +2,13 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
 
-const { emailExiste, celularExiste } = require('../helpers/db-validator');
+//Middlewares
 const { validarCampos } = require('../middlewares/validar-campos');
 
 const { 
-    nutriologoPost,
     nutriologoUpdate,
     nutriologoDelete,
+    nutriologoUpdateServicio,
     getInfo,
     postPredeterminado,
     getPredeterminados,
@@ -24,36 +24,25 @@ const {
     reportar
 } = require('../controllers/nutriologo');
 
-//Verificacion de celular
-const {
-    verifyCode,
-    sendCode,
-} = require('../helpers/verificacion');
-
 const { validarToken } = require('../middlewares/validar-jwt');
 
 const router = Router();
 
 //Verificar que exista sesión iniciada el token
-//router.use(validarToken);
-
-//Crear un nuevo nutriólogo dentro de la DB
-router.post('/', nutriologoPost);
+//GODO COMENTA LA LINEA DE ABAJO SI ES QUE TE DICE QUE NO TIENES TOKEN XD (ESO O INICIA SESIÓN ANTES DE HACER LAS COSAS (EL TOKEN DURA 8HRS))
+router.use(validarToken);
 
 //Actualizar datos básicos del nutriólogo
 router.put('/', nutriologoUpdate);
+
+//Actualizar información de servicio
+router.put('/servicio', nutriologoUpdateServicio);
 
 //Eliminar al nutriólogo
 router.delete('/', nutriologoDelete);
 
 //Obtener datos de un cliente (Paciente para un nutriólogo)
 router.get('/cliente', getClientData);
-
-//Enviar código de verificación
-router.get('/sendCode', sendCode);
-
-//Validar código de verificación
-router.get('/verifyCode', verifyCode);
 
 //Obtener listado de pacientes
 router.get('/pacientes', getPacientes);

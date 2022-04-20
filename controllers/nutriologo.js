@@ -5,9 +5,6 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
 
-//Helpers
-const { emailExiste, celularExiste } = require('../helpers/db-validator');
-
 //Modelos
 const Cliente = require('../models/cliente');
 const Dato = require('../models/dato');
@@ -25,22 +22,14 @@ const nutriologoPost = async (req, res = response) => {
         //Foto de perfil default
         let linkImagen = '';
 
-        // //Extraer ruta temporal
-        // const { tempFilePath } = req.files.imagen;
-        // if(tempFilePath){
-        //     //Subir a cloudinary y extraer el secure_url
-        //     const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
-        //     linkImagen = secure_url;
-        // }
 
         //Crear el objeto
-        const nutri = new Nutriologo({
+        const nutriologo = new Nutriologo({
             nombre: req.body.nombre,
             apellidos: req.body.apellidos,
             nombreCompleto: req.body.nombre + ' ' + req.body.apellidos,
             celular: req.body.celular,
             correo: req.body.correo,
-            precio: req.body.precio,
             imagen: linkImagen,
             fecha_registro: Date.now(),
             especialidades: [
@@ -49,15 +38,15 @@ const nutriologoPost = async (req, res = response) => {
             ]
         });
 
-        await nutri.save();
+        await nutriologo.save();
 
         res.status(201).json({
             success: true,
-            nutri
+            nutriologo
         });
     }
     catch (err) {
-        res.status(400).json({
+        res.status(401).json({
             err,
             success: false,
             msg: 'Error al agregar a la DB'
@@ -65,12 +54,12 @@ const nutriologoPost = async (req, res = response) => {
     }
 }
 
-//Actualizar perfil
+//Actualizar perfil de usuario
 const nutriologoUpdate = async (req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { id, nombre, apellidos, precio, descripcion } = req.body;
+        const { id, nombre, apellidos, celular } = req.body;
 
         const { tempFilePath } = req.files.imagen;
 
@@ -104,8 +93,7 @@ const nutriologoUpdate = async (req, res = response) => {
             nutriologo.apellidos = apellidos;
             nutriologo.nombreCompleto = nutriologo.nombre + ' ' + nutriologo.apellidos;
         }
-        if(precio) nutriologo.precio = precio;
-        if(descripcion) nutriologo.descripcion = descripcion;
+        if(celular) nutriologo.celular = celular;
 
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
@@ -121,6 +109,41 @@ const nutriologoUpdate = async (req, res = response) => {
             msg: 'No fue posible actualizar'
         });
     }
+}
+
+//Actualizar perfil sobre servicio
+const nutriologoUpdateServicio = async (req, res = response) => {
+
+    try {
+
+        const { id, precio, descripcion, activo, indicaciones } = req.body;
+
+        const nutriologo = await Nutriologo.findById(id);
+
+        if(precio) nutriologo.precio = precio;
+        if(descripcion) nutriologo.descripcion = descripcion;
+        if(activo) nutriologo.activo = Boolean(activo);
+        if(indicaciones) nutriologo.indicaciones = indicaciones;
+
+        await Nutriologo.findByIdAndUpdate(id, nutriologo);
+
+        res.status(201).json({
+            success: true,
+            nutriologo
+        });
+
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            msg: 'Error al actualizar'
+        });
+    }
+
+}
+
+//Actualización de fechas disponibles
+const fechasUpdate = async (req, res = response) => {
+
 }
 
 // Crear un nuevo alimento predeterminado
@@ -682,6 +705,7 @@ module.exports = {
     nutriologoPost,
     nutriologoUpdate,
     nutriologoDelete,
+    nutriologoUpdateServicio,
     getInfo,
     postPredeterminado,
     getPredeterminados,

@@ -23,4 +23,9 @@ const SolicitudEmpleoSchema = Schema({
     }
 });
 
+SolicitudEmpleoSchema.methods.toJSON = function(){
+    const { __v, ...solicitud } = this.toObject();
+    return solicitud;
+}
+
 module.exports = model( 'Solicitud_empleo', SolicitudEmpleoSchema );

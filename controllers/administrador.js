@@ -33,11 +33,6 @@ const postAdmin = async (req, res = response) => {
 
     try {
 
-        // let tempFilePath;
-
-        // if(req.files)
-        // tempFilePath = req.files.imagen.tempFilePath;
-
         //Foto de perfil default
         let linkImagen = ' ';
 
@@ -50,13 +45,6 @@ const postAdmin = async (req, res = response) => {
         });
 
         await admin.save();
-
-        // if(tempFilePath){
-        //     //Subir a cloudinary y extraer el secure_url
-        //     admin.imagen = await cloudinary.uploader.upload(tempFilePath);
-        // }
-
-        await Administrador.findByIdAndUpdate(admin._id, admin);
 
         res.status(201).json({
             success: true,
@@ -457,7 +445,7 @@ const adminUpdate = async(req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { id, nombre, apellidos } = req.body;
+        const { id, nombre, apellidos, celular } = req.body;
 
         let tempFilePath;
 
@@ -488,6 +476,7 @@ const adminUpdate = async(req, res = response) => {
         }
         if(nombre) admin.nombre = nombre;
         if(apellidos) admin.apellidos = apellidos;
+        if(celular) admin.celular = celular;
 
         await Administrador.findByIdAndUpdate(id, admin);
 
@@ -614,6 +603,7 @@ const reportesUsuario = async (req, res = response) => {
             listadoReportes
         });
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Error al encontrar usuario'

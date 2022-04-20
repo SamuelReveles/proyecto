@@ -28,4 +28,9 @@ const reporteScema = Schema({
     }
 });
 
+reporteScema.methods.toJSON = function(){
+    const { __v, ...reporte } = this.toObject();
+    return reporte;
+}
+
 module.exports = model('Reporte', reporteScema);
