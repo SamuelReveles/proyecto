@@ -24,13 +24,14 @@ const {
     reportar
 } = require('../controllers/nutriologo');
 
-const { validarToken } = require('../middlewares/validar-jwt');
+const { validarToken, verificarNutriologo } = require('../middlewares/validar-jwt');
 
 const router = Router();
 
 //Verificar que exista sesión iniciada el token
 //GODO COMENTA LA LINEA DE ABAJO SI ES QUE TE DICE QUE NO TIENES TOKEN XD (ESO O INICIA SESIÓN ANTES DE HACER LAS COSAS (EL TOKEN DURA 8HRS))
 router.use(validarToken);
+router.use(verificarNutriologo);
 
 //Actualizar datos básicos del nutriólogo
 router.put('/', nutriologoUpdate);

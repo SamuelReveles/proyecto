@@ -1,9 +1,12 @@
 //Librerías externas
 const { response } = require('express');
-const sgMail = require('@sendgrid/mail');
 
+const sgMail = require('@sendgrid/mail');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
+
+//Helpers
+const { generarJWT } = require('../helpers/verificacion');
 
 //Modelos
 const Cliente = require('../models/cliente');
@@ -46,9 +49,12 @@ const postAdmin = async (req, res = response) => {
 
         await admin.save();
 
+        const jwt = await generarJWT(admin._id);
+
         res.status(201).json({
             success: true,
-            admin
+            admin,
+            jwt
         })
     } catch (error) {
         res.status(401).json({
@@ -445,7 +451,9 @@ const adminUpdate = async(req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { id, nombre, apellidos, celular } = req.body;
+        const { nombre, apellidos, celular } = req.body;
+
+        const id = req.id;
 
         let tempFilePath;
 

@@ -66,7 +66,9 @@ const nutriologoUpdate = async (req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { id, nombre, apellidos, celular } = req.body;
+        const { nombre, apellidos, celular } = req.body;
+
+        const id = req.id;
 
         const { tempFilePath } = req.files.imagen;
 
@@ -123,7 +125,8 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
     try {
 
-        const { id, precio, descripcion, activo, indicaciones } = req.body;
+        const { precio, descripcion, activo, indicaciones } = req.body;
+        const id = req.id;
 
         const nutriologo = await Nutriologo.findById(id);
 
@@ -157,7 +160,7 @@ const fechasUpdate = async (req, res = response) => {
 const postPredeterminado = async (req, res = response) => {
 
     //id del nutriólogo
-    const id = req.body.id;
+    const id = req.id;
 
     try {
 
@@ -189,7 +192,7 @@ const postPredeterminado = async (req, res = response) => {
 //Mostrar todos alimento predeterminado
 const getPredeterminados = async (req, res = response) => {
 
-    const id = req.query.id;
+    const id = req.id;
 
     try {
         //Buscar al nutriologo
@@ -212,7 +215,7 @@ const getPredeterminados = async (req, res = response) => {
 //Mostrar un solo alimento predeterminado
 const getPredeterminado = async (req, res = response) => {
 
-    const id = req.query.id;
+    const id = req.id;
 
     let resultado;
 
@@ -242,7 +245,9 @@ const getPredeterminado = async (req, res = response) => {
 //Actualizar alimento predeterminado
 const putPredeterminado = async (req, res = response) => {
 
-    const { id, nombreAnterior, nuevoNombre, texto } = req.body;
+    const { nombreAnterior, nuevoNombre, texto } = req.body;
+
+    const id = req.id;
 
     const nutriologo = await Nutriologo.findById(id)
         .catch(() => {
@@ -297,7 +302,7 @@ const putPredeterminado = async (req, res = response) => {
 const deletePredeterminado = async (req, res = response) => {
 
     //id del nutriólogo
-    const id = req.query.id;
+    const id = req.id;
 
     //Nombre del alimento predeterminado
     const nombre = req.query.nombre;
@@ -361,12 +366,9 @@ const deletePredeterminado = async (req, res = response) => {
 const putActualizarDatos = async (req, res = response) => {
 
     //Recibir parametro del body
-    const {
-        id, 
-        nombre,
-        apellidos,
-        imagen
-    } = req.body;
+    const { nombre, apellidos, imagen } = req.body;
+
+    const id = req.id;
 
     try {
 
@@ -430,7 +432,7 @@ const getClientData = async (req, res = response) => {
         if(cliente){
 
             //Extraer datos que se van a usar
-            const {nombre, apellidos, datoConstante, datoInicial, verDatos} = cliente;
+            const {nombre, apellidos, datoConstante, datoInicial, imagen, verDatos} = cliente;
 
             if (verDatos){
                 //Si no tiene primeros datos se busca el primer dato
@@ -439,7 +441,8 @@ const getClientData = async (req, res = response) => {
                     res.status(200).json({
                         nombre,
                         apellidos,
-                        datos
+                        datos,
+                        imagen
                     });
                 }
 
@@ -450,7 +453,8 @@ const getClientData = async (req, res = response) => {
                     res.status(200).json({
                         nombre,
                         apellidos,
-                        datos
+                        datos,
+                        imagen
                     });
                 }
             }
@@ -578,7 +582,7 @@ const updateClientData = async (req, res = response) => {
 const getPacientes = async (req, res  = response) => {
 
     try {
-        const id = req.query.id;
+        const id = req.id;
 
         const { pacientes } = await Nutriologo.findById(id);
 
@@ -618,11 +622,11 @@ const reportar = async (req, res = response) => {
     
     try {
         //Extraer datos del reporte
-        const { idCliente, idNutriologo, idReporte, msg } = req.body;
+        const { idCliente, idReporte, msg } = req.body;
 
         //Crear el reporte
         const reporte = new Reporte({
-            emisor: idNutriologo,
+            emisor: req.id,
             para: idCliente,
             tipo: idReporte,
             msg,
@@ -670,7 +674,7 @@ const reportar = async (req, res = response) => {
 const getInfo = async (req, res = response) => {
 
     //Id del nutriologo
-    const id = req.query.id;
+    const id = req.id;
 
     const nutriologo = await Nutriologo.findById(id)
         .catch(() => {
@@ -691,7 +695,7 @@ const getInfo = async (req, res = response) => {
 
 const nutriologoDelete = async (req, res = response) => {
     //Id del cliente
-    const id = req.query.id;
+    const id = req.id;
 
     try {
         await Nutriologo.findByIdAndDelete(id);

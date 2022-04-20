@@ -26,7 +26,7 @@ const ExtraSchema = mongoose.Schema({
 });
 
 ExtraSchema.methods.toJSON = function(){
-    const { __v, extra } = this.toObject();
+    const { __v, ...extra } = this.toObject();
     return extra;
 }
 

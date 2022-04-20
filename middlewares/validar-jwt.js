@@ -1,6 +1,11 @@
 const { response, request } = require('express');
 const jwt = require('jsonwebtoken');
 
+//Modelos
+const Administrador = require('../models/administrador');
+const Nutriologo = require('../models/nutriologo');
+const Cliente = require('../models/cliente');
+
 const validarToken = (req = request, res = response, next) => {
     const token = req.header('jopakatoken');
 
@@ -15,7 +20,9 @@ const validarToken = (req = request, res = response, next) => {
     try {
 
         //Verificar que sea válido el jwt
-        jwt.verify(token, process.env.SIGNJWT);
+        const { id } = jwt.verify(token, process.env.SIGNJWT);
+
+        req.id = id;
 
         next();
 
@@ -27,6 +34,63 @@ const validarToken = (req = request, res = response, next) => {
     }
 }
 
+const verificarAdmin = async (req = request, res = response, next) => {
+    //Obtener id de req
+    const id = req.id;
+
+    //Verificar que sea un admin
+    const admin = await Administrador.findById(id);
+
+    if(!admin) {
+
+        res.status(401).json({ 
+            success: false,
+            msg: 'Token no pertenece a un admin'
+        });
+
+    } else next();
+
+}
+
+const verificarNutriologo = async (req = request, res = response, next) => {
+    //Obtener id de req
+    const id = req.id;
+
+    //Verificar que sea un admin
+    const nutriologo = await Nutriologo.findById(id);
+
+    if(!nutriologo) {
+
+        res.status(401).json({ 
+            success: false,
+            msg: 'Token no pertenece a un Nutriologo'
+        });
+
+    } else next();
+
+}
+
+const verificarCliente = async (req = request, res = response, next) => {
+    //Obtener id de req
+    const id = req.id;
+
+    //Verificar que sea un admin
+    const cliente = await Cliente.findById(id);
+
+    if(!cliente) {
+
+        res.status(401).json({ 
+            success: false,
+            msg: 'Token no pertenece a un cliente'
+        });
+
+    } else next();
+
+}
+
 module.exports = {
-    validarToken
+    validarToken,
+    verificarAdmin,
+    verificarNutriologo,
+    verificarCliente
 }

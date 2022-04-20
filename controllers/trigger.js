@@ -59,9 +59,7 @@ const avisoBaneo = async (req, res = response) => {
 
     try{
         //Nutriólogos
-        const nutriologos = await Nutriologo.aggregate([
-            {$match: {'baneado': false}}
-        ]);
+        const nutriologos = await Nutriologo.find({baneado: false, avisado: false});
 
         for await (let nutriologo of nutriologos) {
             if(diferenciaMeses(new Date(nutriologo.ultima_conexion), new Date(Date.now())) >= 5){

@@ -63,7 +63,7 @@ const usuariosPatch = (req, res = response) => {
 const usuariosDelete = async (req, res = response) => {
    
     //Id del cliente
-   const id = req.query.id;
+   const id = req.id;
 
    try {
        await Cliente.findByIdAndDelete(id);
@@ -250,7 +250,9 @@ const busqueda = async (req, res = response) => {
 const altaExtras = async (req, res = response) => {
 
     //Extraer id del body
-    const id = req.body.id;
+    const id = req.id;
+
+    console.log(id);
 
     //Extraer en objeto del cliente con el ID
     const cliente = await Cliente.findById(id)
@@ -286,6 +288,7 @@ const altaExtras = async (req, res = response) => {
                 msg: 'Guardado correctamente'
             });
         } catch (error) {
+            console.log(error);
             res.status(401).json({
                 success: false,
                 msg: 'Error al guardar el usuario'
@@ -306,7 +309,7 @@ const getProgreso = async (req, res = response) => {
 
     try {
         //Extraer id
-        const id = req.query.id;
+        const id = req.id;
 
         //Buscar entre usuarios y extras
         let user = await Cliente.findById(id);
@@ -356,11 +359,11 @@ const reportar = async (req, res = response) => {
    
     try {
          //Extraer datos del reporte
-        const { idCliente, idNutriologo, idReporte, msg } = req.body;
+        const { idNutriologo, idReporte, msg } = req.body;
 
         //Crear el reporte
         const reporte = new Reporte({
-            emisor: idCliente,
+            emisor: req.id,
             para: idNutriologo,
             tipo: idReporte,
             msg,
@@ -375,11 +378,7 @@ const reportar = async (req, res = response) => {
         nutriologo.puntajeBaneo += puntos;
 
         let reportes = [];
-        if(!nutriologo.reportes){
-            console.log('Sin reportes');
-        }
-        else {
-            console.log('Con reportes');
+        if(nutriologo.reportes){
             reportes = nutriologo.reportes;
         }
         
@@ -503,7 +502,7 @@ const generarTicket = async (req, res = response) => {
 const getExtras = async (req, res = response)  => {
 
     //Id del cliente
-    const id = req.query.id;
+    const id = req.id;
 
     try {    
         //Objeto del cliente
@@ -533,9 +532,9 @@ const getExtras = async (req, res = response)  => {
 const getInfo = async (req, res = response)  => {
 
     //Id del cliente
-    const id = req.query.id;
+    const id = req.id;
 
-    const cliente = await client.findById(id)
+    const cliente = await Cliente.findById(id)
         .catch(() => {
             res.status(400).json({ 
                 success: false,
@@ -556,7 +555,10 @@ const usuariosUpdate = async (req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { id, nombre, apellidos, celular } = req.body;
+        const { nombre, apellidos, celular } = req.body;
+
+        //id de usuario
+        const id = req.id;
 
         let tempFilePath;
 

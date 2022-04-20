@@ -34,10 +34,10 @@ const NutrilogoSchema = Schema({
         type: Object, 
         ref:'preterminado'
     }],
-    especialidades: {
-        type: Array,
-        required: [true, 'Las especialidades son obligatorias']
-    },
+    especialidades: [{
+        type: String,
+        required: true
+    }],
     pacientes: [{ type: Schema.ObjectId, required: false}],
     puntajeBaneo: {
         type: Number,
@@ -80,6 +80,10 @@ const NutrilogoSchema = Schema({
     activo: {
         type: Boolean,
         default: false
+    },
+    avisado: {
+        type: Boolean,
+        desfault: false
     }
 });
 
