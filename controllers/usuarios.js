@@ -5,6 +5,9 @@ const bcryptjs = require('bcryptjs');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
 
+//helpers
+const { generarJWT } = require('../helpers/verificacion');
+
 //Modelos
 const Cliente = require('../models/cliente');
 const Dato = require('../models/dato');
@@ -33,9 +36,13 @@ const usuariosPost = async (req, res = response) => {
 
         await user.save();
 
+        //Iniciar sesión
+        const jwt = await generarJWT(user._id);
+
         res.status(201).json({
             succes: true,
-            user
+            user,
+            jwt
         });
     } 
     catch(error) {

@@ -17,6 +17,8 @@ const validarToken = (req = request, res = response, next) => {
         //Verificar que sea válido el jwt
         jwt.verify(token, process.env.SIGNJWT);
 
+        next();
+
     } catch (error) {
         res.status(400).json({ 
             success: false,

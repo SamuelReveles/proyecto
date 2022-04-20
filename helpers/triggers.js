@@ -1,25 +1,9 @@
-//Modelos
-const Cliente = require('../models/cliente');
-const Nutriologo = require('../models/nutriologo');
+function diferenciaMeses(fecha1, fecha2){
+    let diferencia = (fecha2.getTime() - fecha1.getTime()) / 1000 / (3600 * 24 * 7 * 4);
 
-//Baneo por inactividad
-const baneoAutomatico = async() => {
+    return Math.abs(Math.round(diferencia));
+}
 
-    try{
-        //Nutriólogos
-        const nutriologos = await Nutriologo.aggregate([
-            {$match: {'baneado': false}}
-        ]);
-
-        for await (let nutriologo of nutriologos) {
-            //Si la diferencia de fechas con la actual es mayor a 6 meses
-            nutriologo.baneado = true;
-            await Nutriologo.findByIdAndUpdate(id, nutriologo);
-        }
-
-        //Clientes
-    }catch(error){
-        console.log(error);
-    }
-
+module.exports = {
+    diferenciaMeses
 }

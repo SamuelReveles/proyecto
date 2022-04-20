@@ -41,6 +41,10 @@ const ClienteSchema = Schema({
         type: Boolean,
         default: false
     },
+    fecha_desban: {
+        type: Date,
+        required: false
+    },
     verDatos: {
         type: Boolean, 
         default: true
@@ -62,7 +66,11 @@ const ClienteSchema = Schema({
     },
     historial: [{
         type: Schema.ObjectId, ref:'historial'
-    }]
+    }],
+    avisado: {
+        type: Boolean,
+        default: false
+    }
 });
 
 ClienteSchema.methods.toJSON = function(){

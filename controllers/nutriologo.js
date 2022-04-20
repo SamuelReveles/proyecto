@@ -5,6 +5,9 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
 
+//helpers
+const { generarJWT } = require('../helpers/verificacion');
+
 //Modelos
 const Cliente = require('../models/cliente');
 const Dato = require('../models/dato');
@@ -40,9 +43,13 @@ const nutriologoPost = async (req, res = response) => {
 
         await nutriologo.save();
 
+        //Iniciar sesión
+        const jwt = await generarJWT(nutriologo._id);
+
         res.status(201).json({
             success: true,
-            nutriologo
+            nutriologo,
+            jwt
         });
     }
     catch (err) {

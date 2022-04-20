@@ -47,6 +47,10 @@ const NutrilogoSchema = Schema({
         type: Boolean,
         default: false
     },
+    fecha_desban: {
+        type: Date,
+        required: false
+    },
     calificacion: [{ 
         type: Number, 
         default: 0

@@ -16,6 +16,7 @@ class Server{
         this.adminPath = '/api/administrador';
         this.nutriologoPath = '/api/nutriologo';
         this.authPath = '/api/auth';
+        this.triggerPath = '/api/trigger';
         //Conectar a base de datos
         this.conectarDB();
         //Middlewares
@@ -48,6 +49,7 @@ class Server{
         this.app.use(this.adminPath, require('../routes/administrador'));
         this.app.use(this.nutriologoPath, require('../routes/nutriologo'));
         this.app.use(this.authPath, require('../routes/autenticacion'));
+        this.app.use(this.triggerPath, require('../routes/trigger'));
     }
 
     listen(){
