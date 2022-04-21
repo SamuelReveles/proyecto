@@ -2,8 +2,11 @@
 const { response } = require('express');
 const bcryptjs = require('bcryptjs');
 
-//API externas
-const client = require('twilio')(process.env.TWILIO_SSID, process.env.TWILIO_AUTH_TOKEN);
+const cloudinary = require('cloudinary').v2;
+cloudinary.config(process.env.CLOUDINARY_URL);
+
+//helpers
+const { generarJWT } = require('../helpers/verificacion');
 
 //Modelos
 const Cliente = require('../models/cliente');
@@ -13,59 +16,41 @@ const Extra = require('../models/extra');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 
-//Enviar código al celular
-const sendCode = async (req, res = response) => {
-    //Cliente / servicio de twilio
-    client
-        .verify
-        .services(process.env.ServiceID)
-        .verifications
-        .create({
-            to: '+' + req.query.celular,
-            channel: 'sms'
-        })
-        .then(data => {
-            res.status(200).send(data);
-        });
-}
-
-//Verificar el código de mensaje
-const verifyCode = async (req, res = response) => {
-    client  
-        .verify
-        .services(process.env.ServiceID)
-        .verificationChecks
-        .create({
-            to: '+' + req.query.celular,
-            code: req.query.code
-        })
-        .then(data => {
-            res.status(200).send(data);
-        });
-}
 
 const usuariosPost = async (req, res = response) => {
     
-    //Creando objeto
-    const user = new Cliente({
-        nombre: req.body.nombre,
-        apellidos: req.body.apellidos,
-        celular: req.body.celular,
-        correo: req.body.email,
-    });
 
-    await user.save()
-        .then(await datos.save())
-        .catch(
-            res.status(401).json({
-                succes: false
-            })
-        )
-    
-    res.status(201).json({
-        succes: true,
-        user
-    });
+    try {
+        //Foto de perfil default
+        let linkImagen = ' ';
+
+        //Creando objeto
+        const user = new Cliente({
+            nombre: req.body.nombre,
+            apellidos: req.body.apellidos,
+            imagen: linkImagen,
+            celular: req.body.celular,
+            correo: req.body.correo,
+            fecha_registro: Date.now()
+        });
+
+        await user.save();
+
+        //Iniciar sesión
+        const jwt = await generarJWT(user._id);
+
+        res.status(201).json({
+            succes: true,
+            user,
+            jwt
+        });
+    } 
+    catch(error) {
+        res.status(400).json({
+            succes: false,
+            msg: 'Registro inválido'
+        })
+    }
 }
 
 const usuariosPatch = (req, res = response) => {
@@ -75,11 +60,24 @@ const usuariosPatch = (req, res = response) => {
     });
 };
 
-const usuariosDelete = (req, res = response) => {
-    res.json({
-        ok: true,
-        msg: 'delete API - controller'
-    });
+const usuariosDelete = async (req, res = response) => {
+   
+    //Id del cliente
+   const id = req.id;
+
+   try {
+       await Cliente.findByIdAndDelete(id);
+       
+       res.status(201).json({
+           success: true,
+           msg: 'Usuario eliminado correctamente'
+       });
+   } catch (error) {
+       res.status(400).json({
+           success: false,
+           msg: 'No se ha podido eliminar al usuario ' + id
+       });
+   }
 };
 
 //Buscar nutriólogo por nombre
@@ -100,24 +98,109 @@ const busqueda = async (req, res = response) => {
     //Si se búsca por nombre
     if(nombre){
         //Extraer los resultados
-        users =  await Nutriologo.aggregate([
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'nombreCompleto': nombre}}
-        ]);
+        if(Boolean(req.query.estrellas) === true){
 
-        total = await Nutriologo.count({nombreCompleto: nombre});
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'promedio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'promedio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else if(Boolean(req.query.precio) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'precio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'precio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else {
+            users =  await Nutriologo.aggregate([
+                {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+
+        total = await Nutriologo.count({nombreCompleto: nombre, activo: true, baneado: false});
     }
 
     else if (categoria) {
-        //Extraer los resultados
-        users =  await Nutriologo.aggregate([
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'especialidades': categoria}}
-        ]);
 
-        total = await Nutriologo.count({especialidades: categoria});
+        //Extraer los resultados
+        if(Boolean(req.query.estrellas) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'promedio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'promedio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else if(Boolean(req.query.precio) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'precio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
+                    {$sort: {'precio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else {
+            users =  await Nutriologo.aggregate([
+                {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+
+        total = await Nutriologo.count({especialidades: categoria, activo: true, baneado: false});
     }
 
     else {
@@ -129,58 +212,23 @@ const busqueda = async (req, res = response) => {
         total = await Nutriologo.count();
     }
 
-    //Modificar calificaciones (enviar promedio)
-    for await (let calif of users){
-        //Extraer arreglo con calificaciones
-        const calificaciones = calif.calificacion;
-        
-        //Obtener el promedio de los elementos del arreglo
-        let promedio = 0;
-        if(calificaciones){
-            for (const number of calificaciones){
-                //Sumar los elementos
-                promedio += number;
-            }
-            
-            promedio /= calificaciones.length;
-                
-            //Guardar en el elemento de respuesta
-            calif.calificacion = promedio;
-        }
-    }  
-
     //Eliminar resultados e información innecesaria de nutriólogos baneados
     let resultados = [];
     for await (let nutriologo of users){
-        if(!nutriologo.baneado){
-            const {
-                fecha_registro, 
-                predeterminados, 
-                pacientes,
-                baneado,
-                reportes,
-                correo,
-                celular,
-                id,
-                __v,
-                puntajeBaneo,
-                ...resto} = nutriologo;
-            resultados.push(resto);
-        }
-    }
-
-    //Ordenes
-
-    //Por calificacion
-    if(req.query.estrellas == true){
-        if(req.query.mayor == true) resultados.sort((a, b) => b.calificacion - a.calificacion);
-        else resultados.sort((a, b) => a.calificacion - b.calificacion);
-    }
-
-    //Por precio
-    if(req.query.precio == true){
-        if(req.query.mayor == true) resultados.sort((a, b) => b.precio - a.precio);
-        else resultados.sort((a, b) => a.precio - b.precio);
+        const {
+            fecha_registro, 
+            predeterminados, 
+            pacientes,
+            baneado,
+            reportes,
+            correo,
+            celular,
+            id,
+            puntajeBaneo,
+            calificacion,
+            activo,
+            ...resto} = nutriologo;
+        resultados.push(resto);
     }
 
     if(!resultados) {
@@ -202,25 +250,36 @@ const busqueda = async (req, res = response) => {
 const altaExtras = async (req, res = response) => {
 
     //Extraer id del body
-    const id = req.body.id;
+    const id = req.id;
+
+    console.log(id);
 
     //Extraer en objeto del cliente con el ID
-    const cliente = await Cliente.findById(id);
+    const cliente = await Cliente.findById(id)
+        .catch(() => {
+            res.status(400).json({
+                success: false,
+                msg: 'Error al encontrar al cliente'
+            });
+        });
+
+    if(!cliente) return;
 
     //Verificar que no están llenos los extras del cliente
     if(!cliente.extra1 || !cliente.extra2) { 
-        
-        //Crear el objeto
-        const extra = new Extra({
-            nombre: req.body.nombre,
-            apellidos: req.body.apellidos
-        });
-
-        //Guardar en extra1
-        if(!cliente.extra1) cliente.extra1 = extra;
-        else cliente.extra2 = extra;
 
         try {
+
+            //Crear el objeto
+            const extra = new Extra({
+                nombre: req.body.nombre,
+                apellidos: req.body.apellidos
+            });
+
+            //Guardar en extra1
+            if(!cliente.extra1) cliente.extra1 = extra;
+            else cliente.extra2 = extra;
+
             //Guardar
             await Cliente.findByIdAndUpdate(id, cliente)
             .then(await extra.save());
@@ -248,97 +307,101 @@ const altaExtras = async (req, res = response) => {
 //Mostrar el progreso
 const getProgreso = async (req, res = response) => {
 
-    //Extraer id
-    const id = req.query.id;
+    try {
+        //Extraer id
+        const id = req.id;
 
-    //Buscar entre usuarios y extras
-    let user = await Cliente.findById(id);
+        //Buscar entre usuarios y extras
+        let user = await Cliente.findById(id);
 
-    if (!user) {
-        user = await Extra.findById(id);
-    }
+        if (!user) {
+            user = await Extra.findById(id);
+        }
 
-    //Extraer inicio
-    const inicio = await Dato.findById(user.datoInicial);
+        //Extraer inicio
+        const inicio = await Dato.findById(user.datoInicial);
 
-    //Guardar datos en un arreglo
-    let datos = [];
+        //Guardar datos en un arreglo
+        let datos = [];
 
-    //Extraer todos los datos a un arreglo
-    for await (const _id of user.datoConstante) {
-        const dato = await Dato.findById(_id)
-        datos.push({peso: dato.peso, altura: dato.altura});
-    }
+        //Extraer todos los datos a un arreglo
+        for await (const _id of user.datoConstante) {
+            const dato = await Dato.findById(_id)
+            datos.push({peso: dato.peso, altura: dato.altura});
+        }
 
-    if(!inicio){
+        if(!inicio){
+            res.status(400).json({
+                success: false,
+                inicio: false,
+                constantes: false,
+                msg: 'Usuario sin datos registrados'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            inicio,
+            datos
+        });
+    } catch (error) {
         res.status(400).json({
             success: false,
-            inicio: false,
-            constantes: false,
-            msg: 'Usuario sin datos registrados'
+            msg: 'Error'
         });
-        return;
     }
-
-    res.status(200).json({
-        success: true,
-        msg: "Encontrado con el ID: " + id,
-        inicio,
-        datos
-    });
 
 }
 
 //Reportar
 const reportar = async (req, res = response) => {
-    //Extraer datos del reporte
-    const { idCliente, idNutriologo, idReporte, msg } = req.body;
+   
+    try {
+         //Extraer datos del reporte
+        const { idNutriologo, idReporte, msg } = req.body;
 
-    //Crear el reporte
-    const reporte = new Reporte({
-        emisor: idCliente,
-        para: idNutriologo,
-        tipo: idReporte,
-        msg,
-        fecha: Date.now()
-    });
+        //Crear el reporte
+        const reporte = new Reporte({
+            emisor: req.id,
+            para: idNutriologo,
+            tipo: idReporte,
+            msg,
+            fecha: Date.now()
+        });
 
-    //Guardar reporte
-    await reporte.save();
+        //Extraer tipo de reporte para saber el puntaje
+        const { puntos } = await Motivo.findById(idReporte);
+        const nutriologo = await Nutriologo.findById(idNutriologo);
 
-    //Extraer tipo de reporte para saber el puntaje
-    const report = await Motivo.findById(idReporte);
-    const nutriologo = await Nutriologo.findById(idNutriologo);
+        //Agregar los puntos y push a arreglo de reportes
+        nutriologo.puntajeBaneo += puntos;
 
-    //Agregar los puntos y push a arreglo de reportes
-    nutriologo.puntajeBaneo += report.puntos;
+        let reportes = [];
+        if(nutriologo.reportes){
+            reportes = nutriologo.reportes;
+        }
+        
+        reportes.push(reporte);
+        nutriologo.reportes = reportes;
 
-    let reportes = [];
-    if(!nutriologo.reportes){
-        console.log('Sin reportes');
+        await Nutriologo.findByIdAndUpdate(idNutriologo, nutriologo);
+        
+        //Guardar reporte
+        await reporte.save();
+
+        res.status(201).json({
+            success: true,
+            reporte,
+            msg: 'Reportado correctamente'
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha logrado reportar'
+        });
     }
-    else {
-        console.log('Con reportes');
-        reportes = nutriologo.reportes;
-    }
-    
-    reportes.push(reporte);
-    nutriologo.reportes = reportes;
 
-    await Nutriologo.findByIdAndUpdate(idNutriologo, nutriologo)
-        .catch( () =>  {
-            res.status(401).json({
-                success: false,
-                msg: 'No se ha logrado reportar'
-            });
-            return;
-        })
-
-    res.status(201).json({
-        success: true,
-        reporte,
-        msg: 'Reportado correctamente'
-    });
 }
 
 //Calificar de 0 a 5 estrellas al nutriólogo
@@ -356,30 +419,205 @@ const calificar = async (req, res = response) => {
     }
 
     //Agregar al arreglo del nutriólogo
-    const nutriologo = await Nutriologo.findById(id);
+    const nutriologo = await Nutriologo.findById(id)
+        .catch(() => {
+            res.status(400).json({
+                success: false,
+                msg: 'Error al encontrar el nutriólogo, verifique el id'
+            });
+        });
+
+    if(!nutriologo) return;
 
     let calificaciones = nutriologo.calificacion;
     calificaciones.push(calificacion);
 
+    //Actualizar promedio de calificaciones
+    let promedio = 0;
+    for (const number of calificaciones){
+        //Sumar los elementos
+        promedio += number;
+    }
+    
+    promedio /= calificaciones.length;
+        
+    //Guardar en el elemento de respuesta
+    nutriologo.promedio = promedio;
+    nutriologo.calificaciones = calificaciones;
+
     //Actualizar objeto
     await Nutriologo.findByIdAndUpdate(id, nutriologo)
     .then(
-        res.status(200).json({
+        res.status(201).json({
             success: true,
             msg: 'Calificado correctamente con ' + calificacion + ' estrellas'
         })
     )
+    .catch(() => {
+        res.status(400).json({
+            success: false,
+            msg: 'Error al actualizar el nutriólogo'
+        });
+    });
+}
+
+//Ver información de un nutriólogo
+const getNutriologo = async (req, res = response) => {
+
+    //Id del nutriologo
+    const id = req.query.id;
+
+    try {
+        const nutriologo = await Nutriologo.findById(id);
+
+        //No mostrar datos de alguien baneado
+        if(nutriologo.baneado) throw new Error();
+
+        res.status(200).json({
+            success: true,
+            nutriologo
+        });
+
+    } catch (error) {
+        res.status(400).json({ 
+            success: false,
+            msg: 'No fue posible encontrar la información'
+        });
+    }
+
+}
+
+const generarTicket = async (req, res = response) => {
+    
+    //Id del nutriologo
+    const { id, fecha_cita } = req.query;
+
+    //Objeto del nutriólogo
+    const nutriologo = await Nutriologo.findById(id);
+
+
+}
+
+//Ver extras del cliente
+const getExtras = async (req, res = response)  => {
+
+    //Id del cliente
+    const id = req.id;
+
+    try {    
+        //Objeto del cliente
+        const cliente = await Cliente.findById(id);
+
+        let extra1, extra2;
+
+        if(cliente.extra1) extra1 = await Extra.findById(cliente.extra1);
+        if(cliente.extra2) extra2 =  await Extra.findById(cliente.extra2);
+
+        res.status(200).json({
+            success: true,
+            extra1,
+            extra2
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error: ' + error.message
+        })
+    }
+
+}
+
+//Ver información del cliente
+const getInfo = async (req, res = response)  => {
+
+    //Id del cliente
+    const id = req.id;
+
+    const cliente = await Cliente.findById(id)
+        .catch(() => {
+            res.status(400).json({ 
+                success: false,
+                msg: 'Error al buscar cliente, verifique el ID'
+            });
+        });
+    
+    if(!cliente) return;
+
+    res.status(200).json({
+        success: true,
+        cliente
+    });
+}
+
+//Actualizar información de usuario
+const usuariosUpdate = async (req, res = response) => {
+    try{
+
+        //Recibir parmetros del body
+        const { nombre, apellidos, celular } = req.body;
+
+        //id de usuario
+        const id = req.id;
+
+        let tempFilePath;
+
+        if(req.files)
+        tempFilePath = req.files.imagen.tempFilePath;
+
+        const user = await Cliente.findById(id);
+
+        //Actualizar los datos que se llenaron
+        if(tempFilePath){
+
+            //Si la foto de perfil NO es la default se borra
+            if(user.imagen != 'LINK DE FOTO DEFAULT'){
+                //Borrar la imagen anterior de cloudinary
+            
+                //Split del nombre de la imagen
+                const nombreArr = user.imagen.split('/');
+                const nombre = nombreArr[nombreArr.length - 1];
+                const [ public_id ] = nombre.split('.');
+
+                //Borrar la imagen
+                await cloudinary.uploader.destroy(public_id);
+            }
+
+            //Subir a cloudinary y extraer el secure_url
+            const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+            user.imagen = secure_url;
+        }
+        if(nombre) user.nombre = nombre;
+        if(apellidos) user.apellidos = apellidos;
+        if(celular) user.celular = celular;
+
+        await Cliente.findByIdAndUpdate(id, user);
+
+        res.status(201).json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            error,
+            success: false,
+            msg: 'No fue posible actualizar'
+        });
+    }
 }
 
 module.exports = {
-    sendCode,
-    verifyCode,
     usuariosPost,
+    usuariosUpdate,
     usuariosDelete,
     usuariosPatch,
     busqueda,
+    getNutriologo,
     getProgreso,
     altaExtras,
+    getExtras,
+    getInfo,
     reportar,
     calificar
 }

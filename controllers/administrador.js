@@ -1,22 +1,28 @@
 //Librerías externas
 const { response } = require('express');
+
 const sgMail = require('@sendgrid/mail');
+const cloudinary = require('cloudinary').v2;
+cloudinary.config(process.env.CLOUDINARY_URL);
+
+//Helpers
+const { generarJWT } = require('../helpers/verificacion');
 
 //Modelos
 const Cliente = require('../models/cliente');
-const Solicitud_empleo = require('../models/solicitud_empleo');
 const Nutriologo = require('../models/nutriologo');
 const Administrador = require('../models/administrador');
+const Solicitud_empleo = require('../models/solicitud_empleo');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 
-//Buscar un usuario
+//Obtener información de un usuario
 const getUser = async(req, res = response) => {
     try {
-        const clientes = await Cliente.findById(req.query.id);
+        const cliente = await Cliente.findById(req.query.id);
         res.status(200).json({
             success: true,
-            clientes
+            cliente
         });
     } catch (error) {
         res.status(400).json({
@@ -27,22 +33,31 @@ const getUser = async(req, res = response) => {
 
 //Crear un administrador
 const postAdmin = async (req, res = response) => {
-    const admin = new Administrador({
-        nombre: req.body.nombre,
-        apellidos: req.body.apellidos,
-        imagen: req.body.imagen,
-        celular: req.body.celular,
-        correo: req.body.correo
-    });
 
     try {
+
+        //Foto de perfil default
+        let linkImagen = ' ';
+
+        const admin = new Administrador({
+            nombre: req.body.nombre,
+            apellidos: req.body.apellidos,
+            imagen: linkImagen,
+            celular: req.body.celular,
+            correo: req.body.correo
+        });
+
         await admin.save();
+
+        const jwt = await generarJWT(admin._id);
+
         res.status(201).json({
             success: true,
-            admin
+            admin,
+            jwt
         })
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Registro inválido'
         });
@@ -53,53 +68,78 @@ const postAdmin = async (req, res = response) => {
 const getAllUsers = async(req, res = response) => {
 
     //Se establece el límite Motivo
-    const {limit = 10, start = 0} = req.query;
+    const {limit = 10, start = 0, baneado = false} = req.query;
     let resultado;
-
-    if(req.query.mayor) orden = 1; //De mayor a menor
-    else orden = -1; //De menor a mayor
 
     //Puntaje
     if(req.query.puntaje){
-        resultado = await Cliente.aggregate([
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'puntajeBaneo': {$gt: 6}}}
-        ]);
+        
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Cliente.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Cliente.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
 
-        //Ordenar
-        if(req.query.mayor == true)  resultado.sort((a, b) => b.puntajeBaneo - a.puntajeBaneo);
-        else resultado.sort((a, b) => a.puntajeBaneo - b.puntajeBaneo);
     }
 
     //Tiempo de inactividad
     else if(req.query.inactividad){
-        resultado = await Cliente.aggregate([
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'baneado': false}}
-        ]);
 
         //Ordenar
-        if(req.query.mayor == true)  resultado.sort((a, b) => b.ultima_conexion - a.ultima_conexion);
-        else resultado.sort((a, b) => a.ultima_conexion - b.ultima_conexion);
+        if(Boolean(req.query.mayor) === true)  {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
     }
 
     //Tiempo en plataforma o antiguedad
     else if(req.query.antiguedad){
-        resultado = await Cliente.aggregate([
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'baneado': false}}
-        ]);
 
         //Ordenar
-        if(req.query.mayor == true)  resultado.sort((a, b) => b.fecha_registro - a.fecha_registro);
-        else resultado.sort((a, b) => a.fecha_registro - b.fecha_registro);
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Cliente.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
     }
 
     else {
         resultado = await Cliente.aggregate([
+            {$match: {'baneado': Boolean(baneado)}},
             {$skip: Number(start)},
             {$limit: Number(limit)}
         ]);
@@ -140,48 +180,80 @@ const getNutriologo = async(req, res = response) => {
 
 //Enlistar todos los nutriólogos
 const getAllNutri = async(req, res = response) => {
-    
-    //Se establece el límite Motivo
-    const {limit = 10, start = 0} = req.query;
-    let resultado;
 
-    //Ordenes
+    //Se establece el límite Motivo
+    const {limit = 10, start = 0, baneado = false} = req.query;
+    let resultado;
 
     //Puntaje
     if(req.query.puntaje){
-        resultado = await Nutriologo.aggregate([
-            {$sort: {'puntajeBaneo': 1}},
-            {$skip: Number(start)},
-            {$limit: Number(limit)},
-            {$match: {'puntajeBaneo': {$gt: 5}}}
-        ])
+        
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Nutriologo.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Nutriologo.aggregate([
+                {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
+                {$sort: {'puntajeBaneo': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+
     }
 
     //Tiempo de inactividad
+    else if(req.query.inactividad){
 
-    if(req.query.inactividad){
-        console.log('Buscando por inactividad');
-        resultado = await Nutriologo.aggregate([
-            {$sort: {'ultima_conexion': -1}},
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'baneado': false}}
-        ])
+        //Ordenar
+        if(Boolean(req.query.mayor) === true)  {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'ultima_conexion': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
     }
 
     //Tiempo en plataforma o antiguedad
+    else if(req.query.antiguedad){
 
-    if(req.query.antiguedad){
-        resultado = await Nutriologo.aggregate([
-            {$sort: {'fecha_registro': 1}},
-            {$skip: start},
-            {$limit: limit},
-            {$match: {'baneado': false}}
-        ])
+        //Ordenar
+        if(Boolean(req.query.mayor) === true) {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': 1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+        else {
+            resultado = await Nutriologo.aggregate([
+                {$match: {'baneado': Boolean(baneado)}},
+                {$sort: {'fecha_registro': -1}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
     }
 
     else {
         resultado = await Nutriologo.aggregate([
+            {$match: {'baneado': Boolean(baneado)}},
             {$skip: Number(start)},
             {$limit: Number(limit)}
         ]);
@@ -199,7 +271,7 @@ const getAllNutri = async(req, res = response) => {
         success: true,
         resultado
     });
-};
+}
 
 //Ver todas las solicitudes de empleo
 const getSolicitudes = async(req, res = response) => {
@@ -212,6 +284,8 @@ const getSolicitudes = async(req, res = response) => {
         {$match: {'estado': null}}
     ])
 
+    const total = await Solicitud_empleo.count({estado: null});
+
     if(!solicitudes) {
         res.status(400).json({
             success: false,
@@ -222,43 +296,47 @@ const getSolicitudes = async(req, res = response) => {
 
     res.status(200).json({
         success: true,
-        total: solicitudes.length,
+        total,
         solicitudes
     });
 };
 
 const postSolicitud = async(req, res = response) => {
 
-    const soli = new Solicitud_empleo({
-        nombre: req.body.nombre,
-        cv: req.body.cv,
-        correo: req.body.correo
-    });
-
-    await soli.save()
-        .catch(
-            res.status(401).json({
-            success: false
-        }))
-
-    res.status(201).json({
-        success: true,
-        soli
-    });
+    try {
+        const soli = new Solicitud_empleo({
+            nombre: req.body.nombre,
+            cv: req.body.cv,
+            correo: req.body.correo
+        });
+    
+        await soli.save();
+    
+        res.status(201).json({
+            success: true,
+            soli
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido crear la solicitud'
+        });
+    }
 };
 
 //Cambiar de estado la solicitud de empleo
 const putResponderSolicitud = async(req, res = response) => {
 
-    const { id, respuesta } = req.body;
-
-    //Extraer la solicitud de la base de datos
-    const solicitud = await Solicitud_empleo.findById(id);
-
-    //Cambiar respuesta
-    solicitud.estado = respuesta;
-
     try {
+
+        const { id, respuesta } = req.body;
+
+        //Extraer la solicitud de la base de datos
+        const solicitud = await Solicitud_empleo.findById(id);
+    
+        //Cambiar respuesta
+        solicitud.estado = respuesta;
+
         // Actualizar el objeto
         await Solicitud_empleo.findByIdAndUpdate(id);
 
@@ -281,7 +359,15 @@ const solicitudAccepted = async (req, res = response) => {
 
     const id = req.body.id;
 
-    const solicitud = await Solicitud_empleo.findById(id);
+    const solicitud = await Solicitud_empleo.findById(id)
+        .catch(() => {
+            res.status(400).json({
+                success: false,
+                msg: 'No se ha encontrado la solicitud con id ' + id
+            });
+        })
+
+    if(!solicitud) return;
 
     //Actualizar la solicitud
     solicitud.estado = true;
@@ -309,8 +395,7 @@ const solicitudAccepted = async (req, res = response) => {
         console.error(error);
         res.status(400).json({
             success: false
-            });
-        return;
+        });
     })
 
 }
@@ -320,7 +405,15 @@ const solicitudDenied = async (req, res = response) => {
 
     const id = req.body.id;
 
-    const solicitud = await Solicitud.findById(id);
+    const solicitud = await Solicitud_empleo.findById(id)
+    .catch(() => {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha encontrado la solicitud con id ' + id
+        });
+    })
+
+    if(!solicitud) return;;
 
     //Actualizar la solicitud
     solicitud.estado = true;
@@ -347,72 +440,96 @@ const solicitudDenied = async (req, res = response) => {
         console.error(error);
         res.status(400).json({
             success: false
-            });
-        return;
+        });
     })
 
 }
 
 //Update de los datos del administrador
 const adminUpdate = async(req, res = response) => {
-    //Recibir parmetros del body
-    const { id, nombre, apellidos, imagen } = req.body;
-
-    const admin = await Administrador.findById(id)
-        .catch(
-            res.status(400).json({
-            success: false,
-            msg: 'No fue posible encontrar al admnistrador'
-        }))
 
     try{
+
+        //Recibir parmetros del body
+        const { nombre, apellidos, celular } = req.body;
+
+        const id = req.id;
+
+        let tempFilePath;
+
+        if(req.files)
+        tempFilePath = req.files.imagen.tempFilePath;
+
+        const admin = await Administrador.findById(id);
+
         //Actualizar los datos que se llenaron
+        if(tempFilePath){
+
+            //Si la foto de perfil NO es la default se borra
+            if(admin.imagen != 'LINK DE FOTO DE PERFIL DEFAULT'){
+                //Borrar la imagen anterior de cloudinary
+            
+                //Split del nombre de la imagen
+                const nombreArr = admin.imagen.split('/');
+                const nombre = nombreArr[nombreArr.length - 1];
+                const [ public_id ] = nombre.split('.');
+
+                //Borrar la imagen
+                await cloudinary.uploader.destroy(public_id);
+            }
+
+            //Subir a cloudinary y extraer el secure_url
+            const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+            admin.imagen = secure_url;
+        }
         if(nombre) admin.nombre = nombre;
         if(apellidos) admin.apellidos = apellidos;
-        if(imagen) admin.imagen = imagen;
+        if(celular) admin.celular = celular;
 
         await Administrador.findByIdAndUpdate(id, admin);
 
         res.status(201).json({
             success: true,
-            msg: 'Actualizado correctamente'
+            admin
         });
     } catch (error) {
-        res.status(401).json({
+        console.log(error);
+        res.status(400).json({
             success: false,
             msg: 'No fue posible actualizar'
         });
     }
 }
 
-//Crear un nuevo reporte
-const addReporte = async(req, res = response) => {
-    
-    //Crear el reporte
-    const reporte = new Motivo({
-        puntos: req.body.puntos,
-        descripcion: req.body.descripcion
-    });
-
-    await reporte.save()
-        .catch(
-            res.status(401).json({
-                success: false,
-                msg: 'No fue posible guardar el reporte'
-            })
-        )
-
-    res.status(201).json({
-        success: true,
-        reporte
-    });
-}
-
-//Mostrar todos los reportes
-const getReportes = async (req, res = response) => {
+//Crear un nuevo motivo
+const addMotivo = async(req, res = response) => {
     
     try {
-        const [total, reportes] = await Promise.all([
+         //Crear el reporte
+        const motivo = new Motivo({
+            puntos: req.body.puntos,
+            descripcion: req.body.descripcion
+        });
+
+        await motivo.save();
+
+        res.status(201).json({
+            success: true,
+            motivo
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No fue posible guardar el motivo'
+        })
+    }
+}
+
+//Mostrar todos los motivos
+const getMotivos = async (req, res = response) => {
+    
+    try {
+        const [total, motivos] = await Promise.all([
             Motivo.count(),
             Motivo.find()
         ]);
@@ -420,55 +537,58 @@ const getReportes = async (req, res = response) => {
         res.status(200).json({
             success: true,
             total,
-            reportes
+            motivos
         })
     } catch(error) {
         res.status(400).json({
             success: false,
-            msg: 'Error al encontrar reportes'
+            msg: 'Error al encontrar motivos'
         });
     }
 }
 
-const updateReporte = async (req, res = response) => {
-    
-    //ID del reporte
-    const id = req.body.id;
-
-    //Datos del reporte
-    const {puntos, descripcion} = req.body;
-
-    //Extraer el objeto del reporte
-    const reporte = await Motivo.findById(id);
-
-    //Modificar
-    if(puntos) reporte.puntos = puntos;
-    if(descripcion) reporte.descripcion = descripcion;
+//Actualizar el motivo
+const updateMotivo = async (req, res = response) => {
 
     try {
-        await Motivo.findByIdAndUpdate(id, reporte);
+
+        //ID del motivo
+        const id = req.body.id;
+
+        //Datos del motivo
+        const {puntos, descripcion} = req.body;
+
+        //Extraer el objeto del motivo
+        const motivo = await Motivo.findById(id);
+
+        //Modificar
+        if(puntos) motivo.puntos = puntos;
+        if(descripcion) motivo.descripcion = descripcion;
+
+        await Motivo.findByIdAndUpdate(id, motivo);
         res.status(201).json({
             success: true,
-            reporte
+            motivo
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
-            msg: 'Error al actualizar el reporte'
+            msg: 'Error al actualizar el motivo'
         });
     }
 }
 
 const reportesUsuario = async (req, res = response) => {
-    
-    //Id del usuario
-    const id = req.query.id;
-
-    //Extraer usuario
-    let user = await Cliente.findById(id);
-    if(!user) user = await Nutriologo.findById(id);
 
     try {
+
+        //Id del usuario
+        const id = req.query.id;
+
+        //Extraer usuario
+        let user = await Cliente.findById(id);
+        if(!user) user = await Nutriologo.findById(id);
+
         //Extraer ID's de reportes
         const reportes = user.reportes;
 
@@ -476,7 +596,7 @@ const reportesUsuario = async (req, res = response) => {
 
         for await (const _id of reportes) {
 
-            //Reporte dentro de el arreglo del usuario
+            //Reporte dentro del arreglo del usuario
             const {para, tipo, msg} = await Reporte.findById(_id);
 
             //Extraer el tipo de reporte
@@ -491,6 +611,7 @@ const reportesUsuario = async (req, res = response) => {
             listadoReportes
         });
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Error al encontrar usuario'
@@ -500,34 +621,39 @@ const reportesUsuario = async (req, res = response) => {
 }
 
 const borrarReporte = async (req, res = response) => {
-    const id = req.query.id;
-
-    const reporte = await Reporte.findById(id);
-
-    if(reporte.borrado === true) res.status(200).json({
-        success: false,
-        msg: 'El reporte ya ha sido eliminado'
-    })
-
-    reporte.borrado = true;
-
-    const {para, tipo} = reporte;
-
-    //Extraer objeto del reportado
-    let to = await Nutriologo.findById(para);
-    let esCliente = false;
-    if(!to){
-        to = await Cliente.findById(para);
-        esCliente = true;
-    }
-
-    //Extraer el tipo de reporte
-    const report = await Motivo.findById(tipo);
-
-    //Reducir los puntos
-    to.puntajeBaneo -= report.puntos;
 
     try {
+
+        const id = req.query.id;
+
+        const reporte = await Reporte.findById(id);
+
+        if(reporte.borrado === true) {
+            res.status(400).json({
+                success: false,
+                msg: 'El reporte ya ha sido eliminado'
+            });
+            return;
+        }
+    
+        else reporte.borrado = true;
+    
+        const {para, tipo} = reporte;
+    
+        //Extraer objeto del reportado
+        let to = await Nutriologo.findById(para);
+        let esCliente = false;
+        if(!to){
+            to = await Cliente.findById(para);
+            esCliente = true;
+        }
+    
+        //Extraer el tipo de reporte
+        const { puntos } = await Motivo.findById(tipo);
+    
+        //Reducir los puntos
+        to.puntajeBaneo -= puntos;
+
         //Actualizar objetos
         await Reporte.findByIdAndUpdate(id, reporte);
         if(esCliente) await Cliente.findByIdAndUpdate(para, to);
@@ -535,12 +661,12 @@ const borrarReporte = async (req, res = response) => {
         res.status(201).json({
             success: true,
             msg: 'Reporte eliminado'
-        })
+        });
     } catch(error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se pudo actualizar el objeto'
-        })
+        });
     }
 
 }
@@ -548,11 +674,12 @@ const borrarReporte = async (req, res = response) => {
 const UnBanear = async (req, res = response) => {
     //Id del usuario
     const id = req.query.id;
-
-    //Extraer usuario
-    let user = await Cliente.findById(id);
     
     try {
+
+        //Extraer usuario
+        let user = await Cliente.findById(id);
+
         if(user) {
             //Cambiar bandera de baneo
             user.baneado = false;
@@ -577,7 +704,7 @@ const UnBanear = async (req, res = response) => {
             msg: 'Usuario baneado correctamente'
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: true,
             user,
             msg: 'No se ha podido desbanear'
@@ -597,9 +724,9 @@ module.exports = {
     solicitudAccepted,
     solicitudDenied,
     adminUpdate,
-    addReporte,
-    getReportes,
-    updateReporte,
+    addMotivo,
+    getMotivos,
+    updateMotivo,
     reportesUsuario,
     UnBanear,
     postAdmin,

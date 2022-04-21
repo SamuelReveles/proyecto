@@ -31,13 +31,13 @@ const NutrilogoSchema = Schema({
         required: [true, 'La fecha de registro es obligatoria']
     },
     predeterminados: [{
-        type: Schema.ObjectId, 
+        type: Object, 
         ref:'preterminado'
     }],
-    especialidades: {
-        type: Array,
-        required: [true, 'Las especialidades son obligatorias']
-    },
+    especialidades: [{
+        type: String,
+        required: true
+    }],
     pacientes: [{ type: Schema.ObjectId, required: false}],
     puntajeBaneo: {
         type: Number,
@@ -47,10 +47,17 @@ const NutrilogoSchema = Schema({
         type: Boolean,
         default: false
     },
+    fecha_desban: {
+        type: Date,
+        required: false
+    },
     calificacion: [{ 
         type: Number, 
         default: 0
     }],
+    promedio: {
+        type: Number
+    },
     fechaDisponible: [{ 
         type: Date, 
         required: [true, 'Las fechas disponibles del nutriologo son obligatorias']
@@ -59,15 +66,24 @@ const NutrilogoSchema = Schema({
         type: Schema.ObjectId, ref:'reporte'
     }],
     descripcion: {
-        type: String,
-        required: false
+        type: String
     },
     ultima_conexion: {
         type: Date
     },
     precio: {
         type: Number,
-        required: true
+    },
+    indicaciones: {
+        type: String
+    },
+    activo: {
+        type: Boolean,
+        default: false
+    },
+    avisado: {
+        type: Boolean,
+        desfault: false
     }
 });
 

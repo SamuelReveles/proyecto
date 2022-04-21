@@ -21,21 +21,23 @@ const DatoSchema = Schema({
     abdomen: {
         type: Number
     },
-    ombligo: {
-        type: Number
-    },
     cadera: {
         type: Number
     },
     muslos: {
         type: Number
     },
-    costillas: {
+    pectoral: {
         type: Number
     },
-    busto: {
-        type: Number
+    notas: {
+        type: String
     }
 });
+
+DatoSchema.methods.toJSON = function(){
+    const { __v, ...dato } = this.toObject();
+    return dato;
+}
 
 module.exports = model( 'Dato', DatoSchema );

@@ -13,20 +13,25 @@ const {
     solicitudAccepted,
     solicitudDenied,
     adminUpdate,
-    addReporte,
-    getReportes,
-    updateReporte,
+    addMotivo,
+    getMotivos,
+    updateMotivo,
     reportesUsuario,
     UnBanear,
-    postAdmin,
     borrarReporte
 } = require('../controllers/administrador')
+
+//Helpers
+const { validarToken, verificarAdmin } = require('../middlewares/validar-jwt');
+const { validarCelular } = require('../middlewares/validar-campos');
 
 //Router instance
 const router = Router();
 
-//Crear administrador
-router.post('/', postAdmin);
+//Verificar que exista sesión iniciada el token
+//GODO COMENTA LA LINEA DE ABAJO SI ES QUE TE DICE QUE NO TIENES TOKEN XD
+router.use(validarToken);
+router.use(verificarAdmin);
 
 //Busar un usuario
 router.get('/user/one', getUser);
@@ -59,16 +64,16 @@ router.post('/soli', postSolicitud);
 router.put('/soli', putResponderSolicitud);
 
 //Update de datos de la cuenta
-router.put('/update', adminUpdate);
+router.put('/update', validarCelular, adminUpdate);
 
 //Crear un nuevo reporte
-router.post('/reporte/nuevo', addReporte);
+router.post('/reporte/nuevo', addMotivo);
 
 //Ver los reportes existentes
-router.get('/reporte', getReportes);
+router.get('/reporte', getMotivos);
 
 //Modificar un reporte
-router.put('/reporte', updateReporte);
+router.put('/reporte', updateMotivo);
 
 //Ver reportes de un usuario
 router.get('/reporte/user', reportesUsuario);

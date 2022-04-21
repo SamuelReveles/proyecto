@@ -19,4 +19,9 @@ const ReagendacionSchema = Schema({
     }
 });
 
+ReagendacionSchema.methods.toJSON = function(){
+    const { __v, ...reagendacion } = this.toObject();
+    return reagendacion;
+}
+
 module.exports = model( 'Reagendacion', ReagendacionSchema );

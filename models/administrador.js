@@ -25,4 +25,9 @@ const AdministradorSchema = Schema({
     }
 });
 
+AdministradorSchema.methods.toJSON = function(){
+    const { __v, ...administrador } = this.toObject();
+    return administrador;
+}
+
 module.exports = model( 'Administrador', AdministradorSchema );

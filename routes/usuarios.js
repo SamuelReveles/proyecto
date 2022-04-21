@@ -1,22 +1,23 @@
 //Librerías externas
 const { Router } = require('express');
-const session = require('session');
 const { check } = require('express-validator');
 
 //Validación de campos vacíos
 const { validarCampos } = require('../middlewares/validar-campos');
-//Validar campos correctos y sin repetir
-const { emailExiste, celularExiste } = require('../helpers/db-validator');
+
+const { validarToken, verificarCliente } = require('../middlewares/validar-jwt');
+
 //Rutas y tipos de "Acceso"
 const { 
-    sendCode,
-    verifyCode,
-    usuariosPost,
+    usuariosUpdate,
     usuariosDelete,
     usuariosPatch, 
     busqueda,
+    getNutriologo,
     getProgreso,
     altaExtras,
+    getExtras,
+    getInfo,
     reportar,
     calificar
 } = require('../controllers/usuarios');
@@ -24,17 +25,22 @@ const {
 //Router instance
 const router = Router();
 
-//Enviar código al celular
-router.get('/sendCode',  sendCode);
-
-//Verificar el código
-router.get('/verifyCode', verifyCode);
+//Verificar que exista sesión iniciada el token
+//GODO COMENTA LA LINEA DE ABAJO SI ES QUE TE DICE QUE NO TIENES TOKEN XD
+router.use(validarToken);
+router.use(verificarCliente);
 
 //Buscar un nutriólogo
 router.get('/busqueda', busqueda);
 
+//Ver datos del nutriólogo
+router.get('/nutriologo', getNutriologo);
+
 //Extraer el progreso
 router.get('/progreso', getProgreso);
+
+//Ver datos de la cuenta
+router.get('/data', getInfo);
 
 //Calificar a un nutriólogo
 router.put('/calificar', calificar);
@@ -42,16 +48,16 @@ router.put('/calificar', calificar);
 //Dar de alta un nuevo extra
 router.post('/extra/alta', altaExtras);
 
-//Crear un nuevo usuario
-router.post('/', [
-    check('correo').custom(emailExiste),
-    check('celular').custom(celularExiste),
-    validarCampos
-], usuariosPost);
+//Ver extras del cliente
+router.get('/extra', getExtras);
+
+//Actualizar datos
+router.put('/', usuariosUpdate);
 
 //Reportar
 router.put('/reportar', reportar);
 
+//Eliminar cuenta
 router.delete('/', usuariosDelete);
 
 router.patch('/', usuariosPatch);

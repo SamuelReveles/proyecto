@@ -9,8 +9,9 @@ const ClienteSchema = Schema({
         type: String,
         required: [true, 'Los apellidos son obligatorios']
     },
-    img: {
-        type: String
+    imagen: {
+        type: String,
+        required: true
     },
     celular: {
         type: String,
@@ -40,6 +41,10 @@ const ClienteSchema = Schema({
         type: Boolean,
         default: false
     },
+    fecha_desban: {
+        type: Date,
+        required: false
+    },
     verDatos: {
         type: Boolean, 
         default: true
@@ -61,7 +66,11 @@ const ClienteSchema = Schema({
     },
     historial: [{
         type: Schema.ObjectId, ref:'historial'
-    }]
+    }],
+    avisado: {
+        type: Boolean,
+        default: false
+    }
 });
 
 ClienteSchema.methods.toJSON = function(){

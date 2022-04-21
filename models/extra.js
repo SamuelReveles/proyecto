@@ -4,8 +4,7 @@ const datos = require('./dato');
 const ExtraSchema = mongoose.Schema({
     nombre: {
         type: String,
-        required: [true, 'El username es obligatorio'],
-        unique: true
+        required: [true, 'El username es obligatorio']
     },
     apellidos: {
         type: String,
@@ -25,5 +24,10 @@ const ExtraSchema = mongoose.Schema({
         type: mongoose.Schema.ObjectId, ref:'historial'
     }]
 });
+
+ExtraSchema.methods.toJSON = function(){
+    const { __v, ...extra } = this.toObject();
+    return extra;
+}
 
 module.exports = mongoose.model( 'Extra', ExtraSchema );

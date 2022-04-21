@@ -6,9 +6,85 @@
     <title>Document</title>
 </head>
 <body>
-    <li>
-        <ul>lmao</ul>
-        <ul>aqui va la parte de godo</ul>
-    </li>
+    <ul>
+        <li>lmao</li>
+        <li>aqui va la parte de godo</li>
+
+        <!-- Inicio con google -->
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+      <li>
+        <div id="g_id_onload"
+            data-client_id="86407381520-b22aanmqdi3q61d62sec545cr2curik1.apps.googleusercontent.com"
+            data-auto_prompt="false"
+            data-callback="handleCredentialResponse">
+        </div>
+        <div class="g_id_signin"
+            data-type="standard"
+            data-size="large"
+            data-theme="outline"
+            data-text="sign_in_with"
+            data-shape="rectangular"
+            data-logo_alignment="left">
+      </li>
+      <li>
+          <p id="tipo-usuario"></p>
+      </li>
+      <li>
+          <button id="user-data">Datos de usuario</button>
+      </li>
+      </div>
+    </ul>
+
+    <script>
+
+        let usuario = document.getElementById("tipo-usuario");
+        let headers = new Headers();
+        function handleCredentialResponse(response) {
+
+            const body = { id_token: response.credential };
+
+            fetch('http://localhost:8080/api/auth/logIn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+                .then( resp => resp.json() )
+                .then( resp => {
+                    console.log(resp);
+                    headers.append('jopakatoken', resp.jwt);
+                    if(resp.tipo === 'Administrador'){
+                        usuario.textContent = 'Hola nuevo admin';
+                    }
+                })
+                .catch( err => console.warn);
+
+        }
+
+        let userdata = document.getElementById('user-data');
+
+        userdata.onclick = () => {
+            console.log('Token: ' + headers.get('jopakatoken'));
+            fetch('http://localhost:8080/api/nutriologo/data', {
+                method: 'GET',
+                headers
+            })
+            .then( resp => resp.json() )
+                .then( resp => {
+                    console.log(resp)
+                    if(resp.success === false) {
+                        usuario.textContent = "Hubo un error";
+                        return;
+                    }
+                    const { nombreCompleto, especialidades } = resp.nutriologo;
+
+                    usuario.textContent = 'Bienvenido ' + nombreCompleto;
+                    console.log(especialidades);
+                })
+                .catch( err => console.log(err));
+        }
+    </script>
 </body>
 </html>
