@@ -694,7 +694,7 @@ const getInfo = async (req, res = response) => {
 }
 
 const nutriologoDelete = async (req, res = response) => {
-    //Id del cliente
+    //Id del nutriologo
     const id = req.id;
 
     try {
@@ -711,6 +711,33 @@ const nutriologoDelete = async (req, res = response) => {
         });
     }
 }
+
+const getFechas = async(req, res = response) =>{
+    //id del nutriologo
+    const id = req.id;
+
+    try {
+        const { fechaDisponible } = await Nutriologo.findById(id);
+
+
+    } catch (error) {
+        
+    }
+}
+
+const updateFechas = async (req, res = response) => {
+    //id del nutriologo
+    const id = req.id;
+
+    try {
+        const { fechaDisponible } = await Nutriologo.findById(id);
+
+
+    } catch (error) {
+        
+    }
+}
+
 
 module.exports = {
     nutriologoPost,

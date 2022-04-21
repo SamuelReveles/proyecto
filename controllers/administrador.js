@@ -466,7 +466,7 @@ const adminUpdate = async(req, res = response) => {
         if(tempFilePath){
 
             //Si la foto de perfil NO es la default se borra
-            if(admin.imagen != 'LINK DE FOTO DE PERFIL DEFAULT'){
+            if(admin.imagen != ' '){
                 //Borrar la imagen anterior de cloudinary
             
                 //Split del nombre de la imagen
@@ -713,9 +713,32 @@ const UnBanear = async (req, res = response) => {
 
 }
 
+const getInfo = async (req, res = response)  => {
+    //id del admin
+    const id = req.id;
+
+
+    try {
+        const admin = await Administrador.findById(id);
+
+        res.status(200).json({
+            success: true,
+            admin
+        });  
+
+    } catch (error) {
+        console.log(error);
+            res.status(400).json({
+                success: false,
+                msg: 'Error al obtener información'
+            });
+    }
+}
+
 module.exports = {
     getUser,
     getAllUsers,
+    getInfo,
     getSolicitudes,
     postSolicitud,
     getAllNutri,

@@ -8,6 +8,18 @@ const ServicioSchema = Schema({
     fecha_finalizacion: {
         type: Date,
         required: true
+    },
+    fecha_cita: {
+        type: Object,
+        required: true
+    },
+    calendario: {
+        type: Boolean,
+        default: false
+    },
+    lista_compras: {
+        type: Boolean,
+        default: false
     }
 });
 

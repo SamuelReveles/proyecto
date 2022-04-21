@@ -18,7 +18,8 @@ const {
     updateMotivo,
     reportesUsuario,
     UnBanear,
-    borrarReporte
+    borrarReporte,
+    getInfo
 } = require('../controllers/administrador')
 
 //Helpers
@@ -35,6 +36,9 @@ router.use(verificarAdmin);
 
 //Busar un usuario
 router.get('/user/one', getUser);
+
+//Ver información de la cuenta
+router.get('/data', getInfo);
 
 //Banear a un usuario
 router.put('/desbanear', UnBanear);
