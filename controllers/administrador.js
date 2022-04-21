@@ -57,7 +57,7 @@ const postAdmin = async (req, res = response) => {
             jwt
         })
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Registro inválido'
         });
@@ -317,7 +317,7 @@ const postSolicitud = async(req, res = response) => {
             soli
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se ha podido crear la solicitud'
         });
@@ -494,7 +494,7 @@ const adminUpdate = async(req, res = response) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No fue posible actualizar'
         });
@@ -518,7 +518,7 @@ const addMotivo = async(req, res = response) => {
             motivo
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No fue posible guardar el motivo'
         })
@@ -571,7 +571,7 @@ const updateMotivo = async (req, res = response) => {
             motivo
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Error al actualizar el motivo'
         });
@@ -663,7 +663,7 @@ const borrarReporte = async (req, res = response) => {
             msg: 'Reporte eliminado'
         });
     } catch(error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se pudo actualizar el objeto'
         });
@@ -704,7 +704,7 @@ const UnBanear = async (req, res = response) => {
             msg: 'Usuario baneado correctamente'
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: true,
             user,
             msg: 'No se ha podido desbanear'

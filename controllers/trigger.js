@@ -47,7 +47,7 @@ const baneoAutomatico = async(req, res = response) => {
         });
     }catch(error){
         console.log(error);
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Error al banear usuarios'
         });
@@ -166,7 +166,7 @@ const desbanear = async (req, res = response) => {
         });
     }catch(error){
         console.log(error);
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Error al banear usuarios'
         });

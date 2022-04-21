@@ -46,7 +46,7 @@ const usuariosPost = async (req, res = response) => {
         });
     } 
     catch(error) {
-        res.status(401).json({
+        res.status(400).json({
             succes: false,
             msg: 'Registro inválido'
         })
@@ -73,7 +73,7 @@ const usuariosDelete = async (req, res = response) => {
            msg: 'Usuario eliminado correctamente'
        });
    } catch (error) {
-       res.status(401).json({
+       res.status(400).json({
            success: false,
            msg: 'No se ha podido eliminar al usuario ' + id
        });
@@ -396,7 +396,7 @@ const reportar = async (req, res = response) => {
             msg: 'Reportado correctamente'
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se ha logrado reportar'
         });
@@ -454,7 +454,7 @@ const calificar = async (req, res = response) => {
         })
     )
     .catch(() => {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Error al actualizar el nutriólogo'
         });
@@ -599,7 +599,7 @@ const usuariosUpdate = async (req, res = response) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(401).json({
+        res.status(400).json({
             error,
             success: false,
             msg: 'No fue posible actualizar'

@@ -53,7 +53,7 @@ const nutriologoPost = async (req, res = response) => {
         });
     }
     catch (err) {
-        res.status(401).json({
+        res.status(400).json({
             err,
             success: false,
             msg: 'Error al agregar a la DB'
@@ -112,7 +112,7 @@ const nutriologoUpdate = async (req, res = response) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(401).json({
+        res.status(400).json({
             error,
             success: false,
             msg: 'No fue posible actualizar'
@@ -143,7 +143,7 @@ const nutriologoUpdateServicio = async (req, res = response) => {
         });
 
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'Error al actualizar'
         });
@@ -182,7 +182,7 @@ const postPredeterminado = async (req, res = response) => {
             predeterminado
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No fue posible actualizar los alimentos predeterminados'
         });
@@ -348,7 +348,7 @@ const deletePredeterminado = async (req, res = response) => {
 
     await Nutriologo.findByIdAndUpdate(id, nutriologo)
         .catch(() =>{
-            res.status(401).json({
+            res.status(400).json({
                 success: false,
                 msg: 'No se pudo eliminar el predeterminado dentro del arreglo del nutriólogo'
             });
@@ -663,7 +663,7 @@ const reportar = async (req, res = response) => {
             msg: 'Reportado correctamente'
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se ha logrado reportar'
         });
@@ -705,7 +705,7 @@ const nutriologoDelete = async (req, res = response) => {
             msg: 'Usuario eliminado correctamente'
         });
     } catch (error) {
-        res.status(401).json({
+        res.status(400).json({
             success: false,
             msg: 'No se ha podido eliminar al usuario ' + id
         });

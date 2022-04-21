@@ -27,7 +27,7 @@ const validarToken = (req = request, res = response, next) => {
         next();
 
     } catch (error) {
-        res.status(400).json({ 
+        res.status(401).json({ 
             success: false,
             msg: 'Token inválido'
         });

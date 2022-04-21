@@ -3,6 +3,9 @@ const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const { dbConnection } = require('../database/config');
 
+//Socket controller
+const { socketController } = require('../controllers/sockets');
+
 class Server{
     constructor(){
         //Se usa el framework de express
@@ -11,6 +14,10 @@ class Server{
         this.app.use(express.static('../public/index.html'));
         //Numero de puerto (.env)
         this.port = process.env.PORT;
+        //Server para los sockets
+        this.server = require('http').createServer(this.app);
+        //Socket
+        this.io = require('socket.io')(this.server);
         //Dirección de pruebas
         this.usuariosPath = '/api/usuarios';
         this.adminPath = '/api/administrador';
@@ -23,6 +30,8 @@ class Server{
         this.middlewares();
         //Rutas de la app
         this.routes();
+        //Activar sockets
+        this.sockets();
     }
 
     async conectarDB(){
@@ -52,9 +61,13 @@ class Server{
         this.app.use(this.triggerPath, require('../routes/trigger'));
     }
 
+    sockets() {
+        this.io.on('connection', socketController);
+    }
+
     listen(){
         //Se selecciona un puerto por que el que va a escuchar el server
-        this.app.listen(this.port, (req, res) => {
+        this.server.listen(this.port, (req, res) => {
             console.log('listening on port', this.port);
         });
     }

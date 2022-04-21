@@ -23,14 +23,26 @@ const logIn = async (req, res = response) => {
 
         //Verificar que esté registrado
         let registrado = false;
+        let tipo = '';
 
         let user = await Cliente.findOne({correo});
 
         if(!user) user = await Nutriologo.findOne({correo});
-        else registrado = true;
+        else {
+            registrado = true;
+            tipo = 'Cliente';
+        }
 
         if(!user) user = await Administrador.findOne({correo});
-        else registrado = true;
+        else if(tipo === ''){
+            registrado = true;
+            tipo = 'Nutriólogo';
+        } 
+
+        if(user && tipo === '') {
+            tipo = 'Administrador';
+            registrado = true;
+        }
 
         //Si no está registrado, se envía la información para crear un nuevo registro
         if(!registrado) {
@@ -52,7 +64,8 @@ const logIn = async (req, res = response) => {
                 success: true,
                 registrado: true,
                 jwt,
-                msg: 'Sesión iniciada'
+                msg: 'Sesión iniciada',
+                tipo
             });
         }
 

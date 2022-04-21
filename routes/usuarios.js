@@ -57,6 +57,7 @@ router.put('/', usuariosUpdate);
 //Reportar
 router.put('/reportar', reportar);
 
+//Eliminar cuenta
 router.delete('/', usuariosDelete);
 
 router.patch('/', usuariosPatch);
