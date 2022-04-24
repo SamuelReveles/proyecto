@@ -2,9 +2,13 @@ const { request, response } = require('express');
 
 const socketController = (socket) => {
 
-    socket.on('notificacion', ( payload ) => {
+    socket.on('mensaje', ( payload ) => {
 
-    })
+    });
+
+    socket.emit('notificacion', ( payload) => {
+        
+    });
 
 }
 

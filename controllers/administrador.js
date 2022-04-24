@@ -37,7 +37,7 @@ const postAdmin = async (req, res = response) => {
     try {
 
         //Foto de perfil default
-        let linkImagen = ' ';
+        let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png';
 
         const admin = new Administrador({
             nombre: req.body.nombre,
@@ -466,7 +466,7 @@ const adminUpdate = async(req, res = response) => {
         if(tempFilePath){
 
             //Si la foto de perfil NO es la default se borra
-            if(admin.imagen != ' '){
+            if(admin.imagen != 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png'){
                 //Borrar la imagen anterior de cloudinary
             
                 //Split del nombre de la imagen

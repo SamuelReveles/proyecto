@@ -22,7 +22,7 @@ const usuariosPost = async (req, res = response) => {
 
     try {
         //Foto de perfil default
-        let linkImagen = ' ';
+        let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png';
 
         //Creando objeto
         const user = new Cliente({
@@ -66,17 +66,21 @@ const usuariosDelete = async (req, res = response) => {
    const id = req.id;
 
    try {
-       await Cliente.findByIdAndDelete(id);
-       
-       res.status(201).json({
+
+        const { baneado } = await Cliente.findById(id);
+        if(baneado) throw new Error('Cliente baneado');
+
+        await Cliente.findByIdAndDelete(id);
+
+        res.status(201).json({
            success: true,
            msg: 'Usuario eliminado correctamente'
-       });
+        });
    } catch (error) {
-       res.status(400).json({
-           success: false,
-           msg: 'No se ha podido eliminar al usuario ' + id
-       });
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido eliminar al usuario ' + id
+        });
    }
 };
 
@@ -571,7 +575,7 @@ const usuariosUpdate = async (req, res = response) => {
         if(tempFilePath){
 
             //Si la foto de perfil NO es la default se borra
-            if(user.imagen != 'LINK DE FOTO DEFAULT'){
+            if(user.imagen != 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png'){
                 //Borrar la imagen anterior de cloudinary
             
                 //Split del nombre de la imagen

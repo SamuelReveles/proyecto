@@ -23,7 +23,7 @@ const nutriologoPost = async (req, res = response) => {
     try {
             
         //Foto de perfil default
-        let linkImagen = '';
+        let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png';
 
 
         //Crear el objeto
@@ -78,7 +78,7 @@ const nutriologoUpdate = async (req, res = response) => {
         if(tempFilePath){
 
             //Si la foto de perfil NO es la default se borra
-            if(nutriologo.imagen != 'LINK FOTO DE PERFIL DEFAULT'){
+            if(nutriologo.imagen != 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png'){
                 //Borrar la imagen anterior de cloudinary
             
                 //Split del nombre de la imagen
