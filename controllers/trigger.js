@@ -3,14 +3,16 @@ const { response } = require('express');
 const sgMail = require('@sendgrid/mail');
 
 //Helpers
-const { diferenciaMeses } = require('../helpers/triggers');
+const { diferenciaMeses, diferenciaDias } = require('../helpers/triggers');
 
 //Modelos
 const Cliente = require('../models/cliente');
 const Nutriologo = require('../models/nutriologo');
 
-//Baneo por inactividad
-const baneoAutomatico = async(req, res = response) => {
+const { crearEvento } = require('../helpers/google-verify');
+
+//Borrar usuarios por inactividad
+const borrarAutomatico = async(req, res = response) => {
 
     try{
         //Nutriólogos
@@ -18,11 +20,13 @@ const baneoAutomatico = async(req, res = response) => {
 
         for await (let nutriologo of nutriologos) {
             if(diferenciaMeses(new Date(nutriologo.ultima_conexion), new Date(Date.now())) >= 6){
-                let desban = new Date(Date.now());  
-                desban.setMonth(desban.getMonth() + 6);
-                nutriologo.baneado = true;
-                nutriologo.fecha_desban = desban;
-                await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+                //Método de baneo
+                // let desban = new Date(Date.now());  
+                // desban.setMonth(desban.getMonth() + 6);
+                // nutriologo.baneado = true;
+                // nutriologo.fecha_desban = desban;
+                // await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+                await Nutriologo.findByIdAndDelete(nutriologo._id);
             }
         }
 
@@ -33,11 +37,7 @@ const baneoAutomatico = async(req, res = response) => {
 
         for await (let cliente of clientes) {
             if(diferenciaMeses(new Date(cliente.ultima_conexion), new Date(Date.now())) >= 6){
-                let desban = new Date(Date.now());  
-                desban.setMonth(desban.getMonth() + 6);
-                cliente.baneado = true;
-                cliente.fecha_desban = desban;
-                await Cliente.findByIdAndUpdate(cliente._id, cliente);
+                await Cliente.findByIdAndDelete(cliente._id);
             }
         }
 
@@ -60,9 +60,8 @@ const avisoBaneo = async (req, res = response) => {
     try{
         //Nutriólogos
         const nutriologos = await Nutriologo.find({baneado: false, avisado: false});
-
         for await (let nutriologo of nutriologos) {
-            if(diferenciaMeses(new Date(nutriologo.ultima_conexion), new Date(Date.now())) >= 5){
+            if(diferenciaDias( new Date(nutriologo.ultima_conexion), new Date(Date.now())) >= 165){
                 //Enviar correo de aviso
 
                 //Mensaje de correo electrónico
@@ -88,20 +87,18 @@ const avisoBaneo = async (req, res = response) => {
 
         //Clientes
         const clientes = await Cliente.find({baneado: false, avisado: false});
-
         for await (let cliente of clientes) {
-            if(diferenciaMeses( new Date(cliente.ultima_conexion), new Date(Date.now())) >= 5){
+            if(diferenciaDias( new Date(cliente.ultima_conexion), new Date(Date.now())) >= 165){
                 console.log('Se pasó: ' + cliente.nombre);
-
                 //Enviar correo de aviso
                 
                 //Mensaje de correo electrónico
                 const msg = {
                     to: cliente.correo, // Change to your recipient
                     from: 'a18300384@ceti.mx', // Change to your verified sender
-                    subject: 'Tu cuenta será suspendida en un mes',
+                    subject: 'Tu cuenta será eliminada dentro de unos días',
                     text: 'Text',
-                    html: 'Hola ' + cliente.nombre + ' tu este correo automático es un aviso, pues tu cuenta lleva mucho tiempo inactiva y en un mes será suspendida',
+                    html: 'Hola ' + cliente.nombre + ' tu este correo automático es un aviso, pues tu cuenta lleva mucho tiempo inactiva y en unos días será suspendida',
                 }
     
                 //Enviar el correo de respuesta
@@ -173,8 +170,17 @@ const desbanear = async (req, res = response) => {
     }
 }
 
+const agendar = async (req, res = response) => {
+    const hora_inicio = new Date();
+    hora_inicio.setMinutes(hora_inicio.getMinutes() + 15);
+    const hora_cierre = new Date();
+    hora_cierre.setMinutes(hora_inicio.getMinutes() + 30);
+    await crearEvento(hora_inicio, hora_cierre, '6260345d8753a039f90a46e4', '626067f8c1311a76fc759c29');
+    res.status(200).json({success: true});
+}
 module.exports = {
-    baneoAutomatico,
+    borrarAutomatico,
     avisoBaneo,
-    desbanear
+    desbanear,
+    agendar
 }
