@@ -1,6 +1,7 @@
 //Librerías externas
 const { response } = require('express');
 const bcryptjs = require('bcryptjs');
+const PDFDocument = require('pdfkit');
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
@@ -611,6 +612,86 @@ const usuariosUpdate = async (req, res = response) => {
     }
 }
 
+//Historial de dietas del cliente
+const mostrarHistorial = async (req, res = response) => {
+
+    try {
+        //Id del cliente
+        const id = req.query.id;
+
+        const { historial, nombre } = await Cliente.findById(id);
+
+        const dato = new Dato({
+            peso: 75,
+            altura: 1.80,
+            brazo: 80,
+            cuello: 60,
+            abdomen: 110,
+            cadera: 100,
+            muslos: 80,
+            pectoral: 150,
+            notas: 'Tomar mucha agua'
+        });
+
+        //Extraer los datos del cliente
+        //const datos = await Datos.findById(historial.datos);
+
+        //Crear el documento permitiendo que se pueda crear el archivo de salida
+        const doc = new PDFDocument({bufferPage: true});
+
+        //Asignar nombre al archivo
+        const filename = 'Historial_' + nombre + '_' + Date.now() + '.pdf';
+
+        const stream = res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-disposition': 'attachment; filename=' + filename
+        });
+
+        doc.on('data', (data) => {
+            stream.write(data);
+        });
+
+        doc.on('end', () => {
+            stream.end();
+        });
+
+        //Fuente usada
+        //doc.font('../public/');
+
+        //Dieta semanal
+        doc.fontSize(20);
+        doc.text('Dieta de la semana ' + nombre, {
+            align: 'center'
+        });
+
+        //Datos del cliente
+        doc.addPage();
+        doc.fontSize(20);
+        doc.text('Datos de la semana ' + nombre, {
+            align: 'center'
+        });
+
+        doc.text('\n\n');
+        doc.fontSize(15);
+        if(dato.peso) doc.text('Peso: ' + dato.peso + ' kg\n\n');
+        if(dato.altura) doc.text('Altura: ' + dato.altura + ' m\n\n');
+        if(dato.brazo) doc.text('Brazo: ' + dato.brazo + ' cm\n\n');
+        if(dato.cuello) doc.text('Cuello: ' + dato.cuello + ' cm\n\n');
+        if(dato.abdomen) doc.text('Abdomen: ' + dato.abdomen + ' cm\n\n');
+        if(dato.cadera) doc.text('Cadera: ' + dato.cadera + ' cm\n\n');
+        if(dato.muslos) doc.text('Muslos: ' + dato.muslos + ' cm\n\n');
+        if(dato.pectoral) doc.text('Pectoral: ' + dato.pectoral + ' cm\n\n');
+        if(dato.notas) doc.text('Notas: ' + dato.notas + '\n\n');
+
+        doc.end();
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error :/'
+        })
+    }
+}
+
 module.exports = {
     usuariosPost,
     usuariosUpdate,
@@ -623,5 +704,6 @@ module.exports = {
     getExtras,
     getInfo,
     reportar,
-    calificar
+    calificar,
+    mostrarHistorial
 }

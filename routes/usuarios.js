@@ -19,7 +19,8 @@ const {
     getExtras,
     getInfo,
     reportar,
-    calificar
+    calificar,
+    mostrarHistorial
 } = require('../controllers/usuarios');
 
 //Router instance
@@ -59,6 +60,9 @@ router.put('/reportar', reportar);
 
 //Eliminar cuenta
 router.delete('/', usuariosDelete);
+
+//Ver historial del cliente
+router.get('/historial', mostrarHistorial);
 
 router.patch('/', usuariosPatch);
 

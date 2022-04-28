@@ -6,7 +6,8 @@ const historialSchema = Schema({
         required: true
     },
     datos: {
-        type: String,
+        type: Schema.ObjectId,
+        ref: 'dato',
         required: false
     }
 });

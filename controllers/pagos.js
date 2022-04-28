@@ -59,7 +59,7 @@ const crearOrden = async(req, res = response) => {
 const capturarOrden = async(req, res = response) => {
     try {
         //Datos del pago 
-        const { token, PayerID } = req.query;
+        const { token } = req.query;
 
         const response = await axios.post(process.env.PAYPAL_URLCALL + '/v2/checkout/orders/' + token + '/capture', {}, {
             auth: {

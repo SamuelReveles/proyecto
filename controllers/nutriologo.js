@@ -522,7 +522,15 @@ const updateClientData = async (req, res = response) => {
         //Crear datos del cliente
         const datos = new Dato({
             peso: req.body.peso,
-            altura: req.body.altura
+            altura: req.body.altura,
+            fecha_nacimiento: req.body.fecha_nacimiento,
+            brazo: req.body.brazo,
+            cuello: req.body.cuello,
+            abdomen: req.body.abdomen,
+            cadera: req.body.cadera,
+            muslos: req.body.muslos,
+            pectoral: req.body.pectoral,
+            notas: req.body.notas
         });
 
         const cliente = await Cliente.findById(id);
@@ -533,7 +541,7 @@ const updateClientData = async (req, res = response) => {
             if(!cliente.datoInicial){
                 await Cliente.findByIdAndUpdate(id, {datoInicial : datos})
                 .then(await datos.save());
-                res.status(200).json({
+                res.status(201).json({
                     success: true, 
                     datos
                 });
@@ -542,9 +550,9 @@ const updateClientData = async (req, res = response) => {
                 cliente.datoConstante.push(datos);
                 await Cliente.findByIdAndUpdate(id, cliente)
                 .then(await datos.save());
-                res.json({
+                res.status(201).json({
                     success: true,
-                     datos
+                    datos
                 });
             }
         }
@@ -555,7 +563,7 @@ const updateClientData = async (req, res = response) => {
             if(!extra.datoInicial){
                 await Extra.findByIdAndUpdate(id, {datoInicial : datos})
                 .then(await datos.save());
-                res.status(200).json({
+                res.status(201).json({
                     success: true, 
                     datos
                 });
@@ -564,7 +572,7 @@ const updateClientData = async (req, res = response) => {
                 extra.datoConstante.push(datos)
                 await Extra.findByIdAndUpdate(id, extra)
                 .then(await datos.save());
-                res.status(200).json({
+                res.status(201).json({
                     success: true, 
                     datos
                 });

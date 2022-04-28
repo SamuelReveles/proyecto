@@ -23,6 +23,7 @@ const {
     updateClientData,
     reportar
 } = require('../controllers/nutriologo');
+const { mostrarHistorial } = require('../controllers/usuarios');
 
 const { validarToken, verificarNutriologo } = require('../middlewares/validar-jwt');
 
@@ -74,5 +75,8 @@ router.get('/data', getInfo);
 
 //Reportar a un usuario
 router.put('/reportar', reportar);
+
+//Historial de cliente
+router.get('/historial', mostrarHistorial);
 
 module.exports = router;
