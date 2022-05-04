@@ -24,6 +24,7 @@ class Server{
         this.nutriologoPath = '/api/nutriologo';
         this.authPath = '/api/auth';
         this.triggerPath = '/api/trigger';
+        this.invitadoPath = '/api/invitado';
         //Conectar a base de datos
         this.conectarDB();
         //Middlewares
@@ -59,6 +60,7 @@ class Server{
         this.app.use(this.nutriologoPath, require('../routes/nutriologo'));
         this.app.use(this.authPath, require('../routes/autenticacion'));
         this.app.use(this.triggerPath, require('../routes/trigger'));
+        this.app.use(this.invitadoPath, require('../routes/invitados'));
     }
 
     sockets() {

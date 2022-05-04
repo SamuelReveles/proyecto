@@ -31,12 +31,6 @@ const router = Router();
 router.use(validarToken);
 router.use(verificarCliente);
 
-//Buscar un nutriólogo
-router.get('/busqueda', busqueda);
-
-//Ver datos del nutriólogo
-router.get('/nutriologo', getNutriologo);
-
 //Extraer el progreso
 router.get('/progreso', getProgreso);
 

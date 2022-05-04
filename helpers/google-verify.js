@@ -1,6 +1,7 @@
 const { OAuth2Client } = require('google-auth-library');
 const { google } = require('googleapis');
-const { OAuth2 } = google.auth;
+
+const calendar = google.calendar('v3');
 
 //Modelos
 const Nutriologo = require('../models/nutriologo');
@@ -29,15 +30,6 @@ async function crearEvento(hora_inicio = new Date(), hora_cierre = new Date(), i
 
     const { nombreNutriologo, correoNutriologo } = await Nutriologo.findById(idNutriologo);
     const { nombreCliente, correoCliente } = await Cliente.findById(idCliente);
-    const oAuth2Cliente = new OAuth2(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_SECRET_ID
-    );
-    oAuth2Cliente.setCredentials({
-        refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-    })
-
-    const calendar = google.calendar({ version:'v3', auth: oAuth2Cliente });
 
     const event = {
         summary: 'Consulta con el(la) nutriólogo(a)' ,
@@ -57,12 +49,14 @@ async function crearEvento(hora_inicio = new Date(), hora_cierre = new Date(), i
       };
       
       calendar.events.insert({
+        project: process.env.GOOGLE_CALENDAR_API,
+        auth: jwtClient,
         calendarId: 'primary',
         resource: event,
       }, function(err, event) {
         if (err) {
           console.log('There was an error contacting the Calendar service: ' + err);
-          return;
+          return new Error('Error al crear');
         }
         console.log('Event created: %s', event.htmlLink);
         console.log(event);
