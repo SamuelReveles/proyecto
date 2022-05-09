@@ -83,7 +83,19 @@ const NutrilogoSchema = Schema({
     },
     avisado: {
         type: Boolean,
-        desfault: false
+        default: false
+    },
+    calendario: {
+        type: Boolean
+    },
+    calendario_precio: {
+        type: Number
+    },
+    lista_compras: {
+        type: Boolean
+    },
+    lista_compras_precio: {
+        type: Number
     }
 });
 

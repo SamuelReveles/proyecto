@@ -1,7 +1,7 @@
 //Librerías externas
 const { response } = require('express');
 const bcryptjs = require('bcryptjs');
-const PDFDocument = require('pdfkit');
+const PDF = require('pdfkit-construct');
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
@@ -16,6 +16,7 @@ const Nutriologo = require('../models/nutriologo');
 const Extra = require('../models/extra');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
+const Historial_Pago = require('../models/historial_pago');
 
 
 const usuariosPost = async (req, res = response) => {
@@ -492,17 +493,6 @@ const getNutriologo = async (req, res = response) => {
 
 }
 
-const generarTicket = async (req, res = response) => {
-    
-    //Id del nutriologo
-    const { id, fecha_cita } = req.query;
-
-    //Objeto del nutriólogo
-    const nutriologo = await Nutriologo.findById(id);
-
-
-}
-
 //Ver extras del cliente
 const getExtras = async (req, res = response)  => {
 
@@ -617,7 +607,7 @@ const mostrarHistorial = async (req, res = response) => {
 
     try {
         //Id del cliente
-        const id = req.query.id;
+        const id = req.id;
 
         const { historial, nombre } = await Cliente.findById(id);
 
@@ -628,8 +618,6 @@ const mostrarHistorial = async (req, res = response) => {
             cuello: 60,
             abdomen: 110,
             cadera: 100,
-            muslos: 80,
-            pectoral: 150,
             notas: 'Tomar mucha agua'
         });
 
@@ -637,7 +625,7 @@ const mostrarHistorial = async (req, res = response) => {
         //const datos = await Datos.findById(historial.datos);
 
         //Crear el documento permitiendo que se pueda crear el archivo de salida
-        const doc = new PDFDocument({bufferPage: true});
+        const doc = new PDF({bufferPage: true});
 
         //Asignar nombre al archivo
         const filename = 'Historial_' + nombre + '_' + Date.now() + '.pdf';
@@ -647,6 +635,55 @@ const mostrarHistorial = async (req, res = response) => {
             'Content-disposition': 'attachment; filename=' + filename
         });
 
+        //Fuente usada
+        //doc.font('../public/');
+        
+
+        //Dieta semanal
+        // Logo jopaka
+        doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 480, 730, {scale: 0.04})
+        doc.fontSize(20);
+        doc.text('Dieta de la semana ' + nombre, {
+            align: 'center'
+        });
+
+        //Datos del cliente
+        doc.addPage();
+        //Logo jopaka
+        doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 480, 730, {scale: 0.04})
+        doc.fontSize(20);
+        doc.text('Datos de la semana ' + nombre, {
+            align: 'center'
+        });
+
+        doc.text('\n\n');
+        doc.fontSize(15);
+
+        const datos = dato.toArray();
+
+        // set the header to render in every page
+        doc.setDocumentHeader({ height : "20%" }, () => {
+
+        });
+
+
+        doc.addTable([
+            {key: 'tipo', label: 'Dato', align: 'center'},
+            {key: 'valor', label: 'Valor', align: 'center'}
+        ], datos, {
+            border: {size: 0.06, color: '#000000'},
+            width: "fill_body",
+            striped: true,
+            stripedColors: ["#E8FFBE", "#D2FF7F"],
+            cellsPadding: 10,
+            marginLeft: 45,
+            marginRight: 45,
+            headAlign: 'center',
+            headBackground : '#A9E638',
+        });
+
+        doc.render();
+
         doc.on('data', (data) => {
             stream.write(data);
         });
@@ -655,36 +692,57 @@ const mostrarHistorial = async (req, res = response) => {
             stream.end();
         });
 
-        //Fuente usada
-        //doc.font('../public/');
-
-        //Dieta semanal
-        doc.fontSize(20);
-        doc.text('Dieta de la semana ' + nombre, {
-            align: 'center'
-        });
-
-        //Datos del cliente
-        doc.addPage();
-        doc.fontSize(20);
-        doc.text('Datos de la semana ' + nombre, {
-            align: 'center'
-        });
-
-        doc.text('\n\n');
-        doc.fontSize(15);
-        if(dato.peso) doc.text('Peso: ' + dato.peso + ' kg\n\n');
-        if(dato.altura) doc.text('Altura: ' + dato.altura + ' m\n\n');
-        if(dato.brazo) doc.text('Brazo: ' + dato.brazo + ' cm\n\n');
-        if(dato.cuello) doc.text('Cuello: ' + dato.cuello + ' cm\n\n');
-        if(dato.abdomen) doc.text('Abdomen: ' + dato.abdomen + ' cm\n\n');
-        if(dato.cadera) doc.text('Cadera: ' + dato.cadera + ' cm\n\n');
-        if(dato.muslos) doc.text('Muslos: ' + dato.muslos + ' cm\n\n');
-        if(dato.pectoral) doc.text('Pectoral: ' + dato.pectoral + ' cm\n\n');
-        if(dato.notas) doc.text('Notas: ' + dato.notas + '\n\n');
-
         doc.end();
     } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error :/'
+        })
+    }
+}
+
+const verHistorialPagos = async (req, res = response) => {
+    try {
+        const id = req.id;
+
+        const { historial_pagos, nombre, apellidos } = await Cliente.findById(id);
+
+        // const doc = historial_pagos[req.query.index].toPDF;
+
+        const historial = new Historial_Pago(
+            200,
+            nombre + apellidos,
+            'Nutest',
+            new Date(),
+            'General'
+        )
+
+        historial.calendario(50);
+
+        const doc = historial.toPDF();
+
+        //Asignar nombre al archivo
+        const filename = 'Ticket_' + nombre + '.pdf';
+
+        const stream = res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-disposition': 'attachment; filename=' + filename
+        });
+
+        doc.render();
+
+        doc.on('data', (data) => {
+            stream.write(data);
+        });
+
+        doc.on('end', () => {
+            stream.end();
+        });
+
+        doc.end();
+
+    } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Hubo un error :/'
@@ -705,5 +763,6 @@ module.exports = {
     getInfo,
     reportar,
     calificar,
-    mostrarHistorial
+    mostrarHistorial,
+    verHistorialPagos
 }

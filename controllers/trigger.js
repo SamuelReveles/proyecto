@@ -178,6 +178,21 @@ const agendar = async (req, res = response) => {
     await crearEvento(hora_inicio, hora_cierre, '6260345d8753a039f90a46e4', '626067f8c1311a76fc759c29');
     res.status(200).json({success: true});
 }
+
+//Actualización semanal del historial del cliente
+const actualizarHistorial = async(req, res = response) => {
+    
+    const clientes = await Cliente.find();
+
+    for await (let cliente of clientes) {
+        let historial = [];
+        if(cliente.historial) historial = cliente.historial;
+        //Agregar al arreglo el historial
+        //FALTA
+    }
+
+}
+
 module.exports = {
     borrarAutomatico,
     avisoBaneo,

@@ -1,6 +1,11 @@
 const { request, response } = require('express');
 const axios = require('axios');
 
+//Modelos
+const Historial_pago = require('../models/historial_pago');
+const Nutriologo = require('../models/nutriologo');
+const Cliente = require('../models/cliente');
+
 const crearOrden = async(req, res = response) => {
     
     //Extraer datos necesarios para el pago
@@ -18,7 +23,7 @@ const crearOrden = async(req, res = response) => {
                 {
                     amount: {
                         currency_code: "MXN",
-                        value: 200
+                        value: monto
                     },
                     description: "Servicio de nutrición online"
                 },
@@ -68,8 +73,7 @@ const capturarOrden = async(req, res = response) => {
             },
         });
         
-        //Pago realizado. Crear objeto de servicio
-
+        //Pago realizado 
 
         res.status(200).json({
             success: true,
@@ -87,6 +91,56 @@ const capturarOrden = async(req, res = response) => {
 const cancelarOrden = async(req, res = response) => {
 
 
+}
+
+const ordenPagada = async(req, res = response) => {
+           
+    try {
+        const id = req.id;
+
+        const { 
+            id_nutriologo,
+            categoria,
+            calendario = false,
+            lista_compras = false 
+        } = req.body;
+
+        let cliente = await Cliente.findById(id);
+        const { precio, nombreCompleto, calendario_precio, lista_compras_precio } = await Nutriologo.findById(id_nutriologo);
+
+        //Crear objeto a añadir en el registro de pagos
+        const historial = new Historial_pago(
+            precio,
+            cliente.nombre + ' ' + cliente.apellidos,
+            nombreCompleto,
+            new Date(),
+            categoria
+        );
+
+        if(calendario !== false) historial.calendario(calendario_precio);
+        if(lista_compras !== false ) historial.lista_compras(lista_compras_precio);
+
+        //Guardar en el registro del cliente
+        let historial_cliente = [];
+        if(cliente.historial_pago) historial_cliente = cliente.historial_pago;
+        historial_cliente.push(historial);
+        cliente.historial_pago = historial_cliente;
+
+        await Cliente.findByIdAndUpdate(id, cliente);
+
+        //Crear servicio
+        
+
+        res.status(200).json({
+            success: true
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error al crear servicio o historial'
+        })
+    }
 }
 
 module.exports = {

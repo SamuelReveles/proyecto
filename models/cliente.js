@@ -49,7 +49,6 @@ const ClienteSchema = Schema({
         type: Boolean, 
         default: true
     },
-    metodo_pago: [{ type: Schema.ObjectId, ref: 'metodo_pago' }],
     puntajeBaneo: {
         type: Number,
         default: 0
@@ -70,7 +69,10 @@ const ClienteSchema = Schema({
     avisado: {
         type: Boolean,
         default: false
-    }
+    },
+    historial_pagos: [{
+        type: Object
+    }]
 });
 
 ClienteSchema.methods.toJSON = function(){

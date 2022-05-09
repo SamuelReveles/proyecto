@@ -20,7 +20,8 @@ const {
     getInfo,
     reportar,
     calificar,
-    mostrarHistorial
+    mostrarHistorial,
+    verHistorialPagos
 } = require('../controllers/usuarios');
 
 //Router instance
@@ -57,6 +58,9 @@ router.delete('/', usuariosDelete);
 
 //Ver historial del cliente
 router.get('/historial', mostrarHistorial);
+
+//Ver historial de pagos del cliente
+router.get('/pagos', verHistorialPagos);
 
 router.patch('/', usuariosPatch);
 

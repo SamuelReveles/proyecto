@@ -35,6 +35,58 @@ const DatoSchema = Schema({
     }
 });
 
+DatoSchema.methods.toArray = function(){
+
+    let arreglo = [];
+
+    if(this.peso) arreglo.push({
+        tipo: 'Peso',
+        valor: this.peso + ' kg'
+    });
+
+    if(this.altura) arreglo.push({
+        tipo: 'Altura',
+        valor: this.altura + ' m'
+    });
+
+    if(this.brazo) arreglo.push({
+        tipo: 'Brazo',
+        valor: this.brazo + ' cm'
+    });
+
+    if(this.cuello) arreglo.push({
+        tipo: 'Cuello',
+        valor: this.cuello + ' cm'
+    });
+
+    if(this.abdomen) arreglo.push({ 
+        tipo: 'Abdomen',
+        valor: this.abdomen + ' cm'
+    });
+
+    if(this.cadera) arreglo.push({
+        tipo: 'Cadera',
+        valor: this.cadera + ' cm'
+    });
+
+    if(this.muslos) arreglo.push({
+        tipo: 'Muslos',
+        valor: this.muslos + ' cm'
+    });
+
+    if(this.pectoral) arreglo.push({
+        tipo: 'Pectoral',
+        valor: this.pectoral + ' cm'
+    });
+
+    if(this.notas) arreglo.push({
+        tipo: 'Notas',
+        valor: this.notas
+    })
+
+    return arreglo;
+}
+
 DatoSchema.methods.toJSON = function(){
     const { __v, ...dato } = this.toObject();
     return dato;
