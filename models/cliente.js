@@ -72,7 +72,10 @@ const ClienteSchema = Schema({
     },
     historial_pagos: [{
         type: Object
-    }]
+    }],
+    calendario: {
+        type: Array
+    }
 });
 
 ClienteSchema.methods.toJSON = function(){

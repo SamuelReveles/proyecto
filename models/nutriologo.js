@@ -59,8 +59,7 @@ const NutrilogoSchema = Schema({
         type: Number
     },
     fechaDisponible: [{ 
-        type: Date, 
-        required: [true, 'Las fechas disponibles del nutriologo son obligatorias']
+        type: Object
     }],
     reportes: [{
         type: Schema.ObjectId, ref:'reporte'

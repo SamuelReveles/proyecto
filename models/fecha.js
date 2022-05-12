@@ -1,9 +1,13 @@
 class Fecha {
     
-    constructor(dia, hora_inicio, hora_cierre) {
-        this.dia = dia;
-        this.hora_inicio = hora_inicio;
-        this.hora_cierre = hora_cierre;
+    constructor(hora = '', index = 0) {
+
+        //Algoritmo para crear fechas
+        /*
+        * Recibe string de hora y un índice con el día
+        */ 
+
+        //this.date = Fecha;
         this.agendada = false;
     }
 

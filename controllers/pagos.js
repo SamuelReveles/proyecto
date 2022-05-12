@@ -5,6 +5,7 @@ const axios = require('axios');
 const Historial_pago = require('../models/historial_pago');
 const Nutriologo = require('../models/nutriologo');
 const Cliente = require('../models/cliente');
+const Servicio = require('../models/servicio');
 
 const crearOrden = async(req, res = response) => {
     
@@ -102,11 +103,12 @@ const ordenPagada = async(req, res = response) => {
             id_nutriologo,
             categoria,
             calendario = false,
-            lista_compras = false 
+            lista_compras = false,
+            horario
         } = req.body;
 
         let cliente = await Cliente.findById(id);
-        const { precio, nombreCompleto, calendario_precio, lista_compras_precio } = await Nutriologo.findById(id_nutriologo);
+        const { precio, nombreCompleto, calendario_precio, lista_compras_precio, fechaDisponible } = await Nutriologo.findById(id_nutriologo);
 
         //Crear objeto a añadir en el registro de pagos
         const historial = new Historial_pago(
@@ -128,8 +130,22 @@ const ordenPagada = async(req, res = response) => {
 
         await Cliente.findByIdAndUpdate(id, cliente);
 
+        const date = new Date();
+
         //Crear servicio
-        
+        const fecha_cita = fechaDisponible[fechaDisponible.findIndex(horario)]; //Posible error al convertir con objeto clase fecha
+
+        //Fecha_cita + 10 días
+        const fecha_finalizacion = 0;
+
+        const servicio = new Servicio({
+            fecha_cita,
+            fecha_finalizacion,
+            calendario,
+            lista_compras
+        });
+
+        //Guardar el servicio
 
         res.status(200).json({
             success: true

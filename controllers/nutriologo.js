@@ -153,7 +153,91 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
 //Actualización de fechas disponibles
 const fechasUpdate = async (req, res = response) => {
+    
+    try {
+        const id = req.id;
 
+        const nutriologo = await Nutriologo.findById(id);
+        let fechas = [];
+
+        let arreglo;
+
+        //Arreglo con 7 días de la semana
+        for (let i = 0; i < 7; i++) {
+
+            //Horarios
+            for await (const hora of arreglo[i]){
+                //Crear un objeto fecha
+                let fecha = Fecha(hora, i);
+
+                //Push a las fechas del nutriólogo
+                fechas.push(fecha);
+            }
+
+        }
+
+        nutriologo.fechaDisponible = fechas;
+        await Nutriologo.findByIdAndUpdate(id, nutriologo);
+
+        res.status(200).json({
+            success: true,
+            fechas
+        });
+    } catch(error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se han podido actualizar las fechas'
+        });
+    }
+
+}
+
+//Llenar calendario del paciente
+const llenarCalendario = async (req, res = response) => {
+    try {
+        const id = req.id;
+        const id_paciente = req.body.id;
+
+        const calendario = req.body.calendario;
+        const compras = req.body.lista_compras;
+
+        let calendarioCliente = [];
+
+        //Arreglo con 7 días de la semana
+        for (let i = 0; i < 7; i++) {
+
+            //Posición 0 = Link meet
+            calendarioCliente[i][0] = calendario[i][0];
+
+            //Posición 1 = Desayuno
+            calendarioCliente[i][1] = calendario[i][1];
+
+            //Posición 2 = Comida
+            calendarioCliente[i][2] = calendario[i][2];
+
+            //Posición 3 = Cena
+            calendarioCliente[i][3] = calendario[i][3];
+
+            //Posición 4 = Notas
+            calendarioCliente[i][4] = calendario[i][4];
+
+        }
+
+        calendarioCliente[7][0] = compras;
+
+        await Cliente.findByIdAndUpdate(id_paciente, {calendario: calendarioCliente});
+
+        res.status(200).json({
+            success: true,
+            calendarioCliente
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Error al llenar el calendario del paciente'
+        })   
+    }
 }
 
 // Crear un nuevo alimento predeterminado
@@ -268,7 +352,7 @@ const putPredeterminado = async (req, res = response) => {
             resultado = alimento;
             break;
         }
-    }
+    } 
 
     if(!resultado){
         res.status(400).json({
