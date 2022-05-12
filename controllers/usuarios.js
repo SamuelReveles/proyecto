@@ -701,25 +701,59 @@ const mostrarHistorial = async (req, res = response) => {
     }
 }
 
+const listadoPagos = async (req, res = response) => {
+    try {
+        const id = req.id;
+
+        const { historial_pagos } = await Cliente.findById(id);
+
+        res.status(200).json({
+            success: true,
+            historial_pagos
+        })
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error al ver el historial'
+        })
+    }
+}
+
 const verHistorialPagos = async (req, res = response) => {
     try {
         const id = req.id;
 
         const { historial_pagos, nombre, apellidos } = await Cliente.findById(id);
 
-        // const doc = historial_pagos[req.query.index].toPDF;
+        const { 
+            precio_servicio,
+            nombreCliente,
+            nombreNutriologo,
+            fecha_pago,
+            categoria,
+            calendario_precio,
+            lista_compras_precio
+        } = historial_pagos[req.query.index];
 
         const historial = new Historial_Pago(
-            200,
-            nombre + apellidos,
-            'Nutest',
-            new Date(),
-            'General'
-        )
+            precio_servicio,
+            nombreCliente,
+            nombreNutriologo,
+            fecha_pago,
+            categoria,
+            calendario_precio,
+            lista_compras_precio
+        );
 
-        historial.calendario(50);
+        if(historial_pagos[req.query.index].calendario === true) historial.calendario(calendario_precio);
+        if(historial_pagos[req.query.index].lista_compras === true) historial.lista_compras(lista_compras_precio);
+
+        console.log(historial);
 
         const doc = historial.toPDF();
+
+        // historial.calendario(50);
 
         //Asignar nombre al archivo
         const filename = 'Ticket_' + nombre + '.pdf';
@@ -764,5 +798,6 @@ module.exports = {
     reportar,
     calificar,
     mostrarHistorial,
-    verHistorialPagos
+    verHistorialPagos,
+    listadoPagos
 }

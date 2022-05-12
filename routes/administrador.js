@@ -61,12 +61,6 @@ router.get('/nutriologo', getAllNutri);
 //Buscar un solo nutriólogo
 router.get('/nutriologo/one', getNutriologo);
 
-//Crear una nueva solicitud
-router.post('/soli', postSolicitud);
-
-//Responder solicitud
-router.put('/soli', putResponderSolicitud);
-
 //Update de datos de la cuenta
 router.put('/update', validarCelular, adminUpdate);
 

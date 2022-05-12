@@ -24,12 +24,6 @@ router.get('/desbanear', desbanear);
 //Aviso de baneo autoban
 router.get('/aviso', avisoBaneo);
 
-//PAGOS PAYPAL PRUEBAS
-router.post('/crearOrden', crearOrden);
-
-//Capturar orden de pago
-router.get('/capturarOrden', capturarOrden);
-
 router.get('/crearEvento', agendar);
 
 module.exports = router;

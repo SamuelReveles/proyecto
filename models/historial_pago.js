@@ -9,10 +9,14 @@ class Historial_Pago {
         this.precio_servicio = precio_servicio;
         this.nombreCliente = nombreCliente;
         this.nombreNutriologo = nombreNutriologo;
-        this.fecha_pago = format(fecha_pago, 'dd-MMMM-yyyy', {locale: es});
+        this.fecha_pago = fecha_pago;
         this.categoria = categoria;
         this.calendario_precio = 0;
         this.lista_compras_precio = 0;
+    }
+
+    formatFecha() {
+        return format(this.fecha_pago, 'dd-MMMM-yyyy', {locale: es});
     }
 
     calendario(precio = 0) {
@@ -27,7 +31,7 @@ class Historial_Pago {
 
     toArray() {
 
-        const fechaArr = this.fecha_pago.split('-');
+        const fechaArr = this.formatFecha().split('-');
         const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
         let total = this.precio_servicio;

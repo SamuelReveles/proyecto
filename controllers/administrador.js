@@ -304,12 +304,18 @@ const getSolicitudes = async(req, res = response) => {
 const postSolicitud = async(req, res = response) => {
 
     try {
+        //Extraer archivo de cv
+        const { tempFilePath } = req.files.imagen;
+
+        //Subir a cloudinary y extraer el secure_url
+        const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
+
         const soli = new Solicitud_empleo({
             nombre: req.body.nombre,
-            cv: req.body.cv,
+            cv: secure_url,
             correo: req.body.correo
         });
-    
+
         await soli.save();
     
         res.status(201).json({
@@ -379,8 +385,28 @@ const solicitudAccepted = async (req, res = response) => {
         from: 'a18300384@ceti.mx', // Change to your verified sender
         subject: 'Estado de la solicitud de empleo',
         text: 'Text',
-        html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido aceptada',
+        html:'<h1 font-family="Times New Roman"> Solicitud de empleo aceptada</h1><img src="" alt="Bienvenido"><p>Hola ' + solicitud.nombre + 'tu solicitud de empleo ha sido aceptada, ya puedes iniciar sesión con tu cuenta de nutriologo!</p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">'
+        //html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido aceptada',
     }
+
+    //Registro del nutriólogo
+    //Foto de perfil default
+    let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png';
+
+
+    //Crear el objeto
+    const nutriologo = new Nutriologo({
+        nombre: solicitud.nombre,
+        apellidos: solicitud.apellidos,
+        nombreCompleto: solicitud.nombre + ' ' + solicitud.apellidos,
+        celular: solicitud.celular,
+        correo: solicitud.correo,
+        imagen: linkImagen,
+        fecha_registro: Date.now(),
+        especialidades: req.body.especialidades
+    });
+
+    await nutriologo.save();
 
     //Enviar el correo de respuesta
     sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
@@ -424,6 +450,7 @@ const solicitudDenied = async (req, res = response) => {
         from: 'a18300384@ceti.mx', // Change to your verified sender
         subject: 'Estado de la solicitud de empleo',
         text: 'Text',
+        type:'type/html',
         html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido denegada',
     }
     

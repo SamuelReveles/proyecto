@@ -104,7 +104,7 @@ const ordenPagada = async(req, res = response) => {
             categoria,
             calendario = false,
             lista_compras = false,
-            horario
+            //horario
         } = req.body;
 
         let cliente = await Cliente.findById(id);
@@ -124,16 +124,14 @@ const ordenPagada = async(req, res = response) => {
 
         //Guardar en el registro del cliente
         let historial_cliente = [];
-        if(cliente.historial_pago) historial_cliente = cliente.historial_pago;
+        if(cliente.historial_pagos) historial_cliente = cliente.historial_pagos;
         historial_cliente.push(historial);
-        cliente.historial_pago = historial_cliente;
+        cliente.historial_pagos = historial_cliente;
 
         await Cliente.findByIdAndUpdate(id, cliente);
 
-        const date = new Date();
-
         //Crear servicio
-        const fecha_cita = fechaDisponible[fechaDisponible.findIndex(horario)]; //Posible error al convertir con objeto clase fecha
+        /*const fecha_cita = fechaDisponible[fechaDisponible.findIndex(horario)]; //Posible error al convertir con objeto clase fecha
 
         //Fecha_cita + 10 días
         const fecha_finalizacion = 0;
@@ -143,12 +141,14 @@ const ordenPagada = async(req, res = response) => {
             fecha_finalizacion,
             calendario,
             lista_compras
-        });
+        });*/
 
         //Guardar el servicio
+        //await servicio.save();
 
         res.status(200).json({
-            success: true
+            success: true,
+            historial: cliente.historial_pagos
         });
 
     } catch (error) {
@@ -162,5 +162,6 @@ const ordenPagada = async(req, res = response) => {
 module.exports = {
     crearOrden,
     capturarOrden,
-    cancelarOrden
+    cancelarOrden,
+    ordenPagada
 }
