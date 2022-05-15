@@ -1,6 +1,14 @@
 const { Schema, model} = require('mongoose');
 
 const ServicioSchema = Schema({
+    id_nutriologo: {
+        type: Schema.ObjectId, 
+        required: [true, 'Es obligatorio el id del nutriologo']
+    },
+    id_paciente: {
+        type: Schema.ObjectId, 
+        required: [true, 'Es obligatorio el id del paciente']
+    },
     fecha_inicio: {
         type: Date,
         required: true
@@ -20,7 +28,10 @@ const ServicioSchema = Schema({
     lista_compras: {
         type: Boolean,
         default: false
-    }
+    },
+    mensajes: [{
+        type: Object
+    }]
 });
 
 ServicioSchema.methods.toJSON = function(){

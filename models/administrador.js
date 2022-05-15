@@ -22,7 +22,10 @@ const AdministradorSchema = Schema({
         type: String,
         required: [true, 'El correo es obligatorio'],
         unique: true
-    }
+    },
+    notificaciones: [{
+        type: Object
+    }]
 });
 
 AdministradorSchema.methods.toJSON = function(){

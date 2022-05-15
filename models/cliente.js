@@ -75,7 +75,10 @@ const ClienteSchema = Schema({
     }],
     calendario: {
         type: Array
-    }
+    },
+    notificaciones: [{
+        type: Object
+    }]
 });
 
 ClienteSchema.methods.toJSON = function(){

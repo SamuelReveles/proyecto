@@ -64,7 +64,10 @@ class Server{
     }
 
     sockets() {
-        this.io.on('connection', socketController);
+        this.io.on('connection', socket => {
+            //Conexión de cliente
+            console.log('Conectado ' + socket.id);
+        });
     }
 
     listen(){

@@ -95,7 +95,10 @@ const NutrilogoSchema = Schema({
     },
     lista_compras_precio: {
         type: Number
-    }
+    },
+    notificaciones: [{
+        type: Object
+    }]
 });
 
 NutrilogoSchema.methods.toJSON = function(){

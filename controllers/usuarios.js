@@ -210,12 +210,56 @@ const busqueda = async (req, res = response) => {
     }
 
     else {
-        users =  await Nutriologo.aggregate([
-            {$skip: start},
-            {$limit: limit}
-        ]);
+        //Extraer los resultados
+        if(Boolean(req.query.estrellas) === true){
 
-        total = await Nutriologo.count();
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'baneado': false}, {'activo': true}]}},
+                    {$sort: {'promedio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'baneado': false}, {'activo': true}]}},
+                    {$sort: {'promedio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else if(Boolean(req.query.precio) === true){
+
+            if(Boolean(req.query.mayor) === true){
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'baneado': false}, {'activo': true}]}},
+                    {$sort: {'precio': -1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+            else {
+                users =  await Nutriologo.aggregate([
+                    {$match: {$and: [{'baneado': false}, {'activo': true}]}},
+                    {$sort: {'precio': 1}},
+                    {$skip: Number(start)},
+                    {$limit: Number(limit)}
+                ]);
+            }
+        }
+
+        else {
+            users =  await Nutriologo.aggregate([
+                {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
+                {$skip: Number(start)},
+                {$limit: Number(limit)}
+            ]);
+        }
+
+        total = await Nutriologo.count({nombreCompleto: nombre, activo: true, baneado: false});
     }
 
     //Eliminar resultados e información innecesaria de nutriólogos baneados
