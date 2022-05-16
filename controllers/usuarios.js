@@ -95,7 +95,9 @@ const busqueda = async (req, res = response) => {
     const categoria = req.query.categoria;
 
     //Extablecer limites, superior e inferior
-    const {limit = 10, start = 0} = req.query;
+    let {limit = 10, start = 0} = req.query;
+    limit = Number(limit);
+    start = Number(start);
 
     //Variables de respuesta
     let total = 0, users;
