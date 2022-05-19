@@ -16,7 +16,7 @@ const {
 const router = Router();
 
 //Banear automáticamente
-router.get('/autoban', borrarAutomatico);
+router.get('/inactividad', borrarAutomatico);
 
 //Desbanear automáticamente
 router.get('/desbanear', desbanear);

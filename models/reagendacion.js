@@ -1,7 +1,15 @@
 const { Schema, model } = require('mongoose');
 
 const ReagendacionSchema = Schema({
-    fecha_anterior: {
+    emisor: {
+        type: Schema.ObjectId,
+        required: [true, 'El emisor es obligatorio']
+    },
+    remitente: {
+        type: Schema.ObjectId,
+        required: [true, 'El remitente es obligatorio']
+    },
+    id_servicio: {
         type: Date,
         required: [true, 'La fecha anterior es obligatoria']
     },

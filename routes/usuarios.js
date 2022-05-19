@@ -82,6 +82,4 @@ router.post('/crearOrden', crearOrden);
 //Capturar orden de pago
 router.get('/capturarOrden', capturarOrden);
 
-router.patch('/', usuariosPatch);
-
 module.exports = router;

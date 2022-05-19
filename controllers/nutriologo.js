@@ -16,6 +16,7 @@ const Nutriologo = require('../models/nutriologo');
 const Predeterminado = require('../models/predeterminado');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
+const Reagendacion = require('../models/reagendacion');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
@@ -765,23 +766,28 @@ const reportar = async (req, res = response) => {
 //Información del usuario nutriologo
 const getInfo = async (req, res = response) => {
 
-    //Id del nutriologo
-    const id = req.id;
+    try {
+        //Id del nutriologo
+        const id = req.id;
 
-    const nutriologo = await Nutriologo.findById(id)
-        .catch(() => {
-            res.status(400).json({
-                success: false,
-                msg: 'Error al encontrar el nutriólogo, verifique el id'
-            });
+        const solicitudes = await Reagendacion.aggregate([
+            {$match: {'remitente':id}}
+        ])
+
+        const nutriologo = await Nutriologo.findById(id)
+
+
+        res.status(200).json({
+            success: true,
+            nutriologo,
+            solicitudes
         });
-
-    if(!nutriologo) return;
-
-    res.status(200).json({
-        success: true,
-        nutriologo
-    });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'Error al encontrar el nutriólogo, verifique el id'
+        });
+    }
 
 }
 
@@ -830,6 +836,59 @@ const updateFechas = async (req, res = response) => {
     }
 }
 
+//Solicitud de reagendación POST
+const solicitarReagendacion = async (req, res = response) => {
+    
+    try {
+        //Emisor
+        const id_emisor = req.id;
+
+        //Datos del servicio y reagendación
+        const { id_cliente, id_servicio, fecha, msg } = req.body;
+
+        const reagendacion = new Reagendacion({
+            emisor: id_emisor,
+            remitente: id_cliente,
+            id_servicio,
+            fecha_nueva: fecha,
+            msg,
+            aceptada: null
+        });
+
+        await reagendacion.save();
+
+        res.status(201).json({
+            success: true,
+            reagendacion
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido realizar la solicitud'
+        });
+    }
+
+}
+
+//Rechazar solicitud de reagendación PUT
+const rechazarSolicitud = async (req, res = response) => {
+    try {
+        const id_solicitud = req.query.id;
+
+        const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
+
+        res.status(201).json({ 
+            success: true,
+            reagendacion
+        })
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido rechazar la solicitud'
+        })
+    }
+}
 
 module.exports = {
     nutriologoPost,
@@ -848,5 +907,7 @@ module.exports = {
     getClientData,
     getPacientes,
     updateClientData,
-    reportar
+    reportar,
+    solicitarReagendacion,
+    rechazarSolicitud
 };

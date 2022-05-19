@@ -17,6 +17,8 @@ const Extra = require('../models/extra');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 const Historial_Pago = require('../models/historial_pago');
+const Reagendacion = require('../models/reagendacion');
+const Servicio = require('../models/servicio');
 
 
 const usuariosPost = async (req, res = response) => {
@@ -570,23 +572,35 @@ const getExtras = async (req, res = response)  => {
 //Ver información del cliente
 const getInfo = async (req, res = response)  => {
 
-    //Id del cliente
-    const id = req.id;
+    try {
+        const id = req.id;
 
-    const cliente = await Cliente.findById(id)
-        .catch(() => {
-            res.status(400).json({ 
-                success: false,
-                msg: 'Error al buscar cliente, verifique el ID'
-            });
+        const cliente = await Cliente.findById(id);
+        const {extra1, extra2} = cliente;
+        
+        //Devolver solicitudes de reagendación pendientes
+        const solicitudes = await Reagendacion.aggregate([
+            {$match: {$or: [{'remitente': id}, {'remitente': extra1}, {'remitente': extra2}]}}
+        ])
+
+        const servicios = await Servicio.aggregate([
+            {$match: {$or: [{'id_paciente': id}, {'id_paciente': extra1}, {'id_paciente': extra2}]}}
+        ])
+
+
+        res.status(200).json({
+            success: true,
+            cliente,
+            solicitudes,
+            servicios
         });
-    
-    if(!cliente) return;
-
-    res.status(200).json({
-        success: true,
-        cliente
-    });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Error al encontrar al cliente, verifique el id'
+        });
+    }
 }
 
 //Actualizar información de usuario
@@ -800,7 +814,7 @@ const verHistorialPagos = async (req, res = response) => {
         // historial.calendario(50);
 
         //Asignar nombre al archivo
-        const filename = 'Ticket_' + nombre + '.pdf';
+        const filename = 'Resumen_compra_' + nombre + '.pdf';
 
         const stream = res.writeHead(200, {
             'Content-Type': 'application/pdf',
@@ -828,6 +842,84 @@ const verHistorialPagos = async (req, res = response) => {
     }
 }
 
+//Solicitud de reagendación POST
+const solicitarReagendacion = async (req, res = response) => {
+    
+    try {
+        //Emisor
+        const id_emisor = req.id;
+
+        //Datos del servicio y reagendación
+        const { id_nutriologo, id_servicio, fecha, msg } = req.body;
+
+        const reagendacion = new Reagendacion({
+            emisor: id_emisor,
+            remitente: id_nutriologo,
+            id_servicio,
+            fecha_nueva: fecha,
+            msg,
+            aceptada: null
+        });
+
+        await reagendacion.save();
+
+        res.status(201).json({
+            success: true,
+            reagendacion
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido realizar la solicitud'
+        });
+    }
+
+}
+
+//Rechazar solicitud de reagendación PUT
+const rechazarSolicitud = async (req, res = response) => {
+    try {
+        const id_solicitud = req.query.id;
+
+        const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
+
+        res.status(201).json({ 
+            success: true,
+            reagendacion
+        })
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido rechazar la solicitud'
+        })
+    }
+}
+
+//Aceptar solicitud de reagendación PUT
+const aceptarSolicitud = async (req, res = response) => {
+    try {
+        const { id_solicitud, fecha } = req.body;
+
+        const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: true});
+
+        const servicio = await Servicio.findById(reagendacion.id_servicio);
+
+        cambiarFecha(servicio); //Falta crear el algoritmo
+
+        res.status(201).json({ 
+            success: true,
+            reagendacion
+        })
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido rechazar la solicitud'
+        })
+    }
+}
+
 module.exports = {
     usuariosPost,
     usuariosUpdate,
@@ -843,5 +935,7 @@ module.exports = {
     calificar,
     mostrarHistorial,
     verHistorialPagos,
-    listadoPagos
+    listadoPagos,
+    solicitarReagendacion,
+    rechazarSolicitud
 }

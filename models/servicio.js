@@ -31,7 +31,11 @@ const ServicioSchema = Schema({
     },
     mensajes: [{
         type: Object
-    }]
+    }],
+    verDatos: {
+        type: Boolean,
+        default: true
+    }
 });
 
 ServicioSchema.methods.toJSON = function(){

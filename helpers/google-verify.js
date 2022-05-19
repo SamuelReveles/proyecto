@@ -6,6 +6,7 @@ const calendar = google.calendar('v3');
 //Modelos
 const Nutriologo = require('../models/nutriologo');
 const Cliente = require('../models/cliente');
+const Servicio = require('../models/servicio');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -62,6 +63,14 @@ async function crearEvento(hora_inicio = new Date(), hora_cierre = new Date(), i
         console.log(event);
       });
       
+}
+
+async function cambiarFecha (id_servicio) {
+
+  const servicio = await Servicio.findById(id_servicio);
+
+  return true;
+
 }
 module.exports = {
     googleVerify,

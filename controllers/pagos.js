@@ -131,31 +131,54 @@ const ordenPagada = async(req, res = response) => {
         await Cliente.findByIdAndUpdate(id, cliente);
 
         //Crear servicio
-        /*const fecha_cita = fechaDisponible[fechaDisponible.findIndex(horario)]; //Posible error al convertir con objeto clase fecha
+        //const fecha_cita = fechaDisponible[fechaDisponible.findIndex(horario)]; //Posible error al convertir con objeto clase fecha
+
+        //Intérvalo en días entre citas según investigaciones
+        // let intervalo_citas = 0;
+
+        // switch(categoria) {
+        //     case 'Sobrepeso': 
+        //         intervalo_citas = 14; // 2 - 4 semanas
+        //     break;
+        //     case 'Vegano': 
+                
+        //     break;
+        //     case 'Vegano': 
+        //     break;
+        //     case 'Vegano': 
+        //     break;
+        //     case 'Vegano': 
+        //     break;
+        // }
 
         //Fecha_cita + 10 días
-        const fecha_finalizacion = 0;
+        // const fecha_finalizacion = 0;
 
         const servicio = new Servicio({
-            fecha_cita,
-            fecha_finalizacion,
+            id_paciente: id,
+            id_nutriologo,
+            fecha_inicio: new Date(),
+            fecha_cita: new Date(),
+            fecha_finalizacion: new Date(),
             calendario,
             lista_compras
-        });*/
+        });
 
         //Guardar el servicio
-        //await servicio.save();
+        await servicio.save();
 
         res.status(200).json({
             success: true,
-            historial: cliente.historial_pagos
+            historial: cliente.historial_pagos,
+            servicio
         });
 
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Hubo un error al crear servicio o historial'
-        })
+        });
     }
 }
 
