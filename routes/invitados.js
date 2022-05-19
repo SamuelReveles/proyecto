@@ -25,7 +25,8 @@ router.post('/soli', postSolicitud);
 router.put('/ultCon', async (req, res) => {
     const cliente = await Cliente.findById(req.query.id);
     const haceRato = new Date();
-    cliente.ultima_conexion = haceRato.setDate(haceRato.getDate() + 170);
+    cliente.ultima_conexion = haceRato.setDate(haceRato.getDate() - 200);
+    cliente.avisado = false;
 
     await Cliente.findByIdAndUpdate(req.query.id, cliente);
 
