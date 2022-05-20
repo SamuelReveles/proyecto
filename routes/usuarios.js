@@ -11,7 +11,6 @@ const { validarToken, verificarCliente } = require('../middlewares/validar-jwt')
 const { 
     usuariosUpdate,
     usuariosDelete,
-    usuariosPatch, 
     busqueda,
     getNutriologo,
     getProgreso,

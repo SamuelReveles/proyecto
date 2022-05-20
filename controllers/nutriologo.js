@@ -47,15 +47,10 @@ const nutriologoPost = async (req, res = response) => {
         //Iniciar sesión
         const jwt = await generarJWT(nutriologo._id);
 
-        res.status(201).json({
-            success: true,
-            nutriologo,
-            jwt
-        });
+        res.status(201).json({nutriologo, jwt});
     }
     catch (err) {
         res.status(400).json({
-            err,
             success: false,
             msg: 'Error al agregar a la DB'
         });
@@ -107,10 +102,7 @@ const nutriologoUpdate = async (req, res = response) => {
 
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
-        res.status(201).json({
-            success: true,
-            nutriologo
-        });
+        res.status(201).json(nutriologo);
     } catch (error) {
         console.log(error);
         res.status(400).json({
@@ -138,10 +130,7 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
-        res.status(201).json({
-            success: true,
-            nutriologo
-        });
+        res.status(201).json(nutriologo);
 
     } catch (error) {
         res.status(400).json({
@@ -180,10 +169,7 @@ const fechasUpdate = async (req, res = response) => {
         nutriologo.fechaDisponible = fechas;
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
-        res.status(200).json({
-            success: true,
-            fechas
-        });
+        res.status(200).json(fechas);
     } catch(error) {
         res.status(400).json({
             success: false,
@@ -228,10 +214,7 @@ const llenarCalendario = async (req, res = response) => {
 
         await Cliente.findByIdAndUpdate(id_paciente, {calendario: calendarioCliente});
 
-        res.status(200).json({
-            success: true,
-            calendarioCliente
-        });
+        res.status(200).json(calendarioCliente);
 
     } catch (error) {
         res.status(400).json({
@@ -262,10 +245,7 @@ const postPredeterminado = async (req, res = response) => {
         //Actualizar el objeto
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
-        res.status(201).json({
-            success: true,
-            predeterminado
-        });
+        res.status(201).json(predeterminado);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -283,10 +263,7 @@ const getPredeterminados = async (req, res = response) => {
         //Buscar al nutriologo
         const { predeterminados } = await Nutriologo.findById(id);
 
-        res.status(200).json({
-            success: true,
-            predeterminados
-        });
+        res.status(200).json(predeterminados);
 
     } catch (error) {
         console.error(error);
@@ -315,10 +292,7 @@ const getPredeterminado = async (req, res = response) => {
         }
 
         if(!resultado) throw new Error();
-        res.status(200).json({
-            success: true,
-            resultado
-        });
+        res.status(200).json(resultado);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -377,10 +351,7 @@ const putPredeterminado = async (req, res = response) => {
     nutriologo.predeterminados = predeterminados;
     await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
-    res.status(201).json({
-        success: true,
-        resultado
-    });
+    res.status(201).json(resultado);
 }
 
 //Eliminar un alimento predeterminado
@@ -520,28 +491,19 @@ const getClientData = async (req, res = response) => {
             const {nombre, apellidos, datoConstante, datoInicial, imagen, verDatos} = cliente;
 
             if (verDatos){
+                let datos;
                 //Si no tiene primeros datos se busca el primer dato
                 if(!cliente.datoConstante){
-                    const datos = await Dato.findById(datoInicial);
-                    res.status(200).json({
-                        nombre,
-                        apellidos,
-                        datos,
-                        imagen
-                    });
+                    datos = await Dato.findById(datoInicial);
                 }
 
                 // Si hay datos, se toma el último
                 else{
                     const idDato = datoConstante[datoConstante.length - 1];
-                    const datos = await Dato.findById(idDato);
-                    res.status(200).json({
-                        nombre,
-                        apellidos,
-                        datos,
-                        imagen
-                    });
+                    datos = await Dato.findById(idDato);
                 }
+                
+                res.status(200).json({nombre, apellidos, datos, imagen});
             }
             else{
                 res.status(400).json({
@@ -560,29 +522,20 @@ const getClientData = async (req, res = response) => {
 
             //Verificar si está activada la opción de ver datos
             if (verDatos) {
+                let datos;
                 if(!extra.datoConstante){
-                    console.log('Imprimiendo dato inicial');
-                    const datos = await Dato.findById(datoInicial);
-                    res.status(200).json({
-                        nombre,
-                        apellidos,
-                        datos
-                    });
+                    datos = await Dato.findById(datoInicial);
                 }
                 else{
                     const idDato = datoConstante[datoConstante.length - 1];
-                    const datos = await Dato.findById(idDato);
-                    res.status(200).json({
-                        nombre,
-                        apellidos,
-                        datos
-                    });
+                    datos = await Dato.findById(idDato);
                 }
+                
+                res.status(200).json({nombre, apellidos, datos});
             }
             else{
-                res.status(201).json({
-                    msg: 'El cliente tienen inhabilitada la visualización de datos. Pídele que lo cambie desde ajustes'
-                });
+                let msg = 'El cliente tienen inhabilitada la visualización de datos. Pídele que lo cambie desde ajustes';
+                res.status(201).json(msg);
             }
         }
 
@@ -626,42 +579,28 @@ const updateClientData = async (req, res = response) => {
             if(!cliente.datoInicial){
                 await Cliente.findByIdAndUpdate(id, {datoInicial : datos})
                 .then(await datos.save());
-                res.status(201).json({
-                    success: true, 
-                    datos
-                });
+                res.status(201).json(datos);
             }
             else {
                 cliente.datoConstante.push(datos);
                 await Cliente.findByIdAndUpdate(id, cliente)
                 .then(await datos.save());
-                res.status(201).json({
-                    success: true,
-                    datos
-                });
+                res.status(201).json(datos);
             }
         }
 
         // Si es extra
         else if(extra){
 
-            if(!extra.datoInicial){
-                await Extra.findByIdAndUpdate(id, {datoInicial : datos})
-                .then(await datos.save());
-                res.status(201).json({
-                    success: true, 
-                    datos
-                });
-            }
+            if(!extra.datoInicial) await Extra.findByIdAndUpdate(id, {datoInicial : datos});
             else {
-                extra.datoConstante.push(datos)
-                await Extra.findByIdAndUpdate(id, extra)
-                .then(await datos.save());
-                res.status(201).json({
-                    success: true, 
-                    datos
-                });
+                extra.datoConstante.push(datos);
+                await Extra.findByIdAndUpdate(id, extra);
             }
+
+            await datos.save();
+            res.status(201).json(datos);
+
         }
     } catch (error) {
         res.status(400).json({
@@ -697,10 +636,7 @@ const getPacientes = async (req, res  = response) => {
             }
         }
         
-        res.status(200).json({
-            success: true, 
-            pacientes
-        });
+        res.status(200).json(pacientes);
     } catch (error) {
         res.status(400).json({
             success: false, 
@@ -750,11 +686,7 @@ const reportar = async (req, res = response) => {
         //Guardar reporte
         await reporte.save();
 
-        res.status(201).json({
-            success: true,
-            reporte,
-            msg: 'Reportado correctamente'
-        });
+        res.status(201).json(reporte);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -777,11 +709,7 @@ const getInfo = async (req, res = response) => {
         const nutriologo = await Nutriologo.findById(id)
 
 
-        res.status(200).json({
-            success: true,
-            nutriologo,
-            solicitudes
-        });
+        res.status(200).json({nutriologo, solicitudes});
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -857,10 +785,7 @@ const solicitarReagendacion = async (req, res = response) => {
 
         await reagendacion.save();
 
-        res.status(201).json({
-            success: true,
-            reagendacion
-        });
+        res.status(201).json(reagendacion);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -877,10 +802,7 @@ const rechazarSolicitud = async (req, res = response) => {
 
         const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
 
-        res.status(201).json({ 
-            success: true,
-            reagendacion
-        })
+        res.status(201).json(reagendacion);
 
     } catch (error) {
         res.status(400).json({

@@ -47,16 +47,12 @@ const crearOrden = async(req, res = response) => {
 
         const enlace = response.data.links[1];
 
-        res.status(200).json({
-            success: true,
-            enlace
-        });
+        res.status(200).json(enlace);
 
     } catch (error) {
         res.status(400).json({
             success: false,
             msg: 'Ha ocurrido un error',
-            error
         });
     }
 
@@ -76,11 +72,7 @@ const capturarOrden = async(req, res = response) => {
         
         //Pago realizado 
 
-        res.status(200).json({
-            success: true,
-            data: response.data,
-            pagado: true
-        });
+        res.status(200).json(response.data);
     } catch (error) {
         res.status(400).json({ 
             success: false,
@@ -167,14 +159,9 @@ const ordenPagada = async(req, res = response) => {
         //Guardar el servicio
         await servicio.save();
 
-        res.status(200).json({
-            success: true,
-            historial: cliente.historial_pagos,
-            servicio
-        });
+        res.status(200).json({historial: cliente.historial_pagos, servicio});
 
     } catch (error) {
-        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Hubo un error al crear servicio o historial'

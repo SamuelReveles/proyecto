@@ -45,28 +45,14 @@ const logIn = async (req, res = response) => {
         }
 
         //Si no está registrado, se envía la información para crear un nuevo registro
-        if(!registrado) {
-            res.status(200).json({
-                success: true,
-                registrado: false,
-                nombre,
-                apellidos, 
-                correo
-            })
-        }
+        if(registrado === false) res.status(200).json({registrado, nombre, apellidos, correo});
 
         //Si está registrado, se inicia sesión y se devuelve el jwt
         else {
             const { _id } = user;
             const jwt = await generarJWT(_id);
 
-            res.status(200).json({
-                success: true,
-                registrado: true,
-                jwt,
-                msg: 'Sesión iniciada',
-                tipo
-            });
+            res.status(200).json({registrado, jwt, tipo});
         }
 
     } catch (error) {

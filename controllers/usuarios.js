@@ -43,11 +43,7 @@ const usuariosPost = async (req, res = response) => {
         //Iniciar sesión
         const jwt = await generarJWT(user._id);
 
-        res.status(201).json({
-            succes: true,
-            user,
-            jwt
-        });
+        res.status(201).json({user, jwt});
     } 
     catch(error) {
         res.status(400).json({
@@ -56,13 +52,6 @@ const usuariosPost = async (req, res = response) => {
         })
     }
 }
-
-const usuariosPatch = (req, res = response) => {
-    res.json({
-        ok: true,
-        msg: 'patch API - controller'
-    });
-};
 
 const usuariosDelete = async (req, res = response) => {
    
@@ -76,10 +65,7 @@ const usuariosDelete = async (req, res = response) => {
 
         await Cliente.findByIdAndDelete(id);
 
-        res.status(201).json({
-           success: true,
-           msg: 'Usuario eliminado correctamente'
-        });
+        res.status(201).json(true);
    } catch (error) {
         res.status(400).json({
             success: false,
@@ -255,13 +241,13 @@ const busqueda = async (req, res = response) => {
 
         else {
             users =  await Nutriologo.aggregate([
-                {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
+                {$match: {$and: [{'baneado': false}, {'activo': true}]}},
                 {$skip: Number(start)},
                 {$limit: Number(limit)}
             ]);
         }
 
-        total = await Nutriologo.count({nombreCompleto: nombre, activo: true, baneado: false});
+        total = await Nutriologo.count({activo: true, baneado: false});
     }
 
     //Eliminar resultados e información innecesaria de nutriólogos baneados
@@ -291,11 +277,7 @@ const busqueda = async (req, res = response) => {
     }
 
     //Responder con los resultados
-    res.status(200).json({
-        success: true,
-        total,
-        resultados
-    });
+    res.status(200).json({total, resultados});
 }
 
 //Dar de alta un extra
@@ -392,11 +374,7 @@ const getProgreso = async (req, res = response) => {
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            inicio,
-            datos
-        });
+        res.status(200).json(inicio, datos);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -442,11 +420,7 @@ const reportar = async (req, res = response) => {
         //Guardar reporte
         await reporte.save();
 
-        res.status(201).json({
-            success: true,
-            reporte,
-            msg: 'Reportado correctamente'
-        });
+        res.status(201).json(reporte);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -525,10 +499,7 @@ const getNutriologo = async (req, res = response) => {
         //No mostrar datos de alguien baneado
         if(nutriologo.baneado) throw new Error();
 
-        res.status(200).json({
-            success: true,
-            nutriologo
-        });
+        res.status(200).json(nutriologo);
 
     } catch (error) {
         res.status(400).json({ 
@@ -554,11 +525,7 @@ const getExtras = async (req, res = response)  => {
         if(cliente.extra1) extra1 = await Extra.findById(cliente.extra1);
         if(cliente.extra2) extra2 =  await Extra.findById(cliente.extra2);
 
-        res.status(200).json({
-            success: true,
-            extra1,
-            extra2
-        });
+        res.status(200).json({extra1, extra2});
 
     } catch (error) {
         res.status(400).json({
@@ -588,12 +555,7 @@ const getInfo = async (req, res = response)  => {
         ])
 
 
-        res.status(200).json({
-            success: true,
-            cliente,
-            solicitudes,
-            servicios
-        });
+        res.status(200).json({cliente, solicitudes, servicios});
     } catch (error) {
         console.log(error);
         res.status(400).json({
@@ -646,14 +608,9 @@ const usuariosUpdate = async (req, res = response) => {
 
         await Cliente.findByIdAndUpdate(id, user);
 
-        res.status(201).json({
-            success: true,
-            user
-        });
+        res.status(201).json(user);
     } catch (error) {
-        console.log(error);
         res.status(400).json({
-            error,
             success: false,
             msg: 'No fue posible actualizar'
         });
@@ -765,10 +722,7 @@ const listadoPagos = async (req, res = response) => {
 
         const { historial_pagos } = await Cliente.findById(id);
 
-        res.status(200).json({
-            success: true,
-            historial_pagos
-        })
+        res.status(200).json(historial_pagos)
 
     } catch (error) {
         res.status(400).json({
@@ -863,10 +817,7 @@ const solicitarReagendacion = async (req, res = response) => {
 
         await reagendacion.save();
 
-        res.status(201).json({
-            success: true,
-            reagendacion
-        });
+        res.status(201).json(reagendacion);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -883,10 +834,7 @@ const rechazarSolicitud = async (req, res = response) => {
 
         const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
 
-        res.status(201).json({ 
-            success: true,
-            reagendacion
-        })
+        res.status(201).json(reagendacion);
 
     } catch (error) {
         res.status(400).json({
@@ -907,10 +855,7 @@ const aceptarSolicitud = async (req, res = response) => {
 
         cambiarFecha(servicio); //Falta crear el algoritmo
 
-        res.status(201).json({ 
-            success: true,
-            reagendacion
-        })
+        res.status(201).json(reagendacion);
 
     } catch (error) {
         res.status(400).json({
@@ -924,7 +869,6 @@ module.exports = {
     usuariosPost,
     usuariosUpdate,
     usuariosDelete,
-    usuariosPatch,
     busqueda,
     getNutriologo,
     getProgreso,

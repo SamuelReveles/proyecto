@@ -20,14 +20,11 @@ const Motivo = require('../models/motivo');
 const getUser = async(req, res = response) => {
     try {
         const cliente = await Cliente.findById(req.query.id);
-        res.status(200).json({
-            success: true,
-            cliente
-        });
+        res.status(200).json(cliente);
     } catch (error) {
         res.status(400).json({
-            success: false
-        })
+            succeess: false
+        });
     }
 };
 
@@ -51,11 +48,7 @@ const postAdmin = async (req, res = response) => {
 
         const jwt = await generarJWT(admin._id);
 
-        res.status(201).json({
-            success: true,
-            admin,
-            jwt
-        })
+        res.status(201).json({admin, jwt});
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -153,22 +146,16 @@ const getAllUsers = async(req, res = response) => {
         return;
     }
 
-    res.status(200).json({
-        success: true,
-        resultado
-    });
+    res.status(200).json(resultado);
 };
 
 //Buscar un nutriólogo por correo
 const getNutriologo = async(req, res = response) => {
 
     try {
-        const nutriologos = await Nutriologo.findById(req.query.id);
-        if(!nutriologos) throw new Error('No coincide');
-        res.status(200).json({
-            success: true,
-            nutriologos
-        });
+        const nutriologo = await Nutriologo.findById(req.query.id);
+        if(!nutriologo) throw new Error('No coincide');
+        res.status(200).json(nutriologo);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -267,10 +254,7 @@ const getAllNutri = async(req, res = response) => {
         return;
     }
 
-    res.status(200).json({
-        success: true,
-        resultado
-    });
+    res.status(200).json(resultado);
 }
 
 //Ver todas las solicitudes de empleo
@@ -287,18 +271,11 @@ const getSolicitudes = async(req, res = response) => {
     const total = await Solicitud_empleo.count({estado: null});
 
     if(!solicitudes) {
-        res.status(400).json({
-            success: false,
-            msg: 'No se encontraron solicitudes'
-        });
+        res.status(400).json(false);
         return;
     }
 
-    res.status(200).json({
-        success: true,
-        total,
-        solicitudes
-    });
+    res.status(200).json(solicitudes);
 };
 
 const postSolicitud = async(req, res = response) => {
@@ -318,10 +295,7 @@ const postSolicitud = async(req, res = response) => {
 
         await soli.save();
     
-        res.status(201).json({
-            success: true,
-            soli
-        });
+        res.status(201).json(soli);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -346,11 +320,7 @@ const putResponderSolicitud = async(req, res = response) => {
         // Actualizar el objeto
         await Solicitud_empleo.findByIdAndUpdate(id);
 
-        res.status(200).json({
-            success: true,
-            solicitud,
-            respuesta
-        });
+        res.status(200).json({solicitud, respuesta});
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -413,9 +383,7 @@ const solicitudAccepted = async (req, res = response) => {
     sgMail
     .send(msg)
     .then(() => {
-        res.status(200).json({
-            success: true
-        });
+        res.status(200).json(true);
     })
     .catch((error) => {
         console.error(error);
@@ -459,9 +427,7 @@ const solicitudDenied = async (req, res = response) => {
     sgMail
     .send(msg)
     .then(() => {
-        res.status(200).json({
-            success: true
-        });
+        res.status(200).json(true);
     })
     .catch((error) => {
         console.error(error);
@@ -515,10 +481,7 @@ const adminUpdate = async(req, res = response) => {
 
         await Administrador.findByIdAndUpdate(id, admin);
 
-        res.status(201).json({
-            success: true,
-            admin
-        });
+        res.status(201).json(admin);
     } catch (error) {
         console.log(error);
         res.status(400).json({
@@ -540,15 +503,12 @@ const addMotivo = async(req, res = response) => {
 
         await motivo.save();
 
-        res.status(201).json({
-            success: true,
-            motivo
-        });
+        res.status(201).json(motivo);
     } catch (error) {
         res.status(400).json({
             success: false,
             msg: 'No fue posible guardar el motivo'
-        })
+        });
     }
 }
 
@@ -556,16 +516,9 @@ const addMotivo = async(req, res = response) => {
 const getMotivos = async (req, res = response) => {
     
     try {
-        const [total, motivos] = await Promise.all([
-            Motivo.count(),
-            Motivo.find()
-        ]);
+        const motivos = await Motivo.find();
 
-        res.status(200).json({
-            success: true,
-            total,
-            motivos
-        })
+        res.status(200).json(motivos);
     } catch(error) {
         res.status(400).json({
             success: false,
@@ -593,10 +546,7 @@ const updateMotivo = async (req, res = response) => {
         if(descripcion) motivo.descripcion = descripcion;
 
         await Motivo.findByIdAndUpdate(id, motivo);
-        res.status(201).json({
-            success: true,
-            motivo
-        });
+        res.status(201).json(motivo);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -633,10 +583,7 @@ const reportesUsuario = async (req, res = response) => {
             listadoReportes.push({para, reporte, msg});
 
         }
-        res.status(200).json({
-            success: true,
-            listadoReportes
-        });
+        res.status(200).json(listadoReportes);
     } catch (error) {
         console.log(error);
         res.status(400).json({
@@ -685,10 +632,7 @@ const borrarReporte = async (req, res = response) => {
         await Reporte.findByIdAndUpdate(id, reporte);
         if(esCliente) await Cliente.findByIdAndUpdate(para, to);
         else await Nutriologo.findByIdAndUpdate(para, to);
-        res.status(201).json({
-            success: true,
-            msg: 'Reporte eliminado'
-        });
+        res.status(201).json(true);
     } catch(error) {
         res.status(400).json({
             success: false,
@@ -725,15 +669,10 @@ const UnBanear = async (req, res = response) => {
             await Nutriologo.findByIdAndUpdate(id, user);
         }
     
-        res.status(201).json({
-            success: true,
-            user,
-            msg: 'Usuario baneado correctamente'
-        });
+        res.status(201).json(user);
     } catch (error) {
         res.status(400).json({
             success: true,
-            user,
             msg: 'No se ha podido desbanear'
         });
     }
@@ -748,17 +687,14 @@ const getInfo = async (req, res = response)  => {
     try {
         const admin = await Administrador.findById(id);
 
-        res.status(200).json({
-            success: true,
-            admin
-        });  
+        res.status(200).json(admin);  
 
     } catch (error) {
         console.log(error);
-            res.status(400).json({
-                success: false,
-                msg: 'Error al obtener información'
-            });
+        res.status(400).json({
+            success: false,
+            msg: 'Error al obtener información'
+        });
     }
 }
 
