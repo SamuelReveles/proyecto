@@ -29,12 +29,12 @@ async function googleVerify(token = '') {
 
 async function crearEvento(hora_inicio = new Date(), hora_cierre = new Date(), idCliente, idNutriologo) {
 
-    const { nombreNutriologo, correoNutriologo } = await Nutriologo.findById(idNutriologo);
-    const { nombreCliente, correoCliente } = await Cliente.findById(idCliente);
+    // const { nombreNutriologo, correoNutriologo } = await Nutriologo.findById(idNutriologo);
+    // const { nombreCliente, correoCliente } = await Cliente.findById(idCliente);
 
     const event = {
         summary: 'Consulta con el(la) nutriólogo(a)' ,
-        description: 'Llamada con el nutriólogo ' + nombreNutriologo,
+        description: 'Llamada con el nutriólogo ',
         start: {
           dateTime: hora_inicio,
           timeZone: 'America/Mexico_City',
@@ -44,14 +44,13 @@ async function crearEvento(hora_inicio = new Date(), hora_cierre = new Date(), i
           timeZone: 'America/Mexico_City',
         },
         attendees: [
-          {email: correoCliente},
-          {email: correoNutriologo},
+          {email: 'a18300384@ceti.mx'},
+          {email: 'sabyreveles@gmail.com'},
         ],
       };
       
       calendar.events.insert({
         project: process.env.GOOGLE_CALENDAR_API,
-        auth: jwtClient,
         calendarId: 'primary',
         resource: event,
       }, function(err, event) {

@@ -8,6 +8,7 @@ const { diferenciaMeses, diferenciaDias } = require('../helpers/triggers');
 //Modelos
 const Cliente = require('../models/cliente');
 const Nutriologo = require('../models/nutriologo');
+const Reagendacion = require('../models/reagendacion');
 
 const { crearEvento } = require('../helpers/google-verify');
 
@@ -193,9 +194,23 @@ const actualizarHistorial = async(req, res = response) => {
 
 }
 
+//Borrar solicitudes de reagendación que tengan más de una semana
+const borrarReagendacion = async (req, res = response) => {
+
+    const solicitudes = await Reagendacion.find();
+
+    for await (let reagendacion of solicitudes) {
+        if(diferenciaDias(reagendacion.fecha_nueva, new Date()) >= 7) 
+            await Reagendacion.findByIdAndDelete(reagendacion._id);
+    }
+
+}
+
+
 module.exports = {
     borrarAutomatico,
     avisoBaneo,
     desbanear,
-    agendar
+    agendar,
+    borrarReagendacion
 }

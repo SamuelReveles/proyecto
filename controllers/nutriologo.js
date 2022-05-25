@@ -17,6 +17,7 @@ const Predeterminado = require('../models/predeterminado');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 const Reagendacion = require('../models/reagendacion');
+const Notificacion = require('../models/notificacion');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
@@ -703,7 +704,7 @@ const getInfo = async (req, res = response) => {
         const id = req.id;
 
         const solicitudes = await Reagendacion.aggregate([
-            {$match: {'remitente':id}}
+            {$match: {$and: [{'remitente':id}, {'fecha_finalizacion': {$gt: new Date()}}]}}
         ])
 
         const nutriologo = await Nutriologo.findById(id)
@@ -779,8 +780,7 @@ const solicitarReagendacion = async (req, res = response) => {
             remitente: id_cliente,
             id_servicio,
             fecha_nueva: fecha,
-            msg,
-            aceptada: null
+            msg
         });
 
         await reagendacion.save();
@@ -799,8 +799,43 @@ const solicitarReagendacion = async (req, res = response) => {
 const rechazarSolicitud = async (req, res = response) => {
     try {
         const id_solicitud = req.query.id;
+        const id = req.id;
 
         const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
+
+        //Nombre del nutriólogo para la notificacion
+        const {nombre} = await Nutriologo.findById(id);
+
+        //Encontrar datos del cliente o extra
+        let user = await Cliente.findById(reagendacion.emisor);
+
+        let dueno;
+
+        if(!user){
+            user = await Extra.findById(reagendacion.emisor);
+            dueno = await Cliente.aggregate([
+                {$match: {$or: [{'extra1':reagendacion.emisor}, {'extra2':reagendacion.emisor}]}}
+            ])
+        } 
+
+        //Enviar notificación al cliente
+        const notificacion = new Notificacion('La solicitud de reagendación de ' + user.nombre + ' para ' + nombre + ' ha sido rechazada');
+
+        let notificaciones = [];
+        
+        //Si es un extra, la notifiación se le asigna al dueño de la cuenta
+        if(dueno) {
+            notificaciones = dueno.notificaciones;
+            notificaciones.push(notificacion);
+            dueno.notificaciones = notificaciones;
+            await Cliente.findByIdAndUpdate(dueno._id);
+        }
+        else {
+            notificaciones = user.notificaciones;
+            notificaciones.push(notificacion);
+            user.notificaciones = notificaciones;
+            await Cliente.findByIdAndUpdate(user._id);
+        }
 
         res.status(201).json(reagendacion);
 
