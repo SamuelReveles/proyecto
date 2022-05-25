@@ -33,8 +33,8 @@ const crearOrden = async(req, res = response) => {
                 brand_name: "jopaka.com",
                 landing_page: "LOGIN",
                 user_action: "PAY_NOW",
-                return_url: "http://localhost:8080/api/trigger/capturarOrden",
-                cancel_url: "http://localhost:8080/api/trigger/cancelarOrden"
+                return_url: "http://localhost:8080/api/usuarios/capturarOrden",
+                cancel_url: "http://localhost:8080/api/usuarios/cancelarOrden"
             }
         };
 
@@ -146,18 +146,30 @@ const ordenPagada = async(req, res = response) => {
         //Fecha_cita + 10 días
         // const fecha_finalizacion = 0;
 
-        const servicio = new Servicio({
-            id_paciente: id,
-            id_nutriologo,
-            fecha_inicio: new Date(),
-            fecha_cita: new Date(),
-            fecha_finalizacion: new Date(),
-            calendario,
-            lista_compras
-        });
+        let servicio = Servicio.aggregate([
+            {$match: {$and: [{'id_paciente': id}, {'id_nutriologo': id_nutriologo}]}}
+        ])
 
-        //Guardar el servicio
-        await servicio.save();
+        if(!servicio) {
+            servicio = new Servicio({
+                id_paciente: id,
+                id_nutriologo,
+                fecha_inicio: new Date(),
+                fecha_cita: new Date(),
+                fecha_finalizacion: new Date(),
+                calendario,
+                lista_compras
+            });
+
+            //Guardar el servicio
+            await servicio.save();
+        }
+        else {
+            servicio.fecha_cita = new Date();
+            servicio.fecha_finalizacion = new Date();
+            servicio.calendario = calendario;
+            servicio.lista_compras = lista_compras;
+        }
 
         res.status(200).json({historial: cliente.historial_pagos, servicio});
 
