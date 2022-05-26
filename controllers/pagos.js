@@ -1,5 +1,6 @@
 const { request, response } = require('express');
 const axios = require('axios');
+const { ObjectId } = require('mongodb');
 
 //Modelos
 const Historial_pago = require('../models/historial_pago');
@@ -89,23 +90,29 @@ const cancelarOrden = async(req, res = response) => {
 const ordenPagada = async(req, res = response) => {
            
     try {
-        const id = req.id;
+        let id = req.id;
+
+        id = ObjectId(id);
 
         const { 
-            id_nutriologo,
             categoria,
             calendario = false,
             lista_compras = false,
+            id_extra = ''
             //horario
         } = req.body;
 
-        let cliente = await Cliente.findById(id);
+        let id_nutriologo = ObjectId(req.body.id_nutriologo);
+
+        //Si es para un extra, se cambia id y se cambia el objeto
+        const cliente = await Cliente.findById(id);
+
         const { precio, nombreCompleto, calendario_precio, lista_compras_precio, fechaDisponible } = await Nutriologo.findById(id_nutriologo);
 
         //Crear objeto a añadir en el registro de pagos
         const historial = new Historial_pago(
             precio,
-            cliente.nombre + ' ' + cliente.apellidos,
+            cliente.nombre,
             nombreCompleto,
             new Date(),
             categoria
@@ -146,20 +153,54 @@ const ordenPagada = async(req, res = response) => {
         //Fecha_cita + 10 días
         // const fecha_finalizacion = 0;
 
-        let servicio = Servicio.aggregate([
-            {$match: {$and: [{'id_paciente': id}, {'id_nutriologo': id_nutriologo}]}}
-        ])
+        let servicio;
+
+        if(id_extra !== ''){
+            id_extra = ObjectId(id_extra);
+
+            console.log('Cliente: ' + id_extra + '\nNutriologo: ' + id_nutriologo);
+
+            servicio = await Servicio.aggregate([
+                {$match: {$and: [{'id_paciente': id_extra}, {'id_nutriologo': id_nutriologo}]}}
+            ])[0];
+        }
+        else {
+
+            console.log('Cliente: ' + id + '\nNutriologo: ' + id_nutriologo);
+
+            servicio = await Servicio.aggregate([
+                {$match: {$and: [{'id_paciente': id}, {'id_nutriologo': id_nutriologo}]}}
+            ])[0];
+        }
+
+        console.log('Servicio: ' + servicio);
 
         if(!servicio) {
-            servicio = new Servicio({
-                id_paciente: id,
-                id_nutriologo,
-                fecha_inicio: new Date(),
-                fecha_cita: new Date(),
-                fecha_finalizacion: new Date(),
-                calendario,
-                lista_compras
-            });
+
+            console.log('Parece ser que no hay servicio lmao');
+
+            if(id_extra !== ''){
+                servicio = new Servicio({
+                    id_paciente: id_extra,
+                    id_nutriologo,
+                    fecha_inicio: new Date(),
+                    fecha_cita: new Date(),
+                    fecha_finalizacion: new Date(),
+                    calendario,
+                    lista_compras
+                });
+            } 
+            else {
+                servicio = new Servicio({
+                    id_paciente: id,
+                    id_nutriologo,
+                    fecha_inicio: new Date(),
+                    fecha_cita: new Date(),
+                    fecha_finalizacion: new Date(),
+                    calendario,
+                    lista_compras
+                });
+            }
 
             //Guardar el servicio
             await servicio.save();
@@ -174,6 +215,7 @@ const ordenPagada = async(req, res = response) => {
         res.status(200).json({historial: cliente.historial_pagos, servicio});
 
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Hubo un error al crear servicio o historial'

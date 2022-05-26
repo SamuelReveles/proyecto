@@ -10,7 +10,7 @@ const ReagendacionSchema = Schema({
         required: [true, 'El remitente es obligatorio']
     },
     id_servicio: {
-        type: Date,
+        type: Schema.ObjectId,
         required: [true, 'La fecha anterior es obligatoria']
     },
     fecha_nueva: {

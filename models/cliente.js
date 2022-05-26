@@ -45,10 +45,6 @@ const ClienteSchema = Schema({
         type: Date,
         required: false
     },
-    verDatos: {
-        type: Boolean, 
-        default: true
-    },
     puntajeBaneo: {
         type: Number,
         default: 0

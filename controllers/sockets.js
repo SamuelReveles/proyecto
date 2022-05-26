@@ -16,6 +16,16 @@ const socketController = (socket) => {
     //Conexión, agregar un usuario a la lista de usuarios conectados
     socket.on('conexion', (id_usuario) => {
         usuarios.agregarUsuario(socket.id, id_usuario);
+    });
+
+    //Eliminar de la lista y cambiar la última conexión
+    socket.on('disconnect', async (payload) => {
+        usuarios.borrarUsuario(payload.id_usuario);
+
+        //Agregar la última conexion del usuario
+        let user = await Cliente.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
+
+        if(!user) user = await Nutriologo.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
     })
 
     //Recibir mensaje

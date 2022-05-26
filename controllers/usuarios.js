@@ -553,7 +553,7 @@ const getInfo = async (req, res = response)  => {
         ])
 
         const servicios = await Servicio.aggregate([
-            {$match: {$or: [{'id_paciente': id}, {'id_paciente': extra1}, {'id_paciente': extra2}]}}
+            {$match: {$and: [{$or: [{'id_paciente': id}, {'id_paciente': extra1}, {'id_paciente': extra2}]}, {'activo': true}]}}
         ])
 
 
@@ -626,20 +626,15 @@ const mostrarHistorial = async (req, res = response) => {
         //Id del cliente
         const id = req.id;
 
+        //Indice del arreglo del historial de datos del cliente
+        const indexHistorial = req.query.indice;
+
         const { historial, nombre } = await Cliente.findById(id);
 
-        const dato = new Dato({
-            peso: 75,
-            altura: 1.80,
-            brazo: 80,
-            cuello: 60,
-            abdomen: 110,
-            cadera: 100,
-            notas: 'Tomar mucha agua'
-        });
+        const dato = historial[indexHistorial];
 
         //Extraer los datos del cliente
-        //const datos = await Datos.findById(historial.datos);
+        dato = await Dato.findById(dato);
 
         //Crear el documento permitiendo que se pueda crear el archivo de salida
         const doc = new PDF({bufferPage: true});
@@ -738,7 +733,7 @@ const verHistorialPagos = async (req, res = response) => {
     try {
         const id = req.id;
 
-        const { historial_pagos, nombre, apellidos } = await Cliente.findById(id);
+        const { historial_pagos, nombre } = await Cliente.findById(id);
 
         const { 
             precio_servicio,
@@ -806,13 +801,15 @@ const solicitarReagendacion = async (req, res = response) => {
         const id_emisor = req.id;
 
         //Datos del servicio y reagendación
-        const { id_nutriologo, id_servicio, fecha, msg } = req.body;
+        const { id_servicio, fecha, msg } = req.body;
+
+        const { id_nutriologo } = await Servicio.findById(id_servicio);
 
         const reagendacion = new Reagendacion({
             emisor: id_emisor,
             remitente: id_nutriologo,
             id_servicio,
-            fecha_nueva: fecha,
+            fecha_nueva: new Date(),
             msg,
             aceptada: null
         });
@@ -821,6 +818,9 @@ const solicitarReagendacion = async (req, res = response) => {
 
         res.status(201).json(reagendacion);
     } catch (error) {
+
+        console.log(error);
+
         res.status(400).json({
             success: false,
             msg: 'No se ha podido realizar la solicitud'
@@ -855,15 +855,37 @@ const aceptarSolicitud = async (req, res = response) => {
 
         const servicio = await Servicio.findById(reagendacion.id_servicio);
 
-        cambiarFecha(servicio); //Falta crear el algoritmo
+        //cambiarFecha(servicio); //Falta crear el algoritmo
 
         res.status(201).json(reagendacion);
 
     } catch (error) {
+
+        console.log(error);
+
         res.status(400).json({
             success: false,
-            msg: 'No se ha podido rechazar la solicitud'
+            msg: 'No se ha podido aceptar la solicitud'
         })
+    }
+}
+
+//Quitar ver datos
+const estadoVerDatos = async (req, res = response) => {
+    try {
+        const id_servicio = req.body.id;
+
+        const estado = req.body.estado;
+
+        const servicio = await Servicio.findByIdAndUpdate(id_servicio, {verDatos: Boolean(estado)});
+
+        res.status(200).json(servicio);
+
+    } catch (error) {
+        res.status(400).json({
+            success: true,
+            msg: 'No se ha podido actualizar el objeto'
+        });
     }
 }
 
@@ -883,5 +905,7 @@ module.exports = {
     verHistorialPagos,
     listadoPagos,
     solicitarReagendacion,
-    rechazarSolicitud
+    rechazarSolicitud,
+    aceptarSolicitud,
+    estadoVerDatos
 }

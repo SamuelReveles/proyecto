@@ -16,10 +16,6 @@ const ExtraSchema = mongoose.Schema({
     datoConstante:[ {
         type: mongoose.Schema.ObjectId, ref: datos
     }],
-    verDatos: {
-        type: Boolean, 
-        default: true
-    },
     historial: [{
         type: mongoose.Schema.ObjectId, ref:'historial'
     }]

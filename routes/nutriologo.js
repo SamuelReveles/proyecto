@@ -21,7 +21,7 @@ const {
     getClientData,
     getPacientes,
     updateClientData,
-    reportar
+    reportar,
 } = require('../controllers/nutriologo');
 const { mostrarHistorial } = require('../controllers/usuarios');
 

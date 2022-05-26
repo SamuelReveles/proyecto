@@ -21,7 +21,11 @@ const {
     calificar,
     mostrarHistorial,
     verHistorialPagos,
-    listadoPagos
+    listadoPagos,
+    solicitarReagendacion,
+    rechazarSolicitud,
+    aceptarSolicitud,
+    estadoVerDatos
 } = require('../controllers/usuarios');
 
 //Paypal
@@ -80,5 +84,17 @@ router.post('/crearOrden', crearOrden);
 
 //Capturar orden de pago
 router.get('/capturarOrden', capturarOrden);
+
+//Solicitar reagendación
+router.post('/reagendar', solicitarReagendacion);
+
+//Denegar reagendación
+router.put('/denegar', rechazarSolicitud);
+
+//Aceptar reagendación
+router.put('/aceptar', aceptarSolicitud);
+
+//Cambiar el estado de ver datos
+router.put('/verDatos', estadoVerDatos);
 
 module.exports = router;

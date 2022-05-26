@@ -18,6 +18,7 @@ const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 const Reagendacion = require('../models/reagendacion');
 const Notificacion = require('../models/notificacion');
+const Servicio = require('../models/servicio');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
@@ -479,17 +480,19 @@ const getClientData = async (req, res = response) => {
     try{
 
         //Extraer datos del query
-        const id = req.query.id;
+        const id_servicio = req.query.id;
+
+        const { id_paciente, verDatos } = await Servicio.findById(id_servicio);
 
         //Buscar si es cliente o extra
-        const cliente = await Cliente.findById(id);
-        const extra = await Extra.findById(id);
+        const cliente = await Cliente.findById(id_paciente);
+        const extra = await Extra.findById(id_paciente);
 
         // Si es cliente
         if(cliente){
 
             //Extraer datos que se van a usar
-            const {nombre, apellidos, datoConstante, datoInicial, imagen, verDatos} = cliente;
+            const {nombre, apellidos, datoConstante, datoInicial, imagen} = cliente;
 
             if (verDatos){
                 let datos;
@@ -542,6 +545,7 @@ const getClientData = async (req, res = response) => {
 
         else res.status(400).json({success: false});
     } catch (error){
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Error al encontrar al cliente'
@@ -555,8 +559,10 @@ const updateClientData = async (req, res = response) => {
 
     
     try {
-        //Se extrae id
-        const id = req.body.id;
+        //Extraer datos del query
+        const id_servicio = req.query.id;
+
+        const { id_paciente } = await Servicio.findById(id_servicio);
 
         //Crear datos del cliente
         const datos = new Dato({
@@ -572,19 +578,19 @@ const updateClientData = async (req, res = response) => {
             notas: req.body.notas
         });
 
-        const cliente = await Cliente.findById(id);
-        const extra = await Extra.findById(id);
+        const cliente = await Cliente.findById(id_paciente);
+        const extra = await Extra.findById(id_paciente);
 
         // Si es cliente
         if(cliente){
             if(!cliente.datoInicial){
-                await Cliente.findByIdAndUpdate(id, {datoInicial : datos})
+                await Cliente.findByIdAndUpdate(id_paciente, {datoInicial : datos})
                 .then(await datos.save());
                 res.status(201).json(datos);
             }
             else {
                 cliente.datoConstante.push(datos);
-                await Cliente.findByIdAndUpdate(id, cliente)
+                await Cliente.findByIdAndUpdate(id_paciente, cliente)
                 .then(await datos.save());
                 res.status(201).json(datos);
             }
@@ -593,10 +599,10 @@ const updateClientData = async (req, res = response) => {
         // Si es extra
         else if(extra){
 
-            if(!extra.datoInicial) await Extra.findByIdAndUpdate(id, {datoInicial : datos});
+            if(!extra.datoInicial) await Extra.findByIdAndUpdate(id_paciente, {datoInicial : datos});
             else {
                 extra.datoConstante.push(datos);
-                await Extra.findByIdAndUpdate(id, extra);
+                await Extra.findByIdAndUpdate(id_paciente, extra);
             }
 
             await datos.save();
