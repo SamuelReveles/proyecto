@@ -4,8 +4,7 @@ const { Router } = require('express');
 const { 
     borrarAutomatico, 
     desbanear,
-    avisoBaneo ,
-    agendar
+    avisoBaneo
 } = require('../controllers/trigger');
 
 //Pruebas de paypal
@@ -23,7 +22,5 @@ router.get('/desbanear', desbanear);
 
 //Aviso de baneo autoban
 router.get('/aviso', avisoBaneo);
-
-router.get('/crearEvento', agendar);
 
 module.exports = router;

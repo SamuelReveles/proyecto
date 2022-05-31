@@ -2,12 +2,15 @@
 const { response } = require('express');
 const bcryptjs = require('bcryptjs');
 const PDF = require('pdfkit-construct');
+const format = require('date-fns/format');
+const es = require('date-fns/locale/es');
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
 
 //helpers
 const { generarJWT } = require('../helpers/verificacion');
+const { cambiarFecha } = require('../helpers/google-verify');
 
 //Modelos
 const Cliente = require('../models/cliente');
@@ -19,6 +22,7 @@ const Motivo = require('../models/motivo');
 const Historial_Pago = require('../models/historial_pago');
 const Reagendacion = require('../models/reagendacion');
 const Servicio = require('../models/servicio');
+const Notificacion = require('../models/notificacion');
 
 
 const usuariosPost = async (req, res = response) => {
@@ -435,19 +439,22 @@ const reportar = async (req, res = response) => {
 //Calificar de 0 a 5 estrellas al nutriólogo
 const calificar = async (req, res = response) => {
     //Extraer datos
-    const { id, calificacion } = req.query;
+    const { id_servicio, calificacion } = req.query;
 
-    //Validar que esté dentro del rango
-    if(calificacion > 5 || calificacion < 0) {
+    //Extraer servicio
+    const servicio = Servicio.findById(id_servicio);
+
+    //Validar que esté dentro del rango y que el servicio esté calificado
+    if(calificacion > 5 || calificacion < 0 || servicio.calificado === true) {
         res.status(400).json({
             success: false,
-            msg: 'Calificación fuera del rango'
+            msg: 'Calificación fuera del rango o el servicio está calificado'
         });
         return;
     }
 
     //Agregar al arreglo del nutriólogo
-    const nutriologo = await Nutriologo.findById(id)
+    const nutriologo = await Nutriologo.findById(servicio.id_nutriologo)
         .catch(() => {
             res.status(400).json({
                 success: false,
@@ -832,12 +839,26 @@ const solicitarReagendacion = async (req, res = response) => {
 //Rechazar solicitud de reagendación PUT
 const rechazarSolicitud = async (req, res = response) => {
     try {
-        const id_solicitud = req.query.id;
+        const { id_solicitud } = req.body;
 
         const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
+        const nutriologo = await Nutriologo.findById(reagendacion.emisor);
+
+        //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
+        const notificacion = new Notificacion('Tu solicitud de reagendación ha sido rechazada');
+        let notificaciones = [];
+
+        if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+
+        notificaciones.push(notificacion);
+        nutriologo.notificaciones = notificaciones;
+
+        await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+
+        //Eliminar solicitud
+        await Reagendacion.findByIdAndDelete(id_solicitud);
 
         res.status(201).json(reagendacion);
-
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -849,20 +870,40 @@ const rechazarSolicitud = async (req, res = response) => {
 //Aceptar solicitud de reagendación PUT
 const aceptarSolicitud = async (req, res = response) => {
     try {
+        //Datos de solicitud
         const { id_solicitud, fecha } = req.body;
 
         const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: true});
 
         const servicio = await Servicio.findById(reagendacion.id_servicio);
+        const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
 
-        //cambiarFecha(servicio); //Falta crear el algoritmo
+        let nueva_fecha = new Date();
+        nueva_fecha.setDate(nueva_fecha.getDate() + 2);
+
+        //Modificar fecha de evento
+        cambiarFecha(servicio, nueva_fecha);
+
+        const fechaArr = format(nueva_fecha, 'dd-MMMM-yyyy', {locale: es}).split('-');
+        const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+        //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
+        const notificacion = new Notificacion('Tu solicitud de reagendación ha sido aceptada para el día ' + fechaString);
+        let notificaciones = [];
+
+        if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+
+        notificaciones.push(notificacion);
+        nutriologo.notificaciones = notificaciones;
+
+        await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+
+        //Eliminar solicitud
+        await Reagendacion.findByIdAndDelete(id_solicitud);
 
         res.status(201).json(reagendacion);
 
     } catch (error) {
-
-        console.log(error);
-
         res.status(400).json({
             success: false,
             msg: 'No se ha podido aceptar la solicitud'
@@ -877,10 +918,11 @@ const estadoVerDatos = async (req, res = response) => {
 
         const estado = req.body.estado;
 
-        const servicio = await Servicio.findByIdAndUpdate(id_servicio, {verDatos: Boolean(estado)});
+        await Servicio.findByIdAndUpdate(id_servicio, {verDatos: Boolean(estado)});
 
-        res.status(200).json(servicio);
-
+        res.status(200).json({
+            success: true
+        });
     } catch (error) {
         res.status(400).json({
             success: true,

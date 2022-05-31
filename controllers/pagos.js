@@ -2,6 +2,9 @@ const { request, response } = require('express');
 const axios = require('axios');
 const { ObjectId } = require('mongodb');
 
+//Crear eventos de calendar
+const { crearEvento } = require('../helpers/google-verify');
+
 //Modelos
 const Historial_pago = require('../models/historial_pago');
 const Nutriologo = require('../models/nutriologo');
@@ -94,7 +97,7 @@ const ordenPagada = async(req, res = response) => {
 
         id = ObjectId(id);
 
-        const { 
+        let { 
             categoria,
             calendario = false,
             lista_compras = false,
@@ -156,24 +159,17 @@ const ordenPagada = async(req, res = response) => {
         let servicio;
 
         if(id_extra !== ''){
-            id_extra = ObjectId(id_extra);
-
-            console.log('Cliente: ' + id_extra + '\nNutriologo: ' + id_nutriologo);
-
-            servicio = await Servicio.aggregate([
-                {$match: {$and: [{'id_paciente': id_extra}, {'id_nutriologo': id_nutriologo}]}}
-            ])[0];
+            servicio = await Servicio.findOne({
+                $match: {$and: [{'id_paciente': id_extra}, {'id_nutriologo': id_nutriologo}]}
+            });
         }
         else {
-
-            console.log('Cliente: ' + id + '\nNutriologo: ' + id_nutriologo);
-
-            servicio = await Servicio.aggregate([
-                {$match: {$and: [{'id_paciente': id}, {'id_nutriologo': id_nutriologo}]}}
-            ])[0];
+            servicio = await Servicio.findOne({
+                $match: {$and: [{'id_paciente': id}, {'id_nutriologo': id_nutriologo}]}
+            });
         }
 
-        console.log('Servicio: ' + servicio);
+        console.log(servicio);
 
         if(!servicio) {
 
@@ -206,13 +202,20 @@ const ordenPagada = async(req, res = response) => {
             await servicio.save();
         }
         else {
+            console.log('Se encontró un servicio previo');
             servicio.fecha_cita = new Date();
             servicio.fecha_finalizacion = new Date();
             servicio.calendario = calendario;
             servicio.lista_compras = lista_compras;
         }
 
-        res.status(200).json({historial: cliente.historial_pagos, servicio});
+        //Crear el evento de calendar
+        await crearEvento(servicio.fecha_inicio, id, id_nutriologo, servicio._id);
+        
+        res.status(200).json({
+            historial: cliente.historial_pagos, 
+            servicio
+        });
 
     } catch (error) {
         console.log(error);

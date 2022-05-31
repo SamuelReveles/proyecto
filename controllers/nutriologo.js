@@ -809,8 +809,7 @@ const rechazarSolicitud = async (req, res = response) => {
 
         const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
 
-        //Nombre del nutriólogo para la notificacion
-        const {nombre} = await Nutriologo.findById(id);
+        const servicio = await Servicio.findById(reagendacion.id_servicios);
 
         //Encontrar datos del cliente o extra
         let user = await Cliente.findById(reagendacion.emisor);
@@ -819,13 +818,20 @@ const rechazarSolicitud = async (req, res = response) => {
 
         if(!user){
             user = await Extra.findById(reagendacion.emisor);
-            dueno = await Cliente.aggregate([
-                {$match: {$or: [{'extra1':reagendacion.emisor}, {'extra2':reagendacion.emisor}]}}
-            ])
+            dueno = await Cliente.findOne({
+                    $match: {$or: [{'extra1':reagendacion.emisor}, {'extra2':reagendacion.emisor}]}
+                }
+            )
         } 
 
-        //Enviar notificación al cliente
-        const notificacion = new Notificacion('La solicitud de reagendación de ' + user.nombre + ' para ' + nombre + ' ha sido rechazada');
+        //Modificar fecha de evento
+        cambiarFecha(servicio, nueva_fecha);
+
+        const fechaArr = format(nueva_fecha, 'dd-MMMM-yyyy', {locale: es}).split('-');
+        const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+        //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
+        const notificacion = new Notificacion('Tu solicitud de reagendación ha sido aceptada para el día ' + fechaString);
 
         let notificaciones = [];
         

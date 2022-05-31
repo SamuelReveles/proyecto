@@ -171,15 +171,6 @@ const desbanear = async (req, res = response) => {
     }
 }
 
-const agendar = async (req, res = response) => {
-    const hora_inicio = new Date();
-    hora_inicio.setMinutes(hora_inicio.getMinutes() + 15);
-    const hora_cierre = new Date();
-    hora_cierre.setMinutes(hora_inicio.getMinutes() + 30);
-    await crearEvento(hora_inicio, hora_cierre, '6260345d8753a039f90a46e4', '626067f8c1311a76fc759c29');
-    res.status(200).json({success: true});
-}
-
 //Actualización semanal del historial del cliente
 const actualizarHistorial = async(req, res = response) => {
     
@@ -194,23 +185,8 @@ const actualizarHistorial = async(req, res = response) => {
 
 }
 
-//Borrar solicitudes de reagendación que tengan más de una semana
-const borrarReagendacion = async (req, res = response) => {
-
-    const solicitudes = await Reagendacion.find();
-
-    for await (let reagendacion of solicitudes) {
-        if(diferenciaDias(reagendacion.fecha_nueva, new Date()) >= 7) 
-            await Reagendacion.findByIdAndDelete(reagendacion._id);
-    }
-
-}
-
-
 module.exports = {
     borrarAutomatico,
     avisoBaneo,
-    desbanear,
-    agendar,
-    borrarReagendacion
+    desbanear
 }

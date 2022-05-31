@@ -35,6 +35,17 @@ const ServicioSchema = Schema({
     verDatos: {
         type: Boolean,
         default: true
+    },
+    linkMeet: {
+        type: String,
+        default: ''
+    },
+    eventId: {
+        type: String
+    },
+    calificado: {
+        type: Boolean,
+        default: false
     }
 });
 

@@ -15,6 +15,7 @@ const Administrador = require('../models/administrador');
 const Solicitud_empleo = require('../models/solicitud_empleo');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
+const Solicitud = require('../models/solicitud_empleo');
 
 //Obtener información de un usuario
 const getUser = async(req, res = response) => {

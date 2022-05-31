@@ -1,9 +1,9 @@
 class Notificacion {
-    constructor(mensaje = '', duracion = 100) {
+    constructor(mensaje = '') {
         this.mensaje = mensaje,
         this.hora = new Date(),
-        this.visto = false,
-        this.duracion = duracion //Duración en días
+        this.visto = false
+        // this.duracion = duracion //Duración en días
     }
 
     vista() {
