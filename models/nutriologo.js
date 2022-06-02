@@ -12,6 +12,10 @@ const NutrilogoSchema = Schema({
     nombreCompleto: {
         type: String
     },
+    genero: {
+        type: String,
+        required: [true, 'El genero es obligatorio']
+    },
     imagen: {
         type: String,
         required: [false, 'La imagen es obligatoria']

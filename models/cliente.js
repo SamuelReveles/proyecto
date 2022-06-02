@@ -9,6 +9,10 @@ const ClienteSchema = Schema({
         type: String,
         required: [true, 'Los apellidos son obligatorios']
     },
+    genero: {
+        type: String,
+        required: [true, 'El genero es obligatorio']
+    },
     imagen: {
         type: String,
         required: true

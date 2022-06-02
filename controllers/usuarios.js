@@ -4,6 +4,7 @@ const bcryptjs = require('bcryptjs');
 const PDF = require('pdfkit-construct');
 const format = require('date-fns/format');
 const es = require('date-fns/locale/es');
+const sgMail = require('@sendgrid/mail');
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
@@ -23,6 +24,7 @@ const Historial_Pago = require('../models/historial_pago');
 const Reagendacion = require('../models/reagendacion');
 const Servicio = require('../models/servicio');
 const Notificacion = require('../models/notificacion');
+const Administrador = require('../models/administrador');
 
 
 const usuariosPost = async (req, res = response) => {
@@ -39,6 +41,7 @@ const usuariosPost = async (req, res = response) => {
             imagen: linkImagen,
             celular: req.body.celular,
             correo: req.body.correo,
+            genero: req.body.genero,
             fecha_registro: Date.now()
         });
 
@@ -46,6 +49,20 @@ const usuariosPost = async (req, res = response) => {
 
         //Iniciar sesión
         const jwt = await generarJWT(user._id);
+
+        //Enviar correo de que se registró
+        //Mensaje de correo electrónico
+        const msg = {
+            to: user.correo,
+            from: 'a18300384@ceti.mx', 
+            subject: '¡BIENVENIDO A JOPAKA!',
+            text: 'Text',
+            html: 'Hola ' + user.nombre + ' te damos la bienvenida a nuetra plataforma',
+        }
+
+        //Enviar el correo
+        sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
+        sgMail.send(msg);
 
         res.status(201).json({user, jwt});
     } 
@@ -395,7 +412,19 @@ const reportar = async (req, res = response) => {
    
     try {
          //Extraer datos del reporte
-        const { idNutriologo, idReporte, msg } = req.body;
+        const { idServicio, idReporte, msg } = req.body;
+
+        const servicio = await Servicio.findById(idServicio);
+
+        if(servicio.reportesCliente == 0){
+            res.status(400).json({
+                success: false,
+                msg: 'Límite de reportes'
+            });
+            return;
+        }
+        
+        const idNutriologo = servicio.id_nutriologo;
 
         //Crear el reporte
         const reporte = new Reporte({
@@ -421,10 +450,72 @@ const reportar = async (req, res = response) => {
         reportes.push(reporte);
         nutriologo.reportes = reportes;
 
+        //Aviso de posible baneo
+        if(nutriologo.puntajeBaneo >= 8 && nutriologo.puntajeBaneo <= 14) {
+            //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
+            const notificacion = new Notificacion('Tu cuenta puede ser suspendida por reportes. Revisa tu comportamiento o ponte en contacto con algún administrador');
+            let notificaciones = [];
+
+            if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+
+            notificaciones.push(notificacion);
+            nutriologo.notificaciones = notificaciones;
+        }
+
+        //Aviso de baneo
+        if(nutriologo.puntajeBaneo >= 15) {
+            //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
+            const notificacion = new Notificacion('Tu cuenta ha sido suspendida por reportes. Revisa tu comportamiento o ponte en contacto con algún administrador');
+            let notificaciones = [];
+
+            nutriologo.baneado = true;
+
+            if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+
+            notificaciones.push(notificacion);
+            nutriologo.notificaciones = notificaciones;
+
+            //Enviar notificación a los admins
+            const notiAdmin = new Notificacion('Nuevo usuario baneado ' + nutriologo.nombreCompleto); //Posible cambio por ID del reporte
+
+            const admins = await Administrador.find();
+            for await (const admin of admins) {
+                
+                let notificaciones = [];
+
+                if(admin.notificaciones) notificaciones = admin.notificaciones;
+
+                notificaciones.push(notiAdmin);
+                admin.notificaciones = notificaciones;
+                await Administrador.findByIdAndUpdate(admin._id, admin);
+            }
+        }
+
+        //Aviso de reporte grave a administrador
+        if(puntos >= 3) {
+            //Enviar notificación
+            const notificacion = new Notificacion('Reporte con alto puntaje para ' + nutriologo.nombreCompleto); //Posible cambio por ID del reporte
+
+            const admins = await Administrador.find();
+            for await (const admin of admins) {
+                
+                let notificaciones = [];
+
+                if(admin.notificaciones) notificaciones = admin.notificaciones;
+
+                notificaciones.push(notificacion);
+                admin.notificaciones = notificaciones;
+                await Administrador.findByIdAndUpdate(admin._id, admin);
+            }
+        }
+
         await Nutriologo.findByIdAndUpdate(idNutriologo, nutriologo);
         
         //Guardar reporte
         await reporte.save();
+
+        servicio.reportesCliente -= 1;
+        await Servicio.findByIdAndUpdate(idServicio, servicio);
 
         res.status(201).json(reporte);
     } catch (error) {
@@ -918,12 +1009,17 @@ const estadoVerDatos = async (req, res = response) => {
 
         const estado = req.body.estado;
 
-        await Servicio.findByIdAndUpdate(id_servicio, {verDatos: Boolean(estado)});
+        const servicio = await Servicio.findById(id_servicio);
+
+        servicio.verDatos = estado;
+
+        await Servicio.findByIdAndUpdate(id_servicio, servicio);
 
         res.status(200).json({
             success: true
         });
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: true,
             msg: 'No se ha podido actualizar el objeto'

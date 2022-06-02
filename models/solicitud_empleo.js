@@ -20,6 +20,10 @@ const SolicitudEmpleoSchema = Schema({
     correo: {
         type: String,
         required: [true, 'El correo es obligatorio']
+    },
+    genero: {
+        type: String,
+        required: [true, 'El genero es obligatorio']
     }
 });
 

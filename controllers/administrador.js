@@ -16,6 +16,7 @@ const Solicitud_empleo = require('../models/solicitud_empleo');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
 const Solicitud = require('../models/solicitud_empleo');
+const Notificacion = require('../models/notificacion');
 
 //Obtener información de un usuario
 const getUser = async(req, res = response) => {
@@ -42,7 +43,8 @@ const postAdmin = async (req, res = response) => {
             apellidos: req.body.apellidos,
             imagen: linkImagen,
             celular: req.body.celular,
-            correo: req.body.correo
+            correo: req.body.correo,
+            genero: req.body.genero
         });
 
         await admin.save();
@@ -295,6 +297,21 @@ const postSolicitud = async(req, res = response) => {
         });
 
         await soli.save();
+
+        //Enviar notificación (guardar en el arreglo notificaciones del cliente)
+        const notificacion = new Notificacion('Nueva solicitud de alta de nutriólogo');
+
+        const admins = await Administrador.find();
+        for await (const admin of admins) {
+            
+            let notificaciones = [];
+
+            if(admin.notificaciones) notificaciones = admin.notificaciones;
+
+            notificaciones.push(notificacion);
+            admin.notificaciones = notificaciones;
+            await Administrador.findByIdAndUpdate(admin._id, admin);
+        }
     
         res.status(201).json(soli);
     } catch (error) {
@@ -374,7 +391,8 @@ const solicitudAccepted = async (req, res = response) => {
         correo: solicitud.correo,
         imagen: linkImagen,
         fecha_registro: Date.now(),
-        especialidades: req.body.especialidades
+        especialidades: req.body.especialidades,
+        genero: solicitud.genero
     });
 
     await nutriologo.save();
@@ -384,7 +402,9 @@ const solicitudAccepted = async (req, res = response) => {
     sgMail
     .send(msg)
     .then(() => {
-        res.status(200).json(true);
+        res.status(200).json({
+            success: true
+        });
     })
     .catch((error) => {
         console.error(error);

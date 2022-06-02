@@ -9,6 +9,7 @@ const { diferenciaMeses, diferenciaDias } = require('../helpers/triggers');
 const Cliente = require('../models/cliente');
 const Nutriologo = require('../models/nutriologo');
 const Reagendacion = require('../models/reagendacion');
+const Notificacion = require('../models/notificacion');
 
 const { crearEvento } = require('../helpers/google-verify');
 
@@ -76,12 +77,19 @@ const avisoBaneo = async (req, res = response) => {
 
                 //Enviar el correo de respuesta
                 sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
-                sgMail
-                .send(msg);
+                sgMail.send(msg);
 
                 //Bandera de que fue avisado
                 nutriologo.avisado = true;
 
+                //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
+                const notificacion = new Notificacion('Tu cuenta puede ser suspendida por inactividad');
+                let notificaciones = [];
+
+                if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+
+                notificaciones.push(notificacion);
+                nutriologo.notificaciones = notificaciones;
                 await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
             }
         }
@@ -104,12 +112,19 @@ const avisoBaneo = async (req, res = response) => {
     
                 //Enviar el correo de respuesta
                 sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
-                sgMail
-                .send(msg);
+                sgMail.send(msg);
 
                 //Bandera si ya se avisó
                 cliente.avisado = true;
 
+                //Enviar notificación (guardar en el arreglo notificaciones del cliente)
+                const notificacion = new Notificacion('Tu cuenta puede ser suspendida por inactividad');
+                let notificaciones = [];
+
+                if(cliente.notificaciones) notificaciones = cliente.notificaciones;
+
+                notificaciones.push(notificacion);
+                cliente.notificaciones = notificaciones;
                 await Cliente.findByIdAndUpdate(cliente._id, cliente);
             }
         }

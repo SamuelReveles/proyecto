@@ -19,6 +19,7 @@ const Motivo = require('../models/motivo');
 const Reagendacion = require('../models/reagendacion');
 const Notificacion = require('../models/notificacion');
 const Servicio = require('../models/servicio');
+const Administrador = require('../models/administrador');
 
 //Crear un nuevo nutriologo
 const nutriologoPost = async (req, res = response) => {
@@ -658,7 +659,19 @@ const reportar = async (req, res = response) => {
     
     try {
         //Extraer datos del reporte
-        const { idCliente, idReporte, msg } = req.body;
+        const { idServicio, idReporte, msg } = req.body;
+
+        const servicio = await Servicio.findById(idServicio);
+
+        if(servicio.reportesNutriologo == 0){
+            res.status(400).json({
+                success: false,
+                msg: 'Límite de reportes'
+            });
+            return;
+        } 
+
+        const idCliente = servicio.id_paciente;
 
         //Crear el reporte
         const reporte = new Reporte({
@@ -673,22 +686,80 @@ const reportar = async (req, res = response) => {
         const { puntos } = await Motivo.findById(idReporte);
         const cliente = await Cliente.findById(idCliente);
 
+        console.log(cliente);
+
         //Agregar los puntos y push a arreglo de reportes
         cliente.puntajeBaneo += puntos;
 
+        console.log(cliente.puntajeBaneo);
+
         let reportes = [];
-        if(!cliente.reportes){
-            console.log('Sin reportes');
-        }
-        else {
-            console.log('Con reportes');
-            reportes = cliente.reportes;
-        }
+        if(cliente.reportes) reportes = cliente.reportes;
         
         reportes.push(reporte);
         cliente.reportes = reportes;
 
+        //Aviso de posible baneo
+        if(cliente.puntajeBaneo >= 3 && cliente.puntajeBaneo < 5) {
+            //Enviar notificación (guardar en el arreglo notificaciones del cliente)
+            const notificacion = new Notificacion('Tu cuenta puede ser suspendida por reportes. Revisa tu comportamiento o ponte en contacto con algún administrador');
+            let notificaciones = [];
+
+            if(cliente.notificaciones) notificaciones = cliente.notificaciones;
+
+            notificaciones.push(notificacion);
+            cliente.notificaciones = notificaciones;
+        }
+
+        //Aviso de baneo
+        if(cliente.puntajeBaneo >= 5) {
+            //Enviar notificación (guardar en el arreglo notificaciones del cliente)
+            const notificacion = new Notificacion('Tu cuenta ha sido suspendida por reportes. Revisa tu comportamiento o ponte en contacto con algún administrador');
+            let notificaciones = [];
+
+            if(cliente.notificaciones) notificaciones = cliente.notificaciones;
+
+            notificaciones.push(notificacion);
+            cliente.notificaciones = notificaciones;
+
+            //Enviar notificación a los admins
+            const notiAdmin = new Notificacion('Nuevo usuario baneado ' + cliente.nombre + ' ' + cliente.apellidos); //Posible cambio por ID del reporte
+
+            const admins = await Administrador.find();
+            for await (const admin of admins) {
+                
+                let notificaciones = [];
+
+                if(admin.notificaciones) notificaciones = admin.notificaciones;
+
+                notificaciones.push(notiAdmin);
+                admin.notificaciones = notificaciones;
+                await Administrador.findByIdAndUpdate(admin._id, admin);
+            }
+        }
+
+        //Aviso de reporte grave a administrador
+        if(puntos >= 3) {
+            //Enviar notificación (guardar en el arreglo notificaciones del cliente)
+            const notificacion = new Notificacion('Reporte con alto puntaje para ' + cliente.nombre + ' ' + cliente.apellidos); //Posible cambio por ID del reporte
+
+            const admins = await Administrador.find();
+            for await (const admin of admins) {
+                
+                let notificaciones = [];
+
+                if(admin.notificaciones) notificaciones = admin.notificaciones;
+
+                notificaciones.push(notificacion);
+                admin.notificaciones = notificaciones;
+                await Administrador.findByIdAndUpdate(admin._id, admin);
+            }
+        }
+
         await Cliente.findByIdAndUpdate(idCliente, cliente);
+
+        servicio.reportesNutriologo -= 1;
+        await Servicio.findByIdAndUpdate(idServicio, servicio);
 
         //Guardar reporte
         await reporte.save();

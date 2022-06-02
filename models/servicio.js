@@ -46,6 +46,14 @@ const ServicioSchema = Schema({
     calificado: {
         type: Boolean,
         default: false
+    },
+    reportesNutriologo: {
+        type: Number,
+        default: 2
+    },
+    reportesCliente: {
+        type: Number,
+        default: 2
     }
 });
 

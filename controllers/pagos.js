@@ -10,6 +10,7 @@ const Historial_pago = require('../models/historial_pago');
 const Nutriologo = require('../models/nutriologo');
 const Cliente = require('../models/cliente');
 const Servicio = require('../models/servicio');
+const Notificacion = require('../models/notificacion');
 
 const crearOrden = async(req, res = response) => {
     
@@ -130,6 +131,15 @@ const ordenPagada = async(req, res = response) => {
         historial_cliente.push(historial);
         cliente.historial_pagos = historial_cliente;
 
+        //Enviar notificación (guardar en el arreglo notificaciones del cliente)
+        const notificacion = new Notificacion('Gracias por tu confianza. Recuerda seguir las instrucciones previas que ha dejado el nutriólogo, antes de acudir a la cita');
+        let notificaciones = [];
+
+        if(cliente.notificaciones) notificaciones = cliente.notificaciones;
+
+        notificaciones.push(notificacion);
+        cliente.notificaciones = notificaciones;
+
         await Cliente.findByIdAndUpdate(id, cliente);
 
         //Crear servicio
@@ -207,6 +217,10 @@ const ordenPagada = async(req, res = response) => {
             servicio.fecha_finalizacion = new Date();
             servicio.calendario = calendario;
             servicio.lista_compras = lista_compras;
+            servicio.reportesCliente = 2;
+            servicio.reportesNutriologo = 2;
+
+            await Servicio.findByIdAndUpdate(servicio._id, servicio);
         }
 
         //Crear el evento de calendar
