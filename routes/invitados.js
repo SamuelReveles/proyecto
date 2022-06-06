@@ -5,6 +5,7 @@ const { postSolicitud } = require('../controllers/administrador');
 
 //Modelos
 const Cliente = require('../models/cliente');
+const Nutriologo = require('../models/nutriologo');
 
 const {
     busqueda,
@@ -23,17 +24,26 @@ router.get('/nutriologo', getNutriologo);
 router.post('/soli', postSolicitud);
 
 router.put('/ultCon', async (req, res) => {
-    const cliente = await Cliente.findById(req.query.id);
+    
+    let cliente = await Cliente.findById(req.query.id);
     const haceRato = new Date();
-    cliente.ultima_conexion = haceRato.setDate(haceRato.getDate() - 200);
-    cliente.avisado = false;
 
-    await Cliente.findByIdAndUpdate(req.query.id, cliente);
+    if(!cliente) {
+        cliente = await Nutriologo.findById(req.query.id);
+        cliente.ultima_conexion = haceRato.setDate(haceRato.getDate() - 200);
+        cliente.avisado = false;
+        await Nutriologo.findByIdAndUpdate(req.query.id, cliente);
+    }
+    else {
+        cliente.ultima_conexion = haceRato.setDate(haceRato.getDate() - 200);
+        cliente.avisado = false;
+        await Cliente.findByIdAndUpdate(req.query.id, cliente);
+    }
 
     res.status(201).json({
         success: true,
         cliente
-    })
+    });
 })
 
 module.exports = router;

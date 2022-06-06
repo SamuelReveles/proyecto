@@ -1,9 +1,10 @@
 //Librerías externas
 const { response } = require('express');
-
 const sgMail = require('@sendgrid/mail');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
+const formatDistance = require('date-fns/formatDistance');
+const es = require('date-fns/locale/es');
 
 //Helpers
 const { generarJWT } = require('../helpers/verificacion');
@@ -149,6 +150,10 @@ const getAllUsers = async(req, res = response) => {
         return;
     }
 
+    for await (const cliente of resultado) {
+        cliente.ultima_conexion = formatDistance(cliente.ultima_conexion, new Date(), { locale: es });
+    }
+
     res.status(200).json(resultado);
 };
 
@@ -255,6 +260,10 @@ const getAllNutri = async(req, res = response) => {
             msg: 'Fallo al buscar'
         });
         return;
+    }
+
+    for await (const nutriologo of resultado) {
+        nutriologo.ultima_conexion = formatDistance(nutriologo.ultima_conexion, new Date(), { locale: es });
     }
 
     res.status(200).json(resultado);
