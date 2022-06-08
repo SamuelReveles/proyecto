@@ -20,7 +20,7 @@ const { logIn, logOut } = require('../controllers/sesiones');
 const router = Router();
 
 //Enviar código al celular
-router.get('/sendCode',  sendCode);
+router.get('/sendCode', [validarCelular], sendCode);
 
 //Verificar el código
 router.get('/verifyCode', verifyCode);

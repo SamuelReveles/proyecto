@@ -38,26 +38,28 @@ const validarEspecialidades = (req = request, res = response, next) => {
 
 const validarCelular = async (req = request, res = response, next) => {
     //Extraer celular del body
-    const celular = req.body.celular;
+    let celular = req.body.celular;
+    if(celular === undefined) celular = req.query.celular;
+    console.log(celular);
 
     //Validar que no esté en la base de datos
     let celularExiste = await Cliente.findOne({celular});
     if(celularExiste) {
-        return res.status(401).json({
+        return res.status(400).json({
             success: false,
             msg: 'Celular registrado'
         });
     }
     celularExiste = await Nutriologo.findOne({celular});
     if(celularExiste) {
-        return res.status(401).json({
+        return res.status(400).json({
             success: false,
             msg: 'Celular registrado'
         });
     }
     celularExiste = await Administrador.findOne({celular});
     if(celularExiste) {
-        return res.status(401).json({
+        return res.status(400).json({
             success: false,
             msg: 'Celular registrado'
         });

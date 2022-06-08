@@ -13,7 +13,7 @@ const sendCode = async (req, res = response) => {
         .services(process.env.ServiceID)
         .verifications
         .create({
-            to: '+' + req.query.celular,
+            to: '+52' + req.query.celular,
             channel: 'sms'
         })
         .then(data => {
@@ -28,7 +28,7 @@ const verifyCode = async (req, res = response) => {
         .services(process.env.ServiceID)
         .verificationChecks
         .create({
-            to: '+' + req.query.celular,
+            to: '+52' + req.query.celular,
             code: req.query.code
         })
         .then(data => {
