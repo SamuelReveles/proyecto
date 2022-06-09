@@ -148,13 +148,18 @@ const desbanear = async (req, res = response) => {
 
     try{
         //Nutriólogos
-        const nutriologos = await Nutriologo.find({baneado: false});
+        const nutriologos = await Nutriologo.aggregate([
+            {$match: {'baneado': true}}
+        ]);
 
         for await (let nutriologo of nutriologos) {
             if(Date.now() >= nutriologo.fecha_desban){
+                const notificacion = new Notificacion('Tu cuenta ya no está baneada');
+                nutriologo.notificaciones.push(notificacion);
                 nutriologo.baneado = false;
                 nutriologo.fecha_desban = null;
                 nutriologo.avisado = false;
+                nutriologo.puntajeBaneo = 0;
                 await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
             }
         }
@@ -166,9 +171,12 @@ const desbanear = async (req, res = response) => {
 
         for await (let cliente of clientes) {
             if(Date.now() >= cliente.fecha_desban){
+                const notificacion = new Notificacion('Tu cuenta ya no está baneada');
+                cliente.notificaciones.push(notificacion);
                 cliente.baneado = false;
                 cliente.fecha_desban = null;
                 cliente.avisado = false;
+                cliente.puntajeBaneo = 0;
                 await Cliente.findByIdAndUpdate(cliente._id, cliente);
             }
         }

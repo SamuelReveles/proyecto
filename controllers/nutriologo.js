@@ -187,6 +187,7 @@ const llenarCalendario = async (req, res = response) => {
     try {
         const id = req.id;
         const id_paciente = req.body.id;
+        const cliente = await Cliente.findById(id_paciente);
 
         const calendario = req.body.calendario;
         const compras = req.body.lista_compras;
@@ -215,7 +216,12 @@ const llenarCalendario = async (req, res = response) => {
 
         calendarioCliente[7][0] = compras;
 
-        await Cliente.findByIdAndUpdate(id_paciente, {calendario: calendarioCliente});
+        cliente.calendario = calendarioCliente;
+
+        //Enviar notificación
+        const notificacion = new Notificacion('Se ha actualizado tu calendario');
+        cliente.notificaciones.push(notificacion);
+        await Cliente.findByIdAndUpdate(id_paciente, cliente);
 
         res.status(200).json(calendarioCliente);
 
@@ -686,12 +692,8 @@ const reportar = async (req, res = response) => {
         const { puntos } = await Motivo.findById(idReporte);
         const cliente = await Cliente.findById(idCliente);
 
-        console.log(cliente);
-
         //Agregar los puntos y push a arreglo de reportes
         cliente.puntajeBaneo += puntos;
-
-        console.log(cliente.puntajeBaneo);
 
         let reportes = [];
         if(cliente.reportes) reportes = cliente.reportes;
@@ -721,6 +723,11 @@ const reportar = async (req, res = response) => {
 
             notificaciones.push(notificacion);
             cliente.notificaciones = notificaciones;
+
+            //Baneo de dos meses por reportes
+            let fecha_desban = new Date();
+            fecha_desban.setMonth(fecha_desban.getMonth() + 2);
+            cliente.fecha_desban = fecha_desban;
 
             //Enviar notificación a los admins
             const notiAdmin = new Notificacion('Nuevo usuario baneado ' + cliente.nombre + ' ' + cliente.apellidos); //Posible cambio por ID del reporte
@@ -766,6 +773,7 @@ const reportar = async (req, res = response) => {
 
         res.status(201).json(reporte);
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'No se ha logrado reportar'

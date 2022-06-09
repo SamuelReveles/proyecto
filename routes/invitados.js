@@ -12,6 +12,11 @@ const {
     getNutriologo
 } = require('../controllers/usuarios');
 
+const {
+    validarCorreo,
+    validarCelular
+} = require('../middlewares/validar-campos');
+
 const router = Router();
 
 //Buscar un nutriólogo
@@ -21,7 +26,10 @@ router.get('/busqueda', busqueda);
 router.get('/nutriologo', getNutriologo);
 
 //Crear una nueva solicitud
-router.post('/soli', postSolicitud);
+router.post('/soli',[
+    validarCorreo,
+    validarCelular
+], postSolicitud);
 
 router.put('/ultCon', async (req, res) => {
     

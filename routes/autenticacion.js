@@ -15,7 +15,7 @@ const { sendCode, verifyCode } = require('../helpers/verificacion');
 const { nutriologoPost } = require('../controllers/nutriologo');
 const { usuariosPost } = require('../controllers/usuarios');
 const { postAdmin } = require('../controllers/administrador');
-const { logIn, logOut } = require('../controllers/sesiones');
+const { logIn, verificarCorreo } = require('../controllers/sesiones');
 
 const router = Router();
 
@@ -49,5 +49,8 @@ router.post('/administrador',[
 router.post('/logIn', [
     check('id_token', 'El id_token es necesario').not().isEmpty()
 ],logIn);
+
+//Validar si existe el correo
+router.get('/correo', verificarCorreo);
 
 module.exports = router;

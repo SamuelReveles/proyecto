@@ -9,7 +9,6 @@ const {
     postSolicitud,
     getAllNutri,
     getNutriologo,
-    putResponderSolicitud,
     solicitudAccepted,
     solicitudDenied,
     adminUpdate,

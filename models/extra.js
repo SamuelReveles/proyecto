@@ -10,6 +10,10 @@ const ExtraSchema = mongoose.Schema({
         type: String,
         required: [true, 'La contraseña es obligatoria']
     },
+    sexo: {
+        type: String,
+        required: [true, 'El sexo es obligatorio']
+    },
     datoInicial: {
         type: mongoose.Schema.ObjectId, ref: datos
     },
@@ -18,7 +22,10 @@ const ExtraSchema = mongoose.Schema({
     }],
     historial: [{
         type: mongoose.Schema.ObjectId, ref:'historial'
-    }]
+    }],
+    calendario: {
+        type: Array
+    }
 });
 
 ExtraSchema.methods.toJSON = function(){

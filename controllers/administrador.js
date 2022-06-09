@@ -13,10 +13,9 @@ const { generarJWT } = require('../helpers/verificacion');
 const Cliente = require('../models/cliente');
 const Nutriologo = require('../models/nutriologo');
 const Administrador = require('../models/administrador');
-const Solicitud_empleo = require('../models/solicitud_empleo');
 const Reporte = require('../models/reporte');
 const Motivo = require('../models/motivo');
-const Solicitud = require('../models/solicitud_empleo');
+const Solicitud = require('../models/solicitud_nutriologo');
 const Notificacion = require('../models/notificacion');
 
 //Obtener información de un usuario
@@ -274,13 +273,11 @@ const getSolicitudes = async(req, res = response) => {
 
     const {limit = 10, start = 0} = req.query;
 
-    const solicitudes = await Solicitud_empleo.aggregate([
+    const solicitudes = await Solicitud.aggregate([
         {$skip: start},
         {$limit: limit},
         {$match: {'estado': null}}
     ])
-
-    const total = await Solicitud_empleo.count({estado: null});
 
     if(!solicitudes) {
         res.status(400).json(false);
@@ -293,16 +290,17 @@ const getSolicitudes = async(req, res = response) => {
 const postSolicitud = async(req, res = response) => {
 
     try {
-        //Extraer archivo de cv
-        const { tempFilePath } = req.files.imagen;
-
-        //Subir a cloudinary y extraer el secure_url
-        const { secure_url } = await cloudinary.uploader.upload(tempFilePath);
-
-        const soli = new Solicitud_empleo({
+        const soli = new Solicitud({
             nombre: req.body.nombre,
-            cv: secure_url,
-            correo: req.body.correo
+            apellidos: req.body.apellidos,
+            correo: req.body.correo,
+            cedula: req.body.cedula,
+            domicilio: req.body.domicilio,
+            sexo: req.body.sexo,
+            categorias: req.body.categorias,
+            celular: req.body.celular,
+            fecha_nacimiento: new Date(),
+            CURP: req.body.CURP
         });
 
         await soli.save();
@@ -331,38 +329,12 @@ const postSolicitud = async(req, res = response) => {
     }
 };
 
-//Cambiar de estado la solicitud de empleo
-const putResponderSolicitud = async(req, res = response) => {
-
-    try {
-
-        const { id, respuesta } = req.body;
-
-        //Extraer la solicitud de la base de datos
-        const solicitud = await Solicitud_empleo.findById(id);
-    
-        //Cambiar respuesta
-        solicitud.estado = respuesta;
-
-        // Actualizar el objeto
-        await Solicitud_empleo.findByIdAndUpdate(id);
-
-        res.status(200).json({solicitud, respuesta});
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            solicitud,
-            respuesta
-        });
-    }
-}
-
 //Aceptar solicitud
 const solicitudAccepted = async (req, res = response) => {
 
     const id = req.body.id;
 
-    const solicitud = await Solicitud_empleo.findById(id)
+    const solicitud = await Solicitud.findById(id)
         .catch(() => {
             res.status(400).json({
                 success: false,
@@ -374,7 +346,7 @@ const solicitudAccepted = async (req, res = response) => {
 
     //Actualizar la solicitud
     solicitud.estado = true;
-    await Solicitud_empleo.findByIdAndUpdate(id, solicitud);
+    await Solicitud.findByIdAndUpdate(id, solicitud);
 
     //Mensaje de correo electrónico
     const msg = {
@@ -398,6 +370,8 @@ const solicitudAccepted = async (req, res = response) => {
         nombreCompleto: solicitud.nombre + ' ' + solicitud.apellidos,
         celular: solicitud.celular,
         correo: solicitud.correo,
+        CURP: solicitud.CURP,
+        domicilio: solicitud.domicilio,
         imagen: linkImagen,
         fecha_registro: Date.now(),
         especialidades: req.body.especialidades,
@@ -601,16 +575,16 @@ const reportesUsuario = async (req, res = response) => {
 
         let listadoReportes = [];
 
-        for await (const _id of reportes) {
+        for await (const report of reportes) {
 
             //Reporte dentro del arreglo del usuario
-            const {para, tipo, msg} = await Reporte.findById(_id);
+            const {para, tipo, msg, borrado, _id} = await Reporte.findById(report);
 
             //Extraer el tipo de reporte
             const reporte = await Motivo.findById(tipo);
 
             //Agrego al arreglo
-            listadoReportes.push({para, reporte, msg});
+            listadoReportes.push({para, reporte, msg, borrado, _id});
 
         }
         res.status(200).json(listadoReportes);
@@ -629,6 +603,7 @@ const borrarReporte = async (req, res = response) => {
     try {
 
         const id = req.query.id;
+        let notificacion;
 
         const reporte = await Reporte.findById(id);
 
@@ -653,16 +628,38 @@ const borrarReporte = async (req, res = response) => {
         }
     
         //Extraer el tipo de reporte
-        const { puntos } = await Motivo.findById(tipo);
+        const { puntos, descripcion } = await Motivo.findById(tipo);
     
         //Reducir los puntos
         to.puntajeBaneo -= puntos;
+        notificacion = new Notificacion('Se ha borrado un reporte por ' + descripcion);
+        to.notificaciones.push(notificacion);
+
+        //Quitar baneo en caso de tener un puntaje menor al límite
+        if(esCliente === true){
+            if(to.puntajeBaneo < 5) {
+                notificacion = new Notificacion('Tu cuenta ha vuelto del baneo');
+                to.baneado = false;
+                to.fecha_desban = null;
+                to.notificaciones.push(notificacion);
+            } 
+        }
+        else {
+            if(to.puntajeBaneo < 15) {
+                notificacion = new Notificacion('Tu cuenta ha vuelto del baneo');
+                to.baneado = false;
+                to.fecha_desban = null;
+                to.notificaciones.push(notificacion);
+            } 
+        }
 
         //Actualizar objetos
         await Reporte.findByIdAndUpdate(id, reporte);
         if(esCliente) await Cliente.findByIdAndUpdate(para, to);
         else await Nutriologo.findByIdAndUpdate(para, to);
-        res.status(201).json(true);
+        res.status(201).json({
+            success: true
+        });
     } catch(error) {
         res.status(400).json({
             success: false,
@@ -736,7 +733,6 @@ module.exports = {
     postSolicitud,
     getAllNutri,
     getNutriologo,
-    putResponderSolicitud,
     solicitudAccepted,
     solicitudDenied,
     adminUpdate,

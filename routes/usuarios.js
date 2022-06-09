@@ -3,7 +3,7 @@ const { Router } = require('express');
 const { check } = require('express-validator');
 
 //Validación de campos vacíos
-const { validarCampos } = require('../middlewares/validar-campos');
+const { validarCampos, validarBanCliente } = require('../middlewares/validar-campos');
 
 const { validarToken, verificarCliente } = require('../middlewares/validar-jwt');
 
@@ -50,22 +50,22 @@ router.get('/progreso', getProgreso);
 router.get('/data', getInfo);
 
 //Calificar a un nutriólogo
-router.put('/calificar', calificar);
+router.put('/calificar', [validarBanCliente], calificar);
 
 //Dar de alta un nuevo extra
-router.post('/extra/alta', altaExtras);
+router.post('/extra/alta', [validarBanCliente], altaExtras);
 
 //Ver extras del cliente
-router.get('/extra', getExtras);
+router.get('/extra', [validarBanCliente], getExtras);
 
 //Actualizar datos
-router.put('/', usuariosUpdate);
+router.put('/', [validarBanCliente], usuariosUpdate);
 
 //Reportar
-router.put('/reportar', reportar);
+router.put('/reportar', [validarBanCliente], reportar);
 
 //Eliminar cuenta
-router.delete('/', usuariosDelete);
+router.delete('/', [validarBanCliente], usuariosDelete);
 
 //Ver historial del cliente
 router.get('/historial', mostrarHistorial);
@@ -80,7 +80,7 @@ router.get('/pagos', verHistorialPagos);
 router.post('/pagos', ordenPagada);
 
 //Crear orden de paypal (paso para el check-in)
-router.post('/crearOrden', crearOrden);
+router.post('/crearOrden', [validarBanCliente], crearOrden);
 
 //Capturar orden de pago
 router.get('/capturarOrden', capturarOrden);

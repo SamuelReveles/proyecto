@@ -63,6 +63,40 @@ const logIn = async (req, res = response) => {
     }
 }
 
+const verificarCorreo = async (req = request, res = response, next) => {
+    //Extraer correo del body
+    const correo = req.body.correo;
+
+    //Validar que no esté en la base de datos
+    let existeEmail = await Cliente.findOne({correo});
+    if(existeEmail) {
+        return res.status(200).json({
+            registrado: true,
+            msg: 'Correo registrado en un cliente'
+        });
+    }
+    else existeEmail = await Nutriologo.findOne({correo});
+    if(existeEmail) {
+        return res.status(200).json({
+            registrado: true,
+            msg: 'Correo registrado en un nutriólogo'
+        });
+    }
+    else existeEmail = await Administrador.findOne({correo});
+    if(existeEmail) {
+        return res.status(200).json({
+            registrado: true,
+            msg: 'Correo registrado en un administrador'
+        });
+    }
+    else {
+        return res.status(200).json({
+            registrado: false
+        });
+    }
+}
+
 module.exports = {
-    logIn
+    logIn,
+    verificarCorreo
 }

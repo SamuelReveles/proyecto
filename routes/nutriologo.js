@@ -3,7 +3,7 @@ const { Router } = require('express');
 const { check } = require('express-validator');
 
 //Middlewares
-const { validarCampos } = require('../middlewares/validar-campos');
+const { validarCampos, validarBanNutriologo } = require('../middlewares/validar-campos');
 
 const { 
     nutriologoUpdate,
@@ -35,13 +35,13 @@ router.use(validarToken);
 router.use(verificarNutriologo);
 
 //Actualizar datos básicos del nutriólogo
-router.put('/', nutriologoUpdate);
+router.put('/', [validarBanNutriologo], nutriologoUpdate);
 
 //Actualizar información de servicio
-router.put('/servicio', nutriologoUpdateServicio);
+router.put('/servicio', [validarBanNutriologo], nutriologoUpdateServicio);
 
 //Eliminar al nutriólogo
-router.delete('/', nutriologoDelete);
+router.delete('/', [validarBanNutriologo], nutriologoDelete);
 
 //Obtener datos de un cliente (Paciente para un nutriólogo)
 router.get('/cliente', getClientData);
@@ -68,13 +68,13 @@ router.get('/predeterminado/uno', getPredeterminado);
 router.delete('/predeterminado', deletePredeterminado);
 
 //Actualizar datos de la cuenta
-router.put('/update', putActualizarDatos);
+router.put('/update', [validarBanNutriologo], putActualizarDatos);
 
 //Ver datos de la cuenta
 router.get('/data', getInfo);
 
 //Reportar a un usuario
-router.put('/reportar', reportar);
+router.put('/reportar', [validarBanNutriologo], reportar);
 
 //Historial de cliente
 router.get('/historial', mostrarHistorial);

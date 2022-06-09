@@ -30,7 +30,7 @@ const socketController = (socket) => {
 
     //Recibir mensaje
     socket.on('mensaje', async ( payload ) => {
-        const { emisor, receptor, contenido = '' } = payload;
+        const { emisor, receptor, contenido = '', id_servicio } = payload;
 
         //Identificador de tipo de usuario que recibe el mensaje
         let type = 'Nutriologo';
@@ -50,16 +50,18 @@ const socketController = (socket) => {
         const mensaje = new Mensaje(contenido, emisor);
 
         //Actualizar los mensajes en el servicio
-        let servicio;
-        if(type === 'Nutriologo') {
-            servicio = await Servicio.aggregate([
-                {$match: {$and: [{'id_paciente': emisor}, {'id_nutriologo': receptor}]}}
-            ]);
-        } else {
-            servicio = await Servicio.aggregate([
-                {$match: {$and: [{'id_paciente': receptor}, {'id_nutriologo': emisor}]}}
-            ]);
-        }
+        // let servicio;
+        // if(type === 'Nutriologo') {
+        //     servicio = await Servicio.aggregate([
+        //         {$match: {$and: [{'id_paciente': emisor}, {'id_nutriologo': receptor}]}}
+        //     ]);
+        // } else {
+        //     servicio = await Servicio.aggregate([
+        //         {$match: {$and: [{'id_paciente': receptor}, {'id_nutriologo': emisor}]}}
+        //     ]);
+        // }
+
+        const servicio = await Servicio.findById(id_servicio);
 
         let mensajes = [];
         if(servicio.mensajes) mensajes = servicio.mensajes;

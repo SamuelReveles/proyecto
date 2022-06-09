@@ -330,7 +330,8 @@ const altaExtras = async (req, res = response) => {
             //Crear el objeto
             const extra = new Extra({
                 nombre: req.body.nombre,
-                apellidos: req.body.apellidos
+                apellidos: req.body.apellidos,
+                sexo: req.body.sexo
             });
 
             //Guardar en extra1
@@ -379,25 +380,40 @@ const getProgreso = async (req, res = response) => {
         const inicio = await Dato.findById(user.datoInicial);
 
         //Guardar datos en un arreglo
-        let datos = [];
+        let masa = [];
+        let estatura = [];
+        let IMC = [];
+
+        if(inicio) {
+            masa.push(inicio.peso);
+            estatura.push(inicio.altura);
+            let imcInicio = inicio.peso / ((inicio.altura / 100) * (inicio.altura / 100));
+            IMC.push(imcInicio);
+        }
 
         //Extraer todos los datos a un arreglo
         for await (const _id of user.datoConstante) {
             const dato = await Dato.findById(_id)
-            datos.push({peso: dato.peso, altura: dato.altura});
+            masa.push(dato.peso);
+            estatura.push(dato.altura);
+            let imc = dato.peso / ((dato.altura / 100) * (dato.altura / 100));
+            IMC.push(imc);
         }
 
         if(!inicio){
             res.status(400).json({
                 success: false,
-                inicio: false,
-                constantes: false,
                 msg: 'Usuario sin datos registrados'
             });
             return;
         }
 
-        res.status(200).json(inicio, datos);
+        res.status(200).json({
+            success: true,
+            peso: masa,
+            altura: estatura,
+            IMC
+        });
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -474,6 +490,10 @@ const reportar = async (req, res = response) => {
 
             notificaciones.push(notificacion);
             nutriologo.notificaciones = notificaciones;
+            //Baneo de dos meses por reportes
+            let fecha_desban = new Date();
+            fecha_desban.setMonth(fecha_desban.getMonth + 2);
+            nutriologo.fecha_desban = fecha_desban;
 
             //Enviar notificación a los admins
             const notiAdmin = new Notificacion('Nuevo usuario baneado ' + nutriologo.nombreCompleto); //Posible cambio por ID del reporte
@@ -533,7 +553,7 @@ const calificar = async (req, res = response) => {
     const { id_servicio, calificacion } = req.query;
 
     //Extraer servicio
-    const servicio = Servicio.findById(id_servicio);
+    const servicio = await Servicio.findById(id_servicio);
 
     //Validar que esté dentro del rango y que el servicio esté calificado
     if(calificacion > 5 || calificacion < 0 || servicio.calificado === true) {
@@ -572,12 +592,16 @@ const calificar = async (req, res = response) => {
     nutriologo.calificaciones = calificaciones;
 
     //Actualizar objeto
-    await Nutriologo.findByIdAndUpdate(id, nutriologo)
-    .then(
+    await Nutriologo.findByIdAndUpdate(servicio.id_nutriologo, nutriologo)
+    .then(async () => {
         res.status(201).json({
             success: true,
             msg: 'Calificado correctamente con ' + calificacion + ' estrellas'
-        })
+        });
+
+        servicio.calificado = true;
+        await Servicio.findByIdAndUpdate(id_servicio, servicio);
+    }
     )
     .catch(() => {
         res.status(400).json({

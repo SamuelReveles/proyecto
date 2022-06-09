@@ -97,9 +97,43 @@ const validarCorreo = async (req = request, res = response, next) => {
     next();
 }
 
+const validarBanCliente = async (req = request, res = response, next) => {
+    const id = req.id;
+
+    const cliente = await Cliente.findById(id);
+
+    if(cliente.baneado === true) {
+        res.status(401).json({
+            success: false,
+            msg: 'El usuario está baneado'
+        });
+    } 
+    else {
+        next();
+    }
+}
+
+const validarBanNutriologo = async (req = request, res = response, next) => {
+    const id = req.id;
+
+    const nutriologo = await Nutriologo.findById(id);
+
+    if(nutriologo.baneado === true) {
+        res.status(401).json({
+            success: false,
+            msg: 'El nutriólogo está baneado'
+        });
+    } 
+    else {
+        next();
+    }
+}
+
 module.exports = {
     validarCampos,
     validarCorreo,
     validarCelular,
-    validarEspecialidades
+    validarEspecialidades,
+    validarBanCliente,
+    validarBanNutriologo
 }

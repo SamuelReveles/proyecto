@@ -12,9 +12,21 @@ const NutrilogoSchema = Schema({
     nombreCompleto: {
         type: String
     },
-    genero: {
+    sexo: {
         type: String,
-        required: [true, 'El genero es obligatorio']
+        required: [true, 'El sexo es obligatorio']
+    },
+    fecha_nacimiento: {
+        type: Date,
+        required: [true, 'La fecha de nacimiento es obligatoria']
+    },
+    CURP: {
+        type: String,
+        required: [true, 'La CURP es obligatoria']
+    },
+    domicilio: {
+        type: String,
+        required: [true, 'El domicilio es obligatorio']
     },
     imagen: {
         type: String,
@@ -22,7 +34,7 @@ const NutrilogoSchema = Schema({
     },
     celular: {
         type: String,
-        required: [true, 'La imagen es obligatoria'],
+        required: [true, 'El celular es obligatorio'],
         unique: true
     },
     correo: {
@@ -53,7 +65,8 @@ const NutrilogoSchema = Schema({
     },
     fecha_desban: {
         type: Date,
-        required: false
+        required: false,
+        default: null
     },
     calificacion: [{ 
         type: Number, 

@@ -13,6 +13,10 @@ const ClienteSchema = Schema({
         type: String,
         required: [true, 'El genero es obligatorio']
     },
+    fecha_nacimiento: {
+        type: Date,
+        required: [true, 'La fecha de nacimiento es obligatoria']
+    },
     imagen: {
         type: String,
         required: true
@@ -47,7 +51,8 @@ const ClienteSchema = Schema({
     },
     fecha_desban: {
         type: Date,
-        required: false
+        required: false,
+        default: null
     },
     puntajeBaneo: {
         type: Number,
