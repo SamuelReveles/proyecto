@@ -30,8 +30,8 @@ const router = Router();
 
 //Verificar que exista sesión iniciada el token
 //GODO COMENTA LA LINEA DE ABAJO SI ES QUE TE DICE QUE NO TIENES TOKEN XD
-router.use(validarToken);
-router.use(verificarAdmin);
+// router.use(validarToken);
+// router.use(verificarAdmin);
 
 //Busar un usuario
 router.get('/user/one', getUser);

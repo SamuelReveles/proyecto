@@ -85,7 +85,8 @@ const NutrilogoSchema = Schema({
         type: String
     },
     ultima_conexion: {
-        type: Date
+        type: Date,
+        default: new Date()
     },
     precio: {
         type: Number,

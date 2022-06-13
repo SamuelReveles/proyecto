@@ -66,7 +66,8 @@ const ClienteSchema = Schema({
         required: true
     },
     ultima_conexion: {
-        type: Date
+        type: Date,
+        default: new Date()
     },
     historial: [{
         type: Schema.ObjectId, ref:'historial'
