@@ -29,10 +29,18 @@ const SolicitudNutriologoSchema = Schema({
         type: String, 
         required: [true, 'El sexo es obligatorio']
     },
-    categorias: [{
+    fecha_nacimiento: {
+        type: Date,
+        required: [true, 'La fecha nacimiento es obligatoria']
+    },
+    mensaje: {
         type: String,
         required: [true, 'Las categorias son obligatorias']
-    }]
+    },
+    CURP: {
+        type: String,
+        required: [true, 'La CURP es obligatoria']
+    }
 });
 
 SolicitudNutriologoSchema.methods.toJSON = function(){

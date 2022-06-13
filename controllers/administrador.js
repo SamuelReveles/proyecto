@@ -293,13 +293,13 @@ const postSolicitud = async(req, res = response) => {
         const soli = new Solicitud({
             nombre: req.body.nombre,
             apellidos: req.body.apellidos,
-            correo: req.body.correo,
             cedula: req.body.cedula,
+            correo: req.body.correo,
             domicilio: req.body.domicilio,
             sexo: req.body.sexo,
-            categorias: req.body.categorias,
+            mensaje: req.body.mensaje,
             celular: req.body.celular,
-            fecha_nacimiento: new Date(),
+            fecha_nacimiento: req.body.fecha_nacimiento,
             CURP: req.body.CURP
         });
 
@@ -368,13 +368,13 @@ const solicitudAccepted = async (req, res = response) => {
         nombre: solicitud.nombre,
         apellidos: solicitud.apellidos,
         nombreCompleto: solicitud.nombre + ' ' + solicitud.apellidos,
+        cedula: solicitud.cedula,
         celular: solicitud.celular,
         correo: solicitud.correo,
         CURP: solicitud.CURP,
         domicilio: solicitud.domicilio,
         imagen: linkImagen,
         fecha_registro: new Date(),
-        especialidades: req.body.especialidades,
         sexo: solicitud.genero
     });
 

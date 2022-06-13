@@ -42,7 +42,8 @@ const usuariosPost = async (req, res = response) => {
             celular: req.body.celular,
             correo: req.body.correo,
             sexo: req.body.sexo,
-            fecha_registro: Date.now()
+            fecha_registro: new Date(),
+            fecha_nacimiento: req.body.fecha_nacimiento
         });
 
         await user.save();

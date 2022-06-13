@@ -9,9 +9,6 @@ const DatoSchema = Schema({
         type: Number,
         required: [true, 'La altura es obligatoria']
     },
-    fecha_nacimiento: {
-        type: Date
-    },
     brazo: {
         type: Number
     },

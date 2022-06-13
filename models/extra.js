@@ -25,6 +25,10 @@ const ExtraSchema = mongoose.Schema({
     }],
     calendario: {
         type: Array
+    },
+    fecha_nacimiento: {
+        type: Date,
+        required: [true, 'La fecha de nacimiento es obligatoria']
     }
 });
 
