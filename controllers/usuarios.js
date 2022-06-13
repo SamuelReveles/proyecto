@@ -41,7 +41,7 @@ const usuariosPost = async (req, res = response) => {
             imagen: linkImagen,
             celular: req.body.celular,
             correo: req.body.correo,
-            genero: req.body.genero,
+            sexo: req.body.sexo,
             fecha_registro: Date.now()
         });
 

@@ -38,6 +38,7 @@ const nutriologoPost = async (req, res = response) => {
             celular: req.body.celular,
             correo: req.body.correo,
             imagen: linkImagen,
+            sexo: req.body.sexo,
             fecha_registro: Date.now(),
             especialidades: [
                 "Vegano",

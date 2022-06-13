@@ -9,7 +9,7 @@ const ClienteSchema = Schema({
         type: String,
         required: [true, 'Los apellidos son obligatorios']
     },
-    genero: {
+    sexo: {
         type: String,
         required: [true, 'El genero es obligatorio']
     },

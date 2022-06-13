@@ -13,7 +13,7 @@ const AdministradorSchema = Schema({
         type: String,
         required: [true, 'La imagen es obligatoria']
     },
-    genero: {
+    sexo: {
         type: String,
         required: [true, 'El genero es obligatorio']
     },

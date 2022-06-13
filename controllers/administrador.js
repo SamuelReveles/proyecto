@@ -352,9 +352,9 @@ const solicitudAccepted = async (req, res = response) => {
     const msg = {
         to: solicitud.correo, // Change to your recipient
         from: 'a18300384@ceti.mx', // Change to your verified sender
-        subject: 'Estado de la solicitud de empleo',
+        subject: 'Estado de la solicitud de alta',
         text: 'Text',
-        html:'<h1 font-family="Times New Roman"> Solicitud de empleo aceptada</h1><img src="" alt="Bienvenido"><p>Hola ' + solicitud.nombre + 'tu solicitud de empleo ha sido aceptada, ya puedes iniciar sesión con tu cuenta de nutriologo!</p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">'
+        html:'<h1 font-family="Times New Roman"> Solicitud de alta aceptada. Bienvenido a Jopaka</h1><p>Hola ' + solicitud.nombre + 'tu solicitud de alta ha sido aceptada, ya puedes iniciar sesión con tu cuenta de nutriologo!</p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">'
         //html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido aceptada',
     }
 
@@ -373,9 +373,9 @@ const solicitudAccepted = async (req, res = response) => {
         CURP: solicitud.CURP,
         domicilio: solicitud.domicilio,
         imagen: linkImagen,
-        fecha_registro: Date.now(),
+        fecha_registro: new Date(),
         especialidades: req.body.especialidades,
-        genero: solicitud.genero
+        sexo: solicitud.genero
     });
 
     await nutriologo.save();
@@ -420,10 +420,10 @@ const solicitudDenied = async (req, res = response) => {
     const msg = {
         to: solicitud.correo, // Change to your recipient
         from: 'a18300384@ceti.mx', // Change to your verified sender
-        subject: 'Estado de la solicitud de empleo',
+        subject: 'Estado de la solicitud de alta',
         text: 'Text',
         type:'type/html',
-        html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido denegada',
+        html: 'Hola ' + solicitud.nombre + ' tu solicitud de alta ha sido denegada',
     }
     
     //Enviar el correo de respuesta
