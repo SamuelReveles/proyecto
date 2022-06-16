@@ -95,7 +95,6 @@ const ordenPagada = async(req, res = response) => {
         let id = req.id;
 
         let { 
-            categoria,
             id_extra = ''
             //horario
         } = req.body;
@@ -111,13 +110,8 @@ const ordenPagada = async(req, res = response) => {
         const historial = new Historial_pago(
             precio,
             cliente.nombre,
-            nombreCompleto,
-            new Date(),
-            categoria
+            nombreCompleto
         );
-
-        if(calendario !== false) historial.calendario(calendario_precio);
-        if(lista_compras !== false ) historial.lista_compras(lista_compras_precio);
 
         //Guardar en el registro del cliente
         let historial_cliente = [];
@@ -126,7 +120,7 @@ const ordenPagada = async(req, res = response) => {
         cliente.historial_pagos = historial_cliente;
 
         //Enviar notificación (guardar en el arreglo notificaciones del cliente)
-        const notificacion = new Notificacion('Gracias por tu confianza. Recuerda seguir las instrucciones previas que ha dejado el nutriólogo, antes de acudir a la cita');
+        const notificacion = new Notificacion('Gracias por tu confianza. Recuerda que debes seguir las instrucciones previas que ha dejado el nutriólogo antes de acudir a la cita');
         let notificaciones = [];
 
         if(cliente.notificaciones) notificaciones = cliente.notificaciones;

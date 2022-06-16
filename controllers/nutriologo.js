@@ -311,10 +311,18 @@ const llenarCalendario = async (req, res = response) => {
 
         const servicio = await Servicio.findById(id_servicio);
 
-        if(servicio.llenarCalendario === true) {
+        if(servicio.calendario === true) {
             res.status(401).json({
                 success: false,
                 msg: 'El calendario ya ha sido llenado'
+            });
+            return;
+        }
+
+        if(servicio.llenado_datos === false) {
+            res.status(401).json({
+                success: false,
+                msg: 'Aún no se han llenado los datos'
             });
             return;
         }
@@ -709,7 +717,15 @@ const updateClientData = async (req, res = response) => {
         //Extraer datos del query
         const id_servicio = req.query.id;
 
-        const { id_paciente } = await Servicio.findById(id_servicio);
+        const { id_paciente, llenado_datos } = await Servicio.findById(id_servicio);
+
+        if(llenado_datos === true) {
+            res.status(401).json({
+                success: false,
+                msg: 'Ya se han llenado los datos'
+            });
+            return;
+        }
 
         //Crear datos del cliente
         const datos = new Dato({
@@ -733,26 +749,27 @@ const updateClientData = async (req, res = response) => {
             if(!cliente.datoInicial){
                 await Cliente.findByIdAndUpdate(id_paciente, {datoInicial : datos})
                 .then(await datos.save());
-                res.status(201).json(datos);
             }
             else {
                 cliente.datoConstante.push(datos);
                 await Cliente.findByIdAndUpdate(id_paciente, cliente)
                 .then(await datos.save());
-                res.status(201).json(datos);
             }
+            await Servicio.findByIdAndUpdate(id_servicio, {llenado_datos: true});
+            res.status(201).json(datos);
         }
 
         // Si es extra
         else if(extra){
 
-            if(!extra.datoInicial) await Extra.findByIdAndUpdate(id_paciente, {datoInicial : datos});
+            if(!extra.datoInicial) await Extra.findByIdAndUpdate(id_paciente, {datoInicial: datos});
             else {
                 extra.datoConstante.push(datos);
                 await Extra.findByIdAndUpdate(id_paciente, extra);
             }
 
             await datos.save();
+            await Servicio.findByIdAndUpdate(id_servicio, {llenado_datos: true});
             res.status(201).json(datos);
 
         }

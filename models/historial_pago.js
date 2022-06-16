@@ -5,38 +5,21 @@ const es = require('date-fns/locale/es');
 
 class Historial_Pago {
 
-    constructor(precio_servicio = 0, nombreCliente = '', nombreNutriologo = '', fecha_pago = new Date(), categoria = '') {
+    constructor(precio_servicio = 0, nombreCliente = '', nombreNutriologo = '') {
         this.precio_servicio = precio_servicio;
         this.nombreCliente = nombreCliente;
         this.nombreNutriologo = nombreNutriologo;
-        this.fecha_pago = fecha_pago;
-        this.categoria = categoria;
-        this.calendario_precio = 0;
-        this.lista_compras_precio = 0;
+        this.fecha_pago = new Date();
     }
 
     formatFecha() {
         return format(this.fecha_pago, 'dd-MMMM-yyyy', {locale: es});
     }
 
-    calendario(precio = 0) {
-        this.calendario = true;
-        this.calendario_precio = precio;
-    }
-
-    lista_compras(precio = 0) {
-        this.lista_compras = true;
-        this.lista_compras_precio = precio;
-    }
-
     toArray() {
 
         const fechaArr = this.formatFecha().split('-');
         const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-
-        let total = this.precio_servicio;
-        total += this.lista_compras_precio;
-        total += this.calendario_precio;
 
         let arreglo = [
             {
@@ -46,14 +29,6 @@ class Historial_Pago {
             {
                 tipo: 'Cita con el nutriólogo',
                 valor: this.precio_servicio
-            },
-            {
-                tipo: 'Servicio de calendario',
-                valor: this.calendario_precio
-            },
-            {
-                tipo: 'Servicio de lista de compras',
-                valor: this.lista_compras_precio
             }
         ];
 

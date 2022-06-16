@@ -931,13 +931,29 @@ const solicitarReagendacion = async (req, res = response) => {
         //Datos del servicio y reagendación
         const { id_servicio, fecha, msg } = req.body;
 
-        const { id_nutriologo } = await Servicio.findById(id_servicio);
+        const { id_nutriologo, fecha_cita } = await Servicio.findById(id_servicio);
+
+        if(fecha < new Date()) { //Por si ocurre un bug
+            res.status(400).json({
+                success: false,
+                msg: 'Fecha inválida'
+            });
+            return;
+        }
+
+        if(fecha < fecha_cita) { //Por si se quiere reagendar una vez tomada la cita
+            res.status(400).json({
+                success: false,
+                msg: 'Fecha inválida'
+            });
+            return;
+        }
 
         const reagendacion = new Reagendacion({
             emisor: id_emisor,
             remitente: id_nutriologo,
             id_servicio,
-            fecha_nueva: new Date(),
+            fecha_nueva: fecha,
             msg,
             aceptada: null
         });
@@ -1053,6 +1069,23 @@ const estadoVerDatos = async (req, res = response) => {
         res.status(400).json({
             success: true,
             msg: 'No se ha podido actualizar el objeto'
+        });
+    }
+}
+
+const getMotivosUsuario = (req, res = response) => {
+    try {
+        let motivosUsuario = [];
+        motivosUsuario.push(await Motivo.findById('624536db33d1ed94d196ec61'));
+        motivosUsuario.push(await Motivo.findById('624536e733d1ed94d196ec63'));
+        motivosUsuario.push(await Motivo.findById('6245371633d1ed94d196ec67'));
+        motivosUsuario.push(await Motivo.findById('6245372033d1ed94d196ec69'));
+        motivosUsuario.push(await Motivo.findById('6245372833d1ed94d196ec6b'));
+        motivosUsuario.push(await Motivo.findById('6245373e33d1ed94d196ec6d'));
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            msg: 'Error: ' + error
         });
     }
 }
