@@ -54,7 +54,6 @@ const NutrilogoSchema = Schema({
         type: String,
         required: true
     }],
-    pacientes: [{ type: Schema.ObjectId, required: false}],
     puntajeBaneo: {
         type: Number,
         default: 0
@@ -75,8 +74,11 @@ const NutrilogoSchema = Schema({
     promedio: {
         type: Number
     },
-    fechaDisponible: [{ 
-        type: Object
+    fechaDisponible: { 
+        type: Schema.ObjectId
+    },
+    configuracion_fechas: [{
+        type: Array
     }],
     reportes: [{
         type: Schema.ObjectId, ref:'reporte'
@@ -101,18 +103,6 @@ const NutrilogoSchema = Schema({
     avisado: {
         type: Boolean,
         default: false
-    },
-    calendario: {
-        type: Boolean
-    },
-    calendario_precio: {
-        type: Number
-    },
-    lista_compras: {
-        type: Boolean
-    },
-    lista_compras_precio: {
-        type: Number
     },
     notificaciones: [{
         type: Object

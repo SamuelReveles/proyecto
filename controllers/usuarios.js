@@ -671,13 +671,15 @@ const getInfo = async (req, res = response)  => {
         const {extra1, extra2} = cliente;
         
         //Devolver solicitudes de reagendación pendientes
-        const solicitudes = await Reagendacion.aggregate([
-            {$match: {$or: [{'remitente': id}, {'remitente': extra1}, {'remitente': extra2}]}}
-        ])
+        const solicitudes = await Reagendacion.find();
 
-        const servicios = await Servicio.aggregate([
-            {$match: {$and: [{$or: [{'id_paciente': id}, {'id_paciente': extra1}, {'id_paciente': extra2}]}, {'activo': true}]}}
-        ])
+        let serviciosUsuario = [];
+        const servicios = await Servicio.find();
+        servicios.forEach(servicioFE => {
+            if(servicioFE.id_paciente == id || servicioFE.id_paciente == extra1._id || servicioFE.id_paciente == extra2._id) {
+                serviciosUsuario.push(servicioFE);
+            }
+        })
 
 
         res.status(200).json({cliente, solicitudes, servicios});
@@ -717,7 +719,10 @@ const usuariosUpdate = async (req, res = response) => {
                 //Split del nombre de la imagen
                 const nombreArr = user.imagen.split('/');
                 const nombre = nombreArr[nombreArr.length - 1];
-                const [ public_id ] = nombre.split('.');
+                const [ public_id, extension ] = nombre.split('.');
+                if(extension != 'png' && extension != 'jpg'){
+                    throw new Error('Error en el formato de imagen');
+                }
 
                 //Borrar la imagen
                 await cloudinary.uploader.destroy(public_id);

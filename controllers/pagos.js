@@ -75,8 +75,6 @@ const capturarOrden = async(req, res = response) => {
             },
         });
         
-        //Pago realizado 
-
         res.status(200).json(response.data);
     } catch (error) {
         res.status(400).json({ 
@@ -96,22 +94,18 @@ const ordenPagada = async(req, res = response) => {
     try {
         let id = req.id;
 
-        id = ObjectId(id);
-
         let { 
             categoria,
-            calendario = false,
-            lista_compras = false,
             id_extra = ''
             //horario
         } = req.body;
 
-        let id_nutriologo = ObjectId(req.body.id_nutriologo);
+        let id_nutriologo = req.body.id_nutriologo;
 
         //Si es para un extra, se cambia id y se cambia el objeto
         const cliente = await Cliente.findById(id);
 
-        const { precio, nombreCompleto, calendario_precio, lista_compras_precio, fechaDisponible } = await Nutriologo.findById(id_nutriologo);
+        const { precio, nombreCompleto, fechaDisponible } = await Nutriologo.findById(id_nutriologo);
 
         //Crear objeto a añadir en el registro de pagos
         const historial = new Historial_pago(
@@ -145,38 +139,29 @@ const ordenPagada = async(req, res = response) => {
         //Crear servicio
         //const fecha_cita = fechaDisponible[fechaDisponible.findIndex(horario)]; //Posible error al convertir con objeto clase fecha
 
-        //Intérvalo en días entre citas según investigaciones
-        // let intervalo_citas = 0;
-
-        // switch(categoria) {
-        //     case 'Sobrepeso': 
-        //         intervalo_citas = 14; // 2 - 4 semanas
-        //     break;
-        //     case 'Vegano': 
-                
-        //     break;
-        //     case 'Vegano': 
-        //     break;
-        //     case 'Vegano': 
-        //     break;
-        //     case 'Vegano': 
-        //     break;
-        // }
-
-        //Fecha_cita + 10 días
-        // const fecha_finalizacion = 0;
+        //Fecha_cita + 30 días
+        let fecha_finalizacion = new Date();
+        fecha_finalizacion.setDate(fecha_finalizacion.getDate() + 30);
 
         let servicio;
+        const servicios = await Servicio.find();
 
-        if(id_extra !== ''){
-            servicio = await Servicio.findOne({
-                $match: {$and: [{'id_paciente': id_extra}, {'id_nutriologo': id_nutriologo}]}
-            });
+        //Buscar servicios previos entre el cliente/extra y el nutriólogo
+        if(id_extra !== '') {
+            servicios.forEach(servicioFE => {
+                if(servicioFE.id_paciente == id_extra && servicioFE.id_nutriologo == id_nutriologo) {
+                    servicio = servicioFE;
+                    return;
+                }
+            })
         }
         else {
-            servicio = await Servicio.findOne({
-                $match: {$and: [{'id_paciente': id}, {'id_nutriologo': id_nutriologo}]}
-            });
+            servicios.forEach(servicioFE => {
+                if(servicioFE.id_paciente == id && servicioFE.id_nutriologo == id_nutriologo) {
+                    servicio = servicioFE;
+                    return;
+                }
+            })
         }
 
         console.log(servicio);
@@ -189,22 +174,16 @@ const ordenPagada = async(req, res = response) => {
                 servicio = new Servicio({
                     id_paciente: id_extra,
                     id_nutriologo,
-                    fecha_inicio: new Date(),
                     fecha_cita: new Date(),
-                    fecha_finalizacion: new Date(),
-                    calendario,
-                    lista_compras
+                    fecha_finalizacion: fecha_finalizacion,
                 });
             } 
             else {
                 servicio = new Servicio({
                     id_paciente: id,
                     id_nutriologo,
-                    fecha_inicio: new Date(),
                     fecha_cita: new Date(),
-                    fecha_finalizacion: new Date(),
-                    calendario,
-                    lista_compras
+                    fecha_finalizacion: fecha_finalizacion,
                 });
             }
 
@@ -214,9 +193,9 @@ const ordenPagada = async(req, res = response) => {
         else {
             console.log('Se encontró un servicio previo');
             servicio.fecha_cita = new Date();
-            servicio.fecha_finalizacion = new Date();
-            servicio.calendario = calendario;
-            servicio.lista_compras = lista_compras;
+            servicio.fecha_finalizacion = fecha_finalizacion;
+            servicio.calendario = false;
+            servicio.llenado_datos = false;
             servicio.reportesCliente = 2;
             servicio.reportesNutriologo = 2;
 

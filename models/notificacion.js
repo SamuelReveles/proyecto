@@ -6,8 +6,8 @@ class Notificacion {
         // this.duracion = duracion //Duración en días
     }
 
-    vista() {
-        this.visto = true;
+    ver() {
+        this.visto = new Date();
     }
 }
 

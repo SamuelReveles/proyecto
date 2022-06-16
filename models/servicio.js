@@ -11,7 +11,7 @@ const ServicioSchema = Schema({
     },
     fecha_inicio: {
         type: Date,
-        required: true
+        default: new Date()
     },
     fecha_finalizacion: {
         type: Date,
@@ -25,7 +25,7 @@ const ServicioSchema = Schema({
         type: Boolean,
         default: false
     },
-    lista_compras: {
+    llenado_datos: {
         type: Boolean,
         default: false
     },
@@ -54,6 +54,10 @@ const ServicioSchema = Schema({
     reportesCliente: {
         type: Number,
         default: 2
+    },
+    vigente: {
+        type: Boolean,
+        default: true
     }
 });
 

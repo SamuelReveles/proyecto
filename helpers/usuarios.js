@@ -17,7 +17,7 @@ class Usuarios {
 
     //Obtener el id de socket de cierto usuario
     getUsuario(id_usuario) {
-        let user = this.conectados.filter( usuario => usuario.id_usuario === id_usuario )[0]
+        let user = this.conectados.filter( usuario => usuario.id_usuario == id_usuario )[0]
         return user;
     }
 

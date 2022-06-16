@@ -36,7 +36,7 @@ const postAdmin = async (req, res = response) => {
     try {
 
         //Foto de perfil default
-        let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png';
+        let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1655341829/jopaka_admin_f1lgyv.png';
 
         const admin = new Administrador({
             nombre: req.body.nombre,
@@ -150,8 +150,12 @@ const getAllUsers = async(req, res = response) => {
     }
 
     for await (const cliente of resultado) {
-        cliente.ultima_conexion = formatDistance(cliente.ultima_conexion, new Date(), { locale: es });
-    }
+        try {
+            cliente.ultima_conexion = formatDistance(cliente.ultima_conexion, new Date(), { locale: es });
+        } catch (error) {
+            console.log(error);
+        }
+    }  
 
     res.status(200).json(resultado);
 };
@@ -271,20 +275,16 @@ const getAllNutri = async(req, res = response) => {
 //Ver todas las solicitudes de empleo
 const getSolicitudes = async(req, res = response) => {
 
-    const {limit = 10, start = 0} = req.query;
-
     const solicitudes = await Solicitud.aggregate([
-        {$skip: start},
-        {$limit: limit},
         {$match: {'estado': null}}
     ])
-
-    if(!solicitudes) {
-        res.status(400).json(false);
-        return;
-    }
-
-    res.status(200).json(solicitudes);
+        .then(res.status(200).json(solicitudes))
+        .catch(() => {
+            res.status(400).json({
+                success: false,
+                msg: 'Error al ejectuar la búsqueda'
+            });
+        })
 };
 
 const postSolicitud = async(req, res = response) => {
@@ -347,6 +347,7 @@ const solicitudAccepted = async (req, res = response) => {
     //Actualizar la solicitud
     solicitud.estado = true;
     await Solicitud.findByIdAndUpdate(id, solicitud);
+    //Eliminar la solicitud
 
     //Mensaje de correo electrónico
     const msg = {
@@ -354,7 +355,8 @@ const solicitudAccepted = async (req, res = response) => {
         from: 'a18300384@ceti.mx', // Change to your verified sender
         subject: 'Estado de la solicitud de alta',
         text: 'Text',
-        html:'<h1 font-family="Times New Roman"> Solicitud de alta aceptada. Bienvenido a Jopaka</h1><p>Hola ' + solicitud.nombre + 'tu solicitud de alta ha sido aceptada, ya puedes iniciar sesión con tu cuenta de nutriologo!</p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">'
+        html:'<h1 font-family="Times New Roman"> Solicitud de alta aceptada. Bienvenido a Jopaka</h1><p>Hola ' + solicitud.nombre + 
+        'tu solicitud de alta ha sido aceptada, ya puedes iniciar sesión con tu cuenta de nutriologo!</p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">'
         //html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido aceptada',
     }
 
@@ -374,8 +376,8 @@ const solicitudAccepted = async (req, res = response) => {
         CURP: solicitud.CURP,
         domicilio: solicitud.domicilio,
         imagen: linkImagen,
-        fecha_registro: new Date(),
-        sexo: solicitud.genero
+        sexo: solicitud.genero,
+        especialidades: req.body.especialidades 
     });
 
     await nutriologo.save();
@@ -416,6 +418,7 @@ const solicitudDenied = async (req, res = response) => {
     //Actualizar la solicitud
     solicitud.estado = true;
     await Solicitud.findByIdAndUpdate(id, solicitud);
+    //Eliminar la solicitud
 
     const msg = {
         to: solicitud.correo, // Change to your recipient
@@ -423,7 +426,9 @@ const solicitudDenied = async (req, res = response) => {
         subject: 'Estado de la solicitud de alta',
         text: 'Text',
         type:'type/html',
-        html: 'Hola ' + solicitud.nombre + ' tu solicitud de alta ha sido denegada',
+        html: '<h1 font-family="Times New Roman"> Solicitud de alta denegada.</h1><p>Hola ' + solicitud.nombre + 
+        'tu solicitud de alta ha sido denegada. Por favor en caso de alguna duda ponte en contacto con un administrador' + 
+        '- Jopaka </p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">',
     }
     
     //Enviar el correo de respuesta
@@ -431,7 +436,9 @@ const solicitudDenied = async (req, res = response) => {
     sgMail
     .send(msg)
     .then(() => {
-        res.status(200).json(true);
+        res.status(200).json({
+            success: true
+        });
     })
     .catch((error) => {
         console.error(error);
@@ -463,14 +470,16 @@ const adminUpdate = async(req, res = response) => {
         if(tempFilePath){
 
             //Si la foto de perfil NO es la default se borra
-            if(admin.imagen != 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png'){
+            if(admin.imagen != 'https://res.cloudinary.com/jopaka-com/image/upload/v1655341829/jopaka_admin_f1lgyv.png'){
                 //Borrar la imagen anterior de cloudinary
             
                 //Split del nombre de la imagen
                 const nombreArr = admin.imagen.split('/');
                 const nombre = nombreArr[nombreArr.length - 1];
-                const [ public_id ] = nombre.split('.');
-
+                const [ public_id, extension ] = nombre.split('.');
+                if(extension != 'png' && extension != 'jpg'){
+                    throw new Error('Error en el formato de imagen');
+                }
                 //Borrar la imagen
                 await cloudinary.uploader.destroy(public_id);
             }

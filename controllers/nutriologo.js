@@ -5,6 +5,15 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
 
+const isMonday = require('date-fns/isMonday');
+const isTuesday = require('date-fns/isTuesday');
+const isWednesday = require('date-fns/isWednesday');
+const isThursday = require('date-fns/isThursday');
+const isFriday = require('date-fns/isFriday');
+const isSaturday = require('date-fns/isSaturday');
+const isSunday = require('date-fns/isSunday');
+const addDays = require('date-fns/addDays');
+
 //helpers
 const { generarJWT } = require('../helpers/verificacion');
 
@@ -84,7 +93,10 @@ const nutriologoUpdate = async (req, res = response) => {
                 //Split del nombre de la imagen
                 const nombreArr = nutriologo.imagen.split('/');
                 const nombre = nombreArr[nombreArr.length - 1];
-                const [ public_id ] = nombre.split('.');
+                const [ public_id, extension ] = nombre.split('.');
+                if(extension != 'png' && extension != 'jpg'){
+                    throw new Error('Error en el formato de imagen');
+                }
 
                 //Borrar la imagen
                 await cloudinary.uploader.destroy(public_id);
@@ -146,34 +158,143 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 }
 
 //Actualización de fechas disponibles
-const fechasUpdate = async (req, res = response) => {
+const fechasUpdate = async (id) => {
     
     try {
-        const id = req.id;
-
         const nutriologo = await Nutriologo.findById(id);
-        let fechas = [];
 
-        let arreglo;
+        const config = nutriologo.configuracion_fechas;
+        const fechasDisponibles = nutriologo.fechaDisponible;
 
-        //Arreglo con 7 días de la semana
-        for (let i = 0; i < 7; i++) {
+        let today = addDays(new Date(), 1); //Iniciar desde mañana
 
-            //Horarios
-            for await (const hora of arreglo[i]){
-                //Crear un objeto fecha
-                let fecha = Fecha(hora, i);
+        if(!fechasDisponibles) { //Si se configura por primera vez
+            fechasDisponibles = [];
+            //For con 30 días de posible anticipo
+            for (let i = 0; i < 30; i++) {
 
-                //Push a las fechas del nutriólogo
-                fechas.push(fecha);
+                if(isMonday(today)) {
+                    fechasDisponibles.push({
+                        fecha: today,
+                        horario: config[0]
+                    });
+                }
+                else if(isTuesday(today)) {
+                    fechasDisponibles.push({
+                        fecha: today,
+                        horario: config[1]
+                    });
+                }
+                else if(isWednesday(today)) {
+                    fechasDisponibles.push({
+                        fecha: today,
+                        horario: config[2]
+                    });
+                }
+                else if(isThursday(today)) {
+                    fechasDisponibles.push({
+                        fecha: today,
+                        horario: config[3]
+                    });
+                }
+                else if(isFriday(today)) {
+                    fechasDisponibles.push({
+                        fecha: today,
+                        horario: config[4]
+                    });
+                }
+                else if(isSaturday(today)) {
+                    fechasDisponibles.push({
+                        fecha: today,
+                        horario: config[5]
+                    });
+                }
+                else if(isSunday(today)) {
+                    fechasDisponibles.push({
+                        fecha: today,
+                        horario: config[6]
+                    });
+                }
+                today = addDays(today, 1); //Avanzar de dia
             }
-
         }
 
-        nutriologo.fechaDisponible = fechas;
+        else { //Si ya hay fechas disponibles
+            let nuevasFechasDisponibles = [];
+            //For con 30 días de posible anticipo
+            for (let i = 0; i < 30; i++) {
+                let dia = [];
+                let diaConfig;
+
+                /* Operaciones de disponibilidad
+                    True - Disponible
+                    False - Ocupada
+
+                    Si no está marcada como disponible, se cuenta como ocupada
+                    Config = true & fechasDisponibles = false -> False
+                    Config = false & fechasDisponibles = false -> False
+
+                    Config = false & fechasDisponibles = true -> False
+                    Config = true & fechasDisponibles = true -> True
+
+                    AND
+                */
+                //Configurar la fecha según el día
+
+                if(isMonday(today)) {
+                    diaConfig = config[0]; //Configurando como lunes
+                    for (let j = 0; j < fechasDisponibles.length; j++) {
+                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    }
+                }
+                else if(isTuesday(today)) {
+                    diaConfig = config[1]; //Configurando como martes
+                    for (let j = 0; j < fechasDisponibles.length; j++) {
+                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    }
+                }
+                else if(isWednesday(today)) {
+                    diaConfig = config[2]; //Configurando como miércoles
+                    for (let j = 0; j < fechasDisponibles.length; j++) {
+                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    }
+                }
+                else if(isThursday(today)) {
+                    diaConfig = config[3]; //Configurando como jueves
+                    for (let j = 0; j < fechasDisponibles.length; j++) {
+                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    }
+                }
+                else if(isFriday(today)) {
+                    diaConfig = config[4]; //Configurando como viernes
+                    for (let j = 0; j < fechasDisponibles.length; j++) {
+                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    }
+                }
+                else if(isSaturday(today)) {
+                    diaConfig = config[5]; //Configurando como sábado
+                    for (let j = 0; j < fechasDisponibles.length; j++) {
+                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    }
+                }
+                else if(isSunday(today)) {
+                    diaConfig = config[6]; //Configurando como domingo
+                    for (let j = 0; j < fechasDisponibles.length; j++) {
+                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    }
+                }
+                nuevasFechasDisponibles.push({
+                    fecha: today,
+                    horario: dia
+                });
+                today = addDays(today, 1); //Avanzar de dia
+            }
+            fechasDisponibles = nuevasFechasDisponibles;
+        }
+        nutriologo.fechaDisponible = fechasDisponibles;
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
-        res.status(200).json(fechas);
+        return res.status(200).json(fechasDisponibles);
     } catch(error) {
         res.status(400).json({
             success: false,
@@ -186,9 +307,31 @@ const fechasUpdate = async (req, res = response) => {
 //Llenar calendario del paciente
 const llenarCalendario = async (req, res = response) => {
     try {
-        const id = req.id;
-        const id_paciente = req.body.id;
-        const cliente = await Cliente.findById(id_paciente);
+        const id_servicio = req.body.id_servicio;
+
+        const servicio = await Servicio.findById(id_servicio);
+
+        if(servicio.llenarCalendario === true) {
+            res.status(401).json({
+                success: false,
+                msg: 'El calendario ya ha sido llenado'
+            });
+            return;
+        }
+
+        let paciente = await Cliente.findById(servicio.id_paciente); //Paciente es a quien se le llena el calendario
+        let cliente = paciente; //Cliente a quien se le envía la notificación
+
+        if(!paciente) {
+            paciente = await Extra.findById(servicio.id_paciente);
+            let clientes = await Cliente.find();
+            clientes.forEach( client => { //Buscar el dueño de la cuenta
+                if(client.extra1 == paciente._id || client.extra2 == paciente._id){
+                    clientes = client;
+                    return;
+                }
+            });
+        }
 
         const calendario = req.body.calendario;
         const compras = req.body.lista_compras;
@@ -198,19 +341,16 @@ const llenarCalendario = async (req, res = response) => {
         //Arreglo con 7 días de la semana
         for (let i = 0; i < 7; i++) {
 
-            //Posición 0 = Link meet
-            calendarioCliente[i][0] = calendario[i][0];
-
-            //Posición 1 = Desayuno
+            //Posición 0 = Desayuno
             calendarioCliente[i][1] = calendario[i][1];
 
-            //Posición 2 = Comida
+            //Posición 1 = Comida
             calendarioCliente[i][2] = calendario[i][2];
 
-            //Posición 3 = Cena
+            //Posición 2 = Cena
             calendarioCliente[i][3] = calendario[i][3];
 
-            //Posición 4 = Notas
+            //Posición 3 = Notas
             calendarioCliente[i][4] = calendario[i][4];
 
         }
@@ -508,7 +648,6 @@ const getClientData = async (req, res = response) => {
                 if(!cliente.datoConstante){
                     datos = await Dato.findById(datoInicial);
                 }
-
                 // Si hay datos, se toma el último
                 else{
                     const idDato = datoConstante[datoConstante.length - 1];
@@ -630,26 +769,38 @@ const getPacientes = async (req, res  = response) => {
 
     try {
         const id = req.id;
+        let pacientes = [];
 
-        const { pacientes } = await Nutriologo.findById(id);
+        const servicios = await Servicio.find();
 
-        let lista = [];
+        servicios.forEach(async (servicio) => {
+            if(servicio.id_nutriologo == id){
+                
+                //Si el paciente es cliente
+                let paciente = await Cliente.findById(servicio.id_paciente);
+                if(paciente) pacientes.push({
+                    nombre: paciente.nombre,
+                    apellidos: paciente.apellidos,
+                    imagen: paciente.imagen,
+                    sexo: paciente.sexo,
+                    servicio: servicio._id,
+                    servicio: servicio.vigente
+                });
 
-        for await (const _id of pacientes) {
-
-            const cliente = await Cliente.findById(_id);
-            const extra = await Extra.findById(_id);
-
-            // Si es cliente
-            if(cliente){
-                lista.push({nombre: cliente.nombre, apellidos: cliente.apellidos});
+                //Si el paciente es extra
+                else {
+                    paciente = await Extra.findById(servicio.id_paciente)
+                    pacientes.push({
+                        nombre: paciente.nombre,
+                        apellidos: paciente.apellidos,
+                        imagen: 'https://res.cloudinary.com/jopaka-com/image/upload/v1655342366/jopaka_extra_qhsinv.png',
+                        sexo: paciente.sexo,
+                        servicio: servicio._id,
+                        servicio: servicio.vigente
+                    });
+                }
             }
-
-            //Si es extra
-            else if(extra){
-                lista.push({nombre: extra.nombre, apellidos: extra.apellidos});
-            }
-        }
+        });
         
         res.status(200).json(pacientes);
     } catch (error) {
@@ -667,6 +818,7 @@ const reportar = async (req, res = response) => {
     try {
         //Extraer datos del reporte
         const { idServicio, idReporte, msg } = req.body;
+        let clientes;
 
         const servicio = await Servicio.findById(idServicio);
 
@@ -680,18 +832,28 @@ const reportar = async (req, res = response) => {
 
         const idCliente = servicio.id_paciente;
 
+        //Extraer tipo de reporte para saber el puntaje
+        const { puntos } = await Motivo.findById(idReporte);
+
+        const cliente = await Cliente.findById(idCliente);
+        if(!cliente) { // Si reporta a un extra
+            clientes = await Cliente.find();
+            clientes.forEach(paciente => {
+                if(paciente.extra1 == idCliente || paciente.extra2 == idCliente){
+                    cliente = paciente;
+                    return;
+                }
+            });
+        }
+
         //Crear el reporte
         const reporte = new Reporte({
             emisor: req.id,
-            para: idCliente,
+            para: cliente._id,
             tipo: idReporte,
             msg,
-            fecha: Date.now()
+            fecha: new Date()
         });
-
-        //Extraer tipo de reporte para saber el puntaje
-        const { puntos } = await Motivo.findById(idReporte);
-        const cliente = await Cliente.findById(idCliente);
 
         //Agregar los puntos y push a arreglo de reportes
         cliente.puntajeBaneo += puntos;
@@ -793,7 +955,7 @@ const getInfo = async (req, res = response) => {
             {$match: {$and: [{'remitente':id}, {'fecha_finalizacion': {$gt: new Date()}}]}}
         ])
 
-        const nutriologo = await Nutriologo.findById(id)
+        const nutriologo = await Nutriologo.findById(id);
 
 
         res.status(200).json({nutriologo, solicitudes});
@@ -830,8 +992,9 @@ const getFechas = async(req, res = response) =>{
     const id = req.id;
 
     try {
-        const { fechaDisponible } = await Nutriologo.findById(id);
+        const { configuracion_fechas } = await Nutriologo.findById(id);
 
+        res.status(200).json(configuracion_fechas);
 
     } catch (error) {
         
@@ -843,8 +1006,29 @@ const updateFechas = async (req, res = response) => {
     const id = req.id;
 
     try {
-        const { fechaDisponible } = await Nutriologo.findById(id);
+        const nutriologo = await Nutriologo.findById(id);
 
+        /*
+        Representaciones de las fechas (significado en horas)
+        ['7:00','7:30', '8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30'...]
+        Índices del arreglo: 0-Lunes, 1-Martes, 2-Miércoles, 3-Jueves, 4-Viernes, 5-Sábado, 6-Domingo
+        [
+            [true, false, true, false...], 0
+            [false, true, false, true], 1
+            [true, false, true, false...], 2
+            [false, true, false, true], 3
+            [true, false, true, false...], 4
+            [false, true, false, true], 5
+            [true, false, true, false...], 6
+            [false, true, false, true], 7
+            [true, false, true, false...], 8
+        ]
+        */ 
+
+        nutriologo.configuracion_fechas = req.body.fechas;
+        await Nutriologo.findById(id);
+
+        await fechasUpdate(id);
 
     } catch (error) {
         

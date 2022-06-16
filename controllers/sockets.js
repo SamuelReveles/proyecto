@@ -28,9 +28,32 @@ const socketController = (socket) => {
         if(!user) user = await Nutriologo.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
     })
 
+    //Ver las notificaciones
+    socket.on('notificacion', async (payload) => {
+        //Obtener datos del cliente
+        let esCliente = true;
+        const user = await Cliente.findById(payload.id);
+        if(!user) {
+            user = await Nutriologo.findById(id);
+            esCliente = false;
+        }
+
+        //Actualizar notificaciones
+        const notificaciones = user.notificaciones;
+
+        notificaciones.forEach(notificacion => {
+            if(notificacion.visto === false) notificacion.ver();
+        })
+
+        //Actualizar el objeto
+        user.notifiaciones = notificaciones;
+        if(esCliente === true) await Cliente.findByIdAndUpdate(payload.id, user);
+        else await Nutriologo.findByIdAndUpdate(payload.id, user);
+    });
+
     //Recibir mensaje
     socket.on('mensaje', async ( payload ) => {
-        const { emisor, receptor, contenido = '', id_servicio } = payload;
+        const { emisor, receptor, contenido = ' ', id_servicio } = payload;
 
         //Identificador de tipo de usuario que recibe el mensaje
         let type = 'Nutriologo';
