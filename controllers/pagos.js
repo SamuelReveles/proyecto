@@ -142,27 +142,25 @@ const ordenPagada = async(req, res = response) => {
 
         //Buscar servicios previos entre el cliente/extra y el nutriólogo
         if(id_extra !== '') {
-            servicios.forEach(servicioFE => {
+            for await (const servicioFE of servicios){
                 if(servicioFE.id_paciente == id_extra && servicioFE.id_nutriologo == id_nutriologo) {
                     servicio = servicioFE;
                     return;
                 }
-            })
+            }
         }
         else {
-            servicios.forEach(servicioFE => {
+            for await (const servicioFE of servicios) {
                 if(servicioFE.id_paciente == id && servicioFE.id_nutriologo == id_nutriologo) {
                     servicio = servicioFE;
                     return;
                 }
-            })
+            }
         }
 
         console.log(servicio);
 
         if(!servicio) {
-
-            console.log('Parece ser que no hay servicio lmao');
 
             if(id_extra !== ''){
                 servicio = new Servicio({
@@ -185,13 +183,14 @@ const ordenPagada = async(req, res = response) => {
             await servicio.save();
         }
         else {
-            console.log('Se encontró un servicio previo');
             servicio.fecha_cita = new Date();
             servicio.fecha_finalizacion = fecha_finalizacion;
+            //servicio.fecha_finalizacion += 30;
             servicio.calendario = false;
             servicio.llenado_datos = false;
             servicio.reportesCliente = 2;
             servicio.reportesNutriologo = 2;
+            servicio.vigente = true;
 
             await Servicio.findByIdAndUpdate(servicio._id, servicio);
         }

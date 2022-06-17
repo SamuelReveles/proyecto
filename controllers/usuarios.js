@@ -25,6 +25,7 @@ const Reagendacion = require('../models/reagendacion');
 const Servicio = require('../models/servicio');
 const Notificacion = require('../models/notificacion');
 const Administrador = require('../models/administrador');
+const Historial = require('../models/historial');
 
 
 const usuariosPost = async (req, res = response) => {
@@ -671,18 +672,18 @@ const getInfo = async (req, res = response)  => {
         const {extra1, extra2} = cliente;
         
         //Devolver solicitudes de reagendación pendientes
-        const solicitudes = await Reagendacion.find();
+        //const solicitudes = await Reagendacion.find();
 
-        let serviciosUsuario = [];
-        const servicios = await Servicio.find();
-        servicios.forEach(servicioFE => {
-            if(servicioFE.id_paciente == id || servicioFE.id_paciente == extra1._id || servicioFE.id_paciente == extra2._id) {
-                serviciosUsuario.push(servicioFE);
-            }
-        })
+        // let serviciosUsuario = [];
+        // const servicios = await Servicio.find();
+        // servicios.forEach(servicioFE => {
+        //     if(servicioFE.id_paciente == id || servicioFE.id_paciente == extra1._id || servicioFE.id_paciente == extra2._id) {
+        //         serviciosUsuario.push(servicioFE);
+        //     }
+        // })
 
 
-        res.status(200).json({cliente, solicitudes, servicios});
+        res.status(200).json(cliente);
     } catch (error) {
         console.log(error);
         res.status(400).json({
@@ -752,17 +753,26 @@ const mostrarHistorial = async (req, res = response) => {
 
     try {
         //Id del cliente
-        const id = req.id;
+        const id = req.query.id;
 
         //Indice del arreglo del historial de datos del cliente
         const indexHistorial = req.query.indice;
 
-        const { historial, nombre } = await Cliente.findById(id);
+        let cliente = await Cliente.findById(id);
+        if(!cliente) cliente = await Extra.findById(id);
 
-        const dato = historial[indexHistorial];
+        const { historial, nombre } = cliente;
+
+        if(!historial) {
+            res.status(200);
+            return;
+        }
+
+        let historial_indice = historial[indexHistorial];
+        let { datos, dieta } = await Historial.findById(historial_indice);
 
         //Extraer los datos del cliente
-        dato = await Dato.findById(dato);
+        datos = await Dato.findById(datos);
 
         //Crear el documento permitiendo que se pueda crear el archivo de salida
         const doc = new PDF({bufferPage: true});
@@ -799,7 +809,7 @@ const mostrarHistorial = async (req, res = response) => {
         doc.text('\n\n');
         doc.fontSize(15);
 
-        const datos = dato.toArray();
+        datos = datos.toArray();
 
         // set the header to render in every page
         doc.setDocumentHeader({ height : "20%" }, () => {
@@ -834,6 +844,7 @@ const mostrarHistorial = async (req, res = response) => {
 
         doc.end();
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Hubo un error :/'
@@ -1073,7 +1084,7 @@ const estadoVerDatos = async (req, res = response) => {
     }
 }
 
-const getMotivosUsuario = (req, res = response) => {
+const getMotivosUsuario = async(req, res = response) => {
     try {
         let motivosUsuario = [];
         motivosUsuario.push(await Motivo.findById('624536db33d1ed94d196ec61'));
@@ -1082,6 +1093,8 @@ const getMotivosUsuario = (req, res = response) => {
         motivosUsuario.push(await Motivo.findById('6245372033d1ed94d196ec69'));
         motivosUsuario.push(await Motivo.findById('6245372833d1ed94d196ec6b'));
         motivosUsuario.push(await Motivo.findById('6245373e33d1ed94d196ec6d'));
+
+        res.status(200).json(motivosUsuario);
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -1108,5 +1121,6 @@ module.exports = {
     solicitarReagendacion,
     rechazarSolicitud,
     aceptarSolicitud,
-    estadoVerDatos
+    estadoVerDatos,
+    getMotivosUsuario
 }

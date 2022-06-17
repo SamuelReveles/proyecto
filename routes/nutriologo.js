@@ -16,12 +16,12 @@ const {
     putActualizarDatos,
     putPredeterminado,
     deletePredeterminado,
-    putAgregarEvento,
-    putActualizarEvento,
     getClientData,
     getPacientes,
     updateClientData,
     reportar,
+    llenarCalendario,
+    getMotivosNutriologo
 } = require('../controllers/nutriologo');
 const { mostrarHistorial } = require('../controllers/usuarios');
 
@@ -78,5 +78,11 @@ router.put('/reportar', [validarBanNutriologo], reportar);
 
 //Historial de cliente
 router.get('/historial', mostrarHistorial);
+
+//Llenar calendario del cliente
+router.put('/llenarCalendario', llenarCalendario);
+
+//Ver motivos de reporte
+router.get('/motivos', getMotivosNutriologo)
 
 module.exports = router;

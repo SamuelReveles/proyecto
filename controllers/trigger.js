@@ -267,10 +267,12 @@ const vigenciaServicios = async(req, res = response) => {
     try {
         const servicios = await Servicio.find();
 
-        servicios.forEach(async (servicio) => {
-            if(servicio.fecha_finalizacion < new Date()) 
-                await Servicio.findByIdAndUpdate(servicio._id, {vigente: false});
-        });
+        for await (const servicio of servicios){
+            if(servicio.fecha_finalizacion < new Date() && servicio.vigente === true) {
+                servicio.vigente = false;
+                await Servicio.findByIdAndUpdate(servicio._id, servicio);
+            }
+        }
         
         res.status(200).json({
             success: true,

@@ -9,10 +9,9 @@ const { validarToken, verificarCliente } = require('../middlewares/validar-jwt')
 
 //Rutas y tipos de "Acceso"
 const { 
+    usuariosPost,
     usuariosUpdate,
     usuariosDelete,
-    busqueda,
-    getNutriologo,
     getProgreso,
     altaExtras,
     getExtras,
@@ -25,7 +24,8 @@ const {
     solicitarReagendacion,
     rechazarSolicitud,
     aceptarSolicitud,
-    estadoVerDatos
+    estadoVerDatos,
+    getMotivosUsuario
 } = require('../controllers/usuarios');
 
 //Paypal
@@ -71,7 +71,7 @@ router.delete('/', [validarBanCliente], usuariosDelete);
 router.get('/historial', mostrarHistorial);
 
 //Ver registro de pagos del cliente
-router.get('/registro-pagos', listadoPagos);
+router.get('/registroPagos', listadoPagos);
 
 //Ver historial de pagos del cliente
 router.get('/pagos', verHistorialPagos);
@@ -96,5 +96,8 @@ router.put('/aceptar', aceptarSolicitud);
 
 //Cambiar el estado de ver datos
 router.put('/verDatos', estadoVerDatos);
+
+//Ver motivos de reporete
+router.get('/motivos', getMotivosUsuario);
 
 module.exports = router;
