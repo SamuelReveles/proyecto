@@ -27,7 +27,6 @@ router.get('/verifyCode', verifyCode);
 
 //Crear un nuevo usuario
 router.post('/cliente', [
-    validarCampos,
     validarCorreo,
     validarCelular
 ], usuariosPost);
@@ -36,7 +35,6 @@ router.post('/cliente', [
 router.post('/nutriologo', [
     validarCorreo,
     validarCelular
-    //validarEspecialidades
 ], nutriologoPost);
 
 //Crear nuevo administrador

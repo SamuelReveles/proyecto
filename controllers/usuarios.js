@@ -33,7 +33,7 @@ const usuariosPost = async (req, res = response) => {
 
     try {
         //Foto de perfil default
-        let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png';
+        const linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png';
 
         //Creando objeto
         const user = new Cliente({
@@ -70,7 +70,7 @@ const usuariosPost = async (req, res = response) => {
     } 
     catch(error) {
         res.status(400).json({
-            succes: false,
+            success: false,
             msg: 'Registro inválido'
         })
     }
@@ -106,11 +106,6 @@ const busqueda = async (req, res = response) => {
     //Extraer categoría
     const categoria = req.query.categoria;
 
-    //Extablecer limites, superior e inferior
-    let {limit = 10, start = 0} = req.query;
-    limit = Number(limit);
-    start = Number(start);
-
     //Variables de respuesta
     let total = 0, users;
 
@@ -123,16 +118,12 @@ const busqueda = async (req, res = response) => {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'promedio': -1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
                 ]);
             }
             else {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'promedio': 1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
                 ]);
             }
         }
@@ -143,16 +134,12 @@ const busqueda = async (req, res = response) => {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'precio': -1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
                 ]);
             }
             else {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
                     {$sort: {'precio': 1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
                 ]);
             }
         }
@@ -160,8 +147,6 @@ const busqueda = async (req, res = response) => {
         else {
             users =  await Nutriologo.aggregate([
                 {$match: {$and: [{'nombreCompleto': nombre}, {'baneado': false}, {'activo': true}]}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
             ]);
         }
 
@@ -176,17 +161,13 @@ const busqueda = async (req, res = response) => {
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
-                    {$sort: {'promedio': -1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'promedio': -1}}
                 ]);
             }
             else {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
-                    {$sort: {'promedio': 1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'promedio': 1}}
                 ]);
             }
         }
@@ -196,26 +177,20 @@ const busqueda = async (req, res = response) => {
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
-                    {$sort: {'precio': -1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'precio': -1}}
                 ]);
             }
             else {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
-                    {$sort: {'precio': 1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'precio': 1}}
                 ]);
             }
         }
 
         else {
             users =  await Nutriologo.aggregate([
-                {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$match: {$and: [{'especialidades': categoria}, {'baneado': false}, {'activo': true}]}}
             ]);
         }
 
@@ -229,17 +204,13 @@ const busqueda = async (req, res = response) => {
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'baneado': false}, {'activo': true}]}},
-                    {$sort: {'promedio': -1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'promedio': -1}}
                 ]);
             }
             else {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'baneado': false}, {'activo': true}]}},
-                    {$sort: {'promedio': 1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'promedio': 1}}
                 ]);
             }
         }
@@ -249,17 +220,13 @@ const busqueda = async (req, res = response) => {
             if(Boolean(req.query.mayor) === true){
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'baneado': false}, {'activo': true}]}},
-                    {$sort: {'precio': -1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'precio': -1}}
                 ]);
             }
             else {
                 users =  await Nutriologo.aggregate([
                     {$match: {$and: [{'baneado': false}, {'activo': true}]}},
-                    {$sort: {'precio': 1}},
-                    {$skip: Number(start)},
-                    {$limit: Number(limit)}
+                    {$sort: {'precio': 1}}
                 ]);
             }
         }
@@ -267,8 +234,6 @@ const busqueda = async (req, res = response) => {
         else {
             users =  await Nutriologo.aggregate([
                 {$match: {$and: [{'baneado': false}, {'activo': true}]}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
             ]);
         }
 
@@ -290,6 +255,7 @@ const busqueda = async (req, res = response) => {
             puntajeBaneo,
             calificacion,
             activo,
+            notificaciones,
             ...resto} = nutriologo;
         resultados.push(resto);
     }
@@ -856,11 +822,21 @@ const listadoPagos = async (req, res = response) => {
     try {
         const id = req.id;
 
+        let historial = [];
+
         const { historial_pagos } = await Cliente.findById(id);
 
-        res.status(200).json(historial_pagos)
+        for await (pago of historial_pagos) {
+            const fechaArr = format(pago.fecha_pago, 'dd-MMMM-yyyy', {locale: es}).split('-');
+            const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+            pago.fecha_pago = fechaString;
+            historial.push(pago);
+        }
+
+        res.status(200).json(historial_pagos);
 
     } catch (error) {
+        console.log(error)
         res.status(400).json({
             success: false,
             msg: 'Hubo un error al ver el historial'
@@ -894,18 +870,12 @@ const verHistorialPagos = async (req, res = response) => {
             lista_compras_precio
         );
 
-        if(historial_pagos[req.query.index].calendario === true) historial.calendario(calendario_precio);
-        if(historial_pagos[req.query.index].lista_compras === true) historial.lista_compras(lista_compras_precio);
-
-        console.log(historial);
-
         const doc = historial.toPDF();
-
-        // historial.calendario(50);
 
         //Asignar nombre al archivo
         const filename = 'Resumen_compra_' + nombre + '.pdf';
 
+        //Headers de la respuesta
         const stream = res.writeHead(200, {
             'Content-Type': 'application/pdf',
             'Content-disposition': 'attachment; filename=' + filename
@@ -955,7 +925,7 @@ const solicitarReagendacion = async (req, res = response) => {
         if(fecha < fecha_cita) { //Por si se quiere reagendar una vez tomada la cita
             res.status(400).json({
                 success: false,
-                msg: 'Fecha inválida'
+                msg: 'Ya fue tomada la cita'
             });
             return;
         }

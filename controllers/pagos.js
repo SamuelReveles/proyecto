@@ -15,12 +15,14 @@ const Notificacion = require('../models/notificacion');
 const crearOrden = async(req, res = response) => {
     
     //Extraer datos necesarios para el pago
-    const { monto } = req.body;
+    const { id } = req.body;
+
+    const { precio } = await Nutriologo.findById(id);
 
     try {
 
         //Evaluar que el monto sea válido
-        if(monto <= 0) throw new Error('Monto negativo o nulo');
+        if(precio <= 0) throw new Error('Monto negativo o nulo');
 
         //Crear orden con el estándar de paypal
         const order = {
@@ -29,7 +31,7 @@ const crearOrden = async(req, res = response) => {
                 {
                     amount: {
                         currency_code: "MXN",
-                        value: monto
+                        value: precio
                     },
                     description: "Servicio de nutrición online"
                 },
@@ -38,8 +40,8 @@ const crearOrden = async(req, res = response) => {
                 brand_name: "jopaka.com",
                 landing_page: "LOGIN",
                 user_action: "PAY_NOW",
-                return_url: "http://localhost:8080/api/usuarios/capturarOrden",
-                cancel_url: "http://localhost:8080/api/usuarios/cancelarOrden"
+                return_url: "http://localhost:8080/api/invitado/capturarOrden",
+                cancel_url: "http://localhost:8080"
             }
         };
 
@@ -55,6 +57,7 @@ const crearOrden = async(req, res = response) => {
         res.status(200).json(enlace);
 
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Ha ocurrido un error',

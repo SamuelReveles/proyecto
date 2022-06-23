@@ -17,7 +17,12 @@ const {
     validarCelular
 } = require('../middlewares/validar-campos');
 
+const { capturarOrden } = require('../controllers/pagos');
+
 const router = Router();
+
+//Capturar orden de pago
+router.get('/capturarOrden', capturarOrden);
 
 //Buscar un nutriólogo
 router.get('/busqueda', busqueda);

@@ -82,9 +82,6 @@ router.post('/pagos', ordenPagada);
 //Crear orden de paypal (paso para el check-in)
 router.post('/crearOrden', [validarBanCliente], crearOrden);
 
-//Capturar orden de pago
-router.get('/capturarOrden', capturarOrden);
-
 //Solicitar reagendación
 router.post('/reagendar', solicitarReagendacion);
 
