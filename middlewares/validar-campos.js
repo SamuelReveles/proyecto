@@ -37,10 +37,10 @@ const validarEspecialidades = (req = request, res = response, next) => {
 }
 
 const validarCelular = async (req = request, res = response, next) => {
+    
     //Extraer celular del body
     let celular = req.body.celular;
     if(celular === undefined) celular = req.query.celular;
-    console.log(celular);
 
     //Validar que no esté en la base de datos
     let celularExiste = await Cliente.findOne({celular});
@@ -64,6 +64,7 @@ const validarCelular = async (req = request, res = response, next) => {
             msg: 'Celular registrado'
         });
     }
+
     next();
 }
 
@@ -74,21 +75,21 @@ const validarCorreo = async (req = request, res = response, next) => {
     //Validar que no esté en la base de datos
     let existeEmail = await Cliente.findOne({correo});
     if(existeEmail) {
-        return res.status(401).json({
+        return res.status(400).json({
             success: false,
             msg: 'Correo registrado'
         });
     }
     existeEmail = await Nutriologo.findOne({correo});
     if(existeEmail) {
-        return res.status(401).json({
+        return res.status(400).json({
             success: false,
             msg: 'Correo registrado'
         });
     }
     existeEmail = await Administrador.findOne({correo});
     if(existeEmail) {
-        return res.status(401).json({
+        return res.status(400).json({
             success: false,
             msg: 'Correo registrado'
         });

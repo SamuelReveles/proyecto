@@ -12,6 +12,8 @@ const isFriday = require('date-fns/isFriday');
 const isSaturday = require('date-fns/isSaturday');
 const isSunday = require('date-fns/isSunday');
 const addDays = require('date-fns/addDays');
+const format = require('date-fns/format');
+const es = require('date-fns/locale/es');
 
 //helpers
 const { generarJWT } = require('../helpers/verificacion');
@@ -604,46 +606,6 @@ const deletePredeterminado = async (req, res = response) => {
 
 }
 
-//Actualizar datos del nutriólogo
-const putActualizarDatos = async (req, res = response) => {
-
-    //Recibir parametro del body
-    const { nombre, apellidos, imagen } = req.body;
-
-    const id = req.id;
-
-    try {
-
-        //Buscar al nutriologo
-        const nutriologo = await Nutriologo.findById(id);
-
-        //Actualizar datos del nutriólogo que se hayan enviado desde el body
-        if(nombre){
-            nutriologo.nombre = nombre;
-            nutriologo.nombreCompleto = nombre + ' ' + nutriologo.apellidos;
-        }
-        if(apellidos){
-            nutriologo.apellidos = apellidos;
-            nutriologo.nombreCompleto = nutriologo.nombre + ' ' + apellidos;
-        }
-        if(imagen){
-            nutriologo.imagen = imagen;
-        }
-        
-        await Nutriologo.findByIdAndUpdate(id, nutriologo);
-
-        res.status(200).json({
-            success: true,
-            msg: 'Actualizado correctamente'
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            msg: 'Error al actualizar en la db'
-        });
-    }
-}
-
 //Ver datos del cliente
 const getClientData = async (req, res = response) => {
 
@@ -810,18 +772,28 @@ const getPacientes = async (req, res  = response) => {
                 //Si el paciente es cliente
                 let paciente = await Cliente.findById(servicio.id_paciente);
                 if(paciente) {
+
+                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
+                    const fechaArr = fecha.split('-');
+                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+                   
                     pacientes.push({
                         nombre: paciente.nombre,
                         apellidos: paciente.apellidos,
                         imagen: paciente.imagen,
                         sexo: paciente.sexo,
                         id_servicio: servicio._id,
-                        servicio: servicio.vigente
+                        servicio: servicio.vigente,
+                        cita: fechaString
                     });
                 }
 
                 //Si el paciente es extra
                 else {
+                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
+                    const fechaArr = fecha.split('-');
+                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+                    
                     paciente = await Extra.findById(servicio.id_paciente);
                     pacientes.push({
                         nombre: paciente.nombre,
@@ -829,7 +801,8 @@ const getPacientes = async (req, res  = response) => {
                         imagen: 'https://res.cloudinary.com/jopaka-com/image/upload/v1655342366/jopaka_extra_qhsinv.png',
                         sexo: paciente.sexo,
                         id_servicio: servicio._id,
-                        servicio: servicio.vigente
+                        servicio: servicio.vigente,
+                        cita: fechaString
                     });
                 }
             }
@@ -1158,12 +1131,27 @@ const rechazarSolicitud = async (req, res = response) => {
 const getMotivosNutriologo = async(req, res = response) => {
     try {
         let motivosNutriologo = [];
-        motivosNutriologo.push(await Motivo.findById('624536db33d1ed94d196ec61'));
-        motivosNutriologo.push(await Motivo.findById('624536e733d1ed94d196ec63'));
-        motivosNutriologo.push(await Motivo.findById('6245371633d1ed94d196ec67'));
-        motivosNutriologo.push(await Motivo.findById('6245372033d1ed94d196ec69'));
-        motivosNutriologo.push(await Motivo.findById('6245372833d1ed94d196ec6b'));
-        motivosNutriologo.push(await Motivo.findById('6245373e33d1ed94d196ec6d'));
+        
+        let temporal = await Motivo.findById('624536db33d1ed94d196ec61');
+        motivosNutriologo.push(temporal);
+        
+        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
+        motivosNutriologo.push(temporal);
+        
+        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
+        motivosNutriologo.push(temporal);
+        
+        temporal = await Motivo.findById('6245371633d1ed94d196ec67');
+        motivosNutriologo.push(temporal);
+        
+        temporal = await Motivo.findById('6245372033d1ed94d196ec69');
+        motivosNutriologo.push(temporal);
+        
+        temporal = await Motivo.findById('6245372833d1ed94d196ec6b');
+        motivosNutriologo.push(temporal);
+        
+        temporal = await Motivo.findById('6245373e33d1ed94d196ec6d');
+        motivosNutriologo.push(temporal);
 
         res.status(200).json(motivosNutriologo);
     } catch (error) {
@@ -1185,7 +1173,6 @@ module.exports = {
     putPredeterminado,
     getPredeterminado,
     deletePredeterminado,
-    putActualizarDatos,
     getClientData,
     getPacientes,
     updateClientData,

@@ -144,21 +144,21 @@ const ordenPagada = async(req, res = response) => {
         const servicios = await Servicio.find();
 
         //Buscar servicios previos entre el cliente/extra y el nutriólogo
-        if(id_extra !== '') {
-            for await (const servicioFE of servicios){
+        if(id_extra !== '') {            
+            servicios.forEach(servicioFE => {
                 if(servicioFE.id_paciente == id_extra && servicioFE.id_nutriologo == id_nutriologo) {
                     servicio = servicioFE;
                     return;
                 }
-            }
+            });
         }
         else {
-            for await (const servicioFE of servicios) {
+            servicios.forEach(servicioFE => {
                 if(servicioFE.id_paciente == id && servicioFE.id_nutriologo == id_nutriologo) {
                     servicio = servicioFE;
                     return;
                 }
-            }
+            });
         }
 
         console.log(servicio);

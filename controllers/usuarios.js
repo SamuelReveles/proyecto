@@ -277,8 +277,6 @@ const altaExtras = async (req, res = response) => {
     //Extraer id del body
     const id = req.id;
 
-    console.log(id);
-
     //Extraer en objeto del cliente con el ID
     const cliente = await Cliente.findById(id)
         .catch(() => {
@@ -299,7 +297,8 @@ const altaExtras = async (req, res = response) => {
             const extra = new Extra({
                 nombre: req.body.nombre,
                 apellidos: req.body.apellidos,
-                sexo: req.body.sexo
+                sexo: req.body.sexo,
+                fecha_nacimiento: new Date(req.body.fecha_nacimiento)
             });
 
             //Guardar en extra1
@@ -335,7 +334,9 @@ const getProgreso = async (req, res = response) => {
 
     try {
         //Extraer id
-        const id = req.id;
+        let id = req.id;
+
+        if(req.query.id) id = req.query.id; 
 
         //Buscar entre usuarios y extras
         let user = await Cliente.findById(id);
@@ -614,8 +615,25 @@ const getExtras = async (req, res = response)  => {
 
         let extra1, extra2;
 
-        if(cliente.extra1) extra1 = await Extra.findById(cliente.extra1);
-        if(cliente.extra2) extra2 =  await Extra.findById(cliente.extra2);
+        if(cliente.extra1){
+            extra1 = await Extra.findById(cliente.extra1);
+
+            const fecha = format(extra1.fecha_nacimiento, 'dd-MMMM-yyyy', {locale: es});
+            const fechaArr = fecha.split('-');
+            const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+            
+            extra1.fecha_nacimiento = fechaString;
+        }
+            
+        if(cliente.extra2){
+            extra2 = await Extra.findById(cliente.extra2);
+
+            const fecha = format(extra2.fecha_nacimiento, 'dd-MMMM-yyyy', {locale: es});
+            const fechaArr = fecha.split('-');
+            const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+            
+            extra2.fecha_nacimiento = fechaString;
+        }
 
         res.status(200).json({extra1, extra2});
 
@@ -657,6 +675,88 @@ const getInfo = async (req, res = response)  => {
             msg: 'Error al encontrar al cliente, verifique el id'
         });
     }
+}
+
+const getServicios = async (req, res = response) => {
+
+    try {
+        const id = req.id;
+        let serviciosUsuario = [];
+        const { extra1, extra2, nombre } = await Cliente.findById(id);
+
+        const servicios = await Servicio.find();
+
+        for await (let servicio of servicios) {
+            if(servicio.id_paciente == id){
+                
+                const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
+                const fechaArr = fecha.split('-');
+                const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+                const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+
+                serviciosUsuario.push({
+                    servicio: servicio._id,
+                    cita: fechaString,
+                    paciente: nombre,
+                    id_nutriologo: servicio.id_nutriologo,
+                    nutriologo: nutriologo.nombre,
+                    imagen: nutriologo.imagen,
+                    activo: servicio.vigente
+                });
+            }
+            if(extra1) {
+                if (String(extra1) == String(servicio.id_paciente)){
+                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
+                    const fechaArr = fecha.split('-');
+                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+    
+                    const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+                    const paciente = await Extra.findById(extra1);
+    
+                    serviciosUsuario.push({
+                        servicio: servicio._id,
+                        cita: fechaString,
+                        paciente: paciente.nombre,
+                        id_nutriologo: servicio.id_nutriologo,
+                        nutriologo: nutriologo.nombre,
+                        imagen: nutriologo.imagen,
+                        activo: servicio.vigente
+                    });
+                }
+            }
+            if(extra2) {
+                if (String(extra2) == String(servicio.id_paciente)){
+                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
+                    const fechaArr = fecha.split('-');
+                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+    
+                    const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+                    const paciente = await Extra.findById(extra2);
+    
+                    serviciosUsuario.push({
+                        servicio: servicio._id,
+                        cita: fechaString,
+                        paciente: paciente.nombre,
+                        id_nutriologo: servicio.id_nutriologo,
+                        nutriologo: nutriologo.nombre,
+                        imagen: nutriologo.imagen,
+                        activo: servicio.vigente
+                    });
+                }
+            }
+        }
+
+        res.status(200).json(serviciosUsuario);
+
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Error al encontrar al cliente, verifique el id'
+        });
+    }
+
 }
 
 //Actualizar información de usuario
@@ -1057,12 +1157,27 @@ const estadoVerDatos = async (req, res = response) => {
 const getMotivosUsuario = async(req, res = response) => {
     try {
         let motivosUsuario = [];
-        motivosUsuario.push(await Motivo.findById('624536db33d1ed94d196ec61'));
-        motivosUsuario.push(await Motivo.findById('624536e733d1ed94d196ec63'));
-        motivosUsuario.push(await Motivo.findById('6245371633d1ed94d196ec67'));
-        motivosUsuario.push(await Motivo.findById('6245372033d1ed94d196ec69'));
-        motivosUsuario.push(await Motivo.findById('6245372833d1ed94d196ec6b'));
-        motivosUsuario.push(await Motivo.findById('6245373e33d1ed94d196ec6d'));
+        
+        let temporal = await Motivo.findById('624536db33d1ed94d196ec61');
+        motivosUsuario.push(temporal);
+        
+        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
+        motivosUsuario.push(temporal);
+        
+        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
+        motivosUsuario.push(temporal);
+        
+        temporal = await Motivo.findById('6245371633d1ed94d196ec67');
+        motivosUsuario.push(temporal);
+        
+        temporal = await Motivo.findById('6245372033d1ed94d196ec69');
+        motivosUsuario.push(temporal);
+        
+        temporal = await Motivo.findById('6245372833d1ed94d196ec6b');
+        motivosUsuario.push(temporal);
+        
+        temporal = await Motivo.findById('6245373e33d1ed94d196ec6d');
+        motivosUsuario.push(temporal);
 
         res.status(200).json(motivosUsuario);
     } catch (error) {
@@ -1092,5 +1207,6 @@ module.exports = {
     rechazarSolicitud,
     aceptarSolicitud,
     estadoVerDatos,
-    getMotivosUsuario
+    getMotivosUsuario,
+    getServicios
 }

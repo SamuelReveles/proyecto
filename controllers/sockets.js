@@ -26,7 +26,7 @@ const socketController = (socket) => {
         let user = await Cliente.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
 
         if(!user) user = await Nutriologo.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
-    })
+    });
 
     //Ver las notificaciones
     socket.on('notificacion', async (payload) => {

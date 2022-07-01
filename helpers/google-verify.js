@@ -35,108 +35,116 @@ async function googleVerify(token = '') {
 
 async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, idServicio) {
 
-  const nutriologo = await Nutriologo.findById(idNutriologo);
-  const cliente = await Cliente.findById(idCliente);
-
-  //Hora de finalización de la llamada
-  let hora_cierre = new Date();
-  hora_cierre.setMinutes(hora_inicio.getMinutes() + 30);
-
-  const event = {
-      summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
-      description: 'Evento de llamada para la atención del servicio de nutrición de ' + cliente.nombre + 
-      '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
-      start: {
-        dateTime: hora_inicio,
-        timeZone: 'America/Mexico_City',
-      },
-      end: {
-        dateTime: hora_cierre,
-        timeZone: 'America/Mexico_City',
-      },
-      attendees: [
-        {email: cliente.correo},
-        {email: nutriologo.correo},
-      ],
-      conferenceData: {
-        createRequest: { 'requestId': (Math.random() + 1).toString(36).substring(7) }
-      }
-    };
-
-  oauth2Client.setCredentials({refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN})
-
-  calendar.events.insert({
-    auth: oauth2Client,
-    project: process.env.GOOGLE_CALENDAR_API,
-    calendarId: 'primary',
-    resource: event,
-    sendNotifications: true,
-    conferenceDataVersion: 1
-  }, async function(err, event) {
-    if (err) {
-      console.log('There was an error contacting the Calendar service: ' + err);
-      return new Error('Error al crear');
-    }
-    //Guardar en el servicio el link de meet
-    await Servicio.findByIdAndUpdate(idServicio, {linkMeet: event.data.hangoutLink, eventId: event.data.id});
-  });
-
-}
-
-async function cambiarFecha (idServicio, hora_nueva) {
-
-  const servicio = await Servicio.findById(idServicio);
-
-  const idNutriologo = servicio.id_nutriologo;
-  const idCliente = servicio.id_paciente;
-
-  const nutriologo = await Nutriologo.findById(idNutriologo);
-  const cliente = await Cliente.findById(idCliente);
-
-  let hora_cierre = new Date(hora_nueva);
-  hora_cierre.setMinutes(hora_nueva.getMinutes() + 30);
-
-  const event = {
-      summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
-      description: 'Evento de llamada para la atención del servicio de nutrición de ' + cliente.nombre + 
-      '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
-      start: {
-        dateTime: hora_nueva,
-        timeZone: "America/Mexico_City"
-      },
-      end: {
-        dateTime: hora_cierre,
-        timeZone: "America/Mexico_City"
-      },
-      attendees: [
-        {email: cliente.correo},
-        {email: nutriologo.correo},
-      ],
-      conferenceData: {
-        createRequest: { 'requestId': (Math.random() + 1).toString(36).substring(7) }
-      }
-    };
-
-    oauth2Client.setCredentials({refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN})
-
-    calendar.events.update({
+  try {
+    const nutriologo = await Nutriologo.findById(idNutriologo);
+    const cliente = await Cliente.findById(idCliente);
+  
+    //Hora de finalización de la llamada
+    let hora_cierre = new Date();
+    hora_cierre.setMinutes(hora_inicio.getMinutes() + 30);
+  
+    const event = {
+        summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
+        description: 'Evento de llamada para la atención del servicio de nutrición de ' + cliente.nombre + 
+        '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
+        start: {
+          dateTime: hora_inicio,
+          timeZone: 'America/Mexico_City',
+        },
+        end: {
+          dateTime: hora_cierre,
+          timeZone: 'America/Mexico_City',
+        },
+        attendees: [
+          {email: cliente.correo},
+          {email: nutriologo.correo},
+        ],
+        conferenceData: {
+          createRequest: { 'requestId': (Math.random() + 1).toString(36).substring(7) }
+        }
+      };
+  
+    oauth2Client.setCredentials({refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN});
+  
+    calendar.events.insert({
       auth: oauth2Client,
       project: process.env.GOOGLE_CALENDAR_API,
       calendarId: 'primary',
-      eventId: servicio.eventId,
       resource: event,
       sendNotifications: true,
       conferenceDataVersion: 1
     }, async function(err, event) {
       if (err) {
         console.log('There was an error contacting the Calendar service: ' + err);
-        return new Error('Error al actualizar');
+        return new Error('Error al crear');
       }
       //Guardar en el servicio el link de meet
       await Servicio.findByIdAndUpdate(idServicio, {linkMeet: event.data.hangoutLink, eventId: event.data.id});
     });
+  } catch (error) {
+    console.log(error);
+  }
 
-  return true;
+}
+
+async function cambiarFecha (idServicio, hora_nueva) {
+
+  try {
+    const servicio = await Servicio.findById(idServicio);
+
+    const idNutriologo = servicio.id_nutriologo;
+    const idCliente = servicio.id_paciente;
+  
+    const nutriologo = await Nutriologo.findById(idNutriologo);
+    const cliente = await Cliente.findById(idCliente);
+  
+    let hora_cierre = new Date(hora_nueva);
+    hora_cierre.setMinutes(hora_nueva.getMinutes() + 30);
+  
+    const event = {
+        summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
+        description: 'Evento de llamada para la atención del servicio de nutrición de ' + cliente.nombre + 
+        '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
+        start: {
+          dateTime: hora_nueva,
+          timeZone: "America/Mexico_City"
+        },
+        end: {
+          dateTime: hora_cierre,
+          timeZone: "America/Mexico_City"
+        },
+        attendees: [
+          {email: cliente.correo},
+          {email: nutriologo.correo},
+        ],
+        conferenceData: {
+          createRequest: { 'requestId': (Math.random() + 1).toString(36).substring(7) }
+        }
+      };
+  
+      oauth2Client.setCredentials({refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN});
+
+      calendar.events.update({
+        auth: oauth2Client,
+        project: process.env.GOOGLE_CALENDAR_API,
+        calendarId: 'primary',
+        eventId: servicio.eventId,
+        resource: event,
+        sendNotifications: true,
+        conferenceDataVersion: 1
+      }, async function(err, event) {
+        if (err) {
+          console.log('There was an error contacting the Calendar service: ' + err);
+          return new Error('Error al actualizar');
+        }
+        //Guardar en el servicio el link de meet
+        await Servicio.findByIdAndUpdate(idServicio, {linkMeet: event.data.hangoutLink, eventId: event.data.id});
+      });
+  
+    return true;
+  } catch (error) {
+    console.log(error);
+  }
 
 }
 module.exports = {

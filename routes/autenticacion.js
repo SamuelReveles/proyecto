@@ -12,9 +12,8 @@ const {
 
 //Funciones
 const { sendCode, verifyCode } = require('../helpers/verificacion');
-const { nutriologoPost } = require('../controllers/nutriologo');
 const { usuariosPost } = require('../controllers/usuarios');
-const { postAdmin } = require('../controllers/administrador');
+const { postAdmin, postSolicitud } = require('../controllers/administrador');
 const { logIn, verificarCorreo } = require('../controllers/sesiones');
 
 const router = Router();
@@ -35,7 +34,7 @@ router.post('/cliente', [
 router.post('/nutriologo', [
     validarCorreo,
     validarCelular
-], nutriologoPost);
+], postSolicitud);
 
 //Crear nuevo administrador
 router.post('/administrador',[

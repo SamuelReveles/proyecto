@@ -1,15 +1,13 @@
 //Librerías externas
 const { Router } = require('express');
-const { check } = require('express-validator');
 
 //Validación de campos vacíos
-const { validarCampos, validarBanCliente } = require('../middlewares/validar-campos');
+const { validarBanCliente } = require('../middlewares/validar-campos');
 
 const { validarToken, verificarCliente } = require('../middlewares/validar-jwt');
 
 //Rutas y tipos de "Acceso"
 const { 
-    usuariosPost,
     usuariosUpdate,
     usuariosDelete,
     getProgreso,
@@ -25,13 +23,13 @@ const {
     rechazarSolicitud,
     aceptarSolicitud,
     estadoVerDatos,
+    getServicios,
     getMotivosUsuario
 } = require('../controllers/usuarios');
 
 //Paypal
 const {
     crearOrden, 
-    capturarOrden,
     ordenPagada
 } = require('../controllers/pagos');
 
@@ -96,5 +94,7 @@ router.put('/verDatos', estadoVerDatos);
 
 //Ver motivos de reporete
 router.get('/motivos', getMotivosUsuario);
+
+router.get('/servicio', getServicios);
 
 module.exports = router;

@@ -1,9 +1,8 @@
 //Librerías externas
 const { Router } = require('express');
-const { check } = require('express-validator');
 
 //Middlewares
-const { validarCampos, validarBanNutriologo } = require('../middlewares/validar-campos');
+const { validarBanNutriologo } = require('../middlewares/validar-campos');
 
 const { 
     nutriologoUpdate,
@@ -30,7 +29,6 @@ const { validarToken, verificarNutriologo } = require('../middlewares/validar-jw
 const router = Router();
 
 //Verificar que exista sesión iniciada el token
-//GODO COMENTA LA LINEA DE ABAJO SI ES QUE TE DICE QUE NO TIENES TOKEN XD (ESO O INICIA SESIÓN ANTES DE HACER LAS COSAS (EL TOKEN DURA 8HRS))
 router.use(validarToken);
 router.use(verificarNutriologo);
 
@@ -66,9 +64,6 @@ router.get('/predeterminado/uno', getPredeterminado);
 
 //Eliminar un alimento predeterminado
 router.delete('/predeterminado', deletePredeterminado);
-
-//Actualizar datos de la cuenta
-router.put('/update', [validarBanNutriologo], putActualizarDatos);
 
 //Ver datos de la cuenta
 router.get('/data', getInfo);

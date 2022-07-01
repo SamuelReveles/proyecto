@@ -44,7 +44,7 @@ const postAdmin = async (req, res = response) => {
             imagen: linkImagen,
             celular: req.body.celular,
             correo: req.body.correo,
-            genero: req.body.genero
+            sexo: req.body.sexo
         });
 
         await admin.save();
@@ -53,6 +53,7 @@ const postAdmin = async (req, res = response) => {
 
         res.status(201).json({admin, jwt});
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Registro inválido'
@@ -64,7 +65,7 @@ const postAdmin = async (req, res = response) => {
 const getAllUsers = async(req, res = response) => {
 
     //Se establece el límite Motivo
-    const {limit = 10, start = 0, baneado = false} = req.query;
+    const { baneado = false } = req.query;
     let resultado;
 
     //Puntaje
@@ -73,17 +74,13 @@ const getAllUsers = async(req, res = response) => {
         if(Boolean(req.query.mayor) === true) {
             resultado = await Cliente.aggregate([
                 {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
-                {$sort: {'puntajeBaneo': 1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'puntajeBaneo': 1}}
             ]);
         }
         else {
             resultado = await Cliente.aggregate([
                 {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
-                {$sort: {'puntajeBaneo': -1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'puntajeBaneo': -1}}
             ]);
         }
 
@@ -96,17 +93,13 @@ const getAllUsers = async(req, res = response) => {
         if(Boolean(req.query.mayor) === true)  {
             resultado = await Cliente.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'ultima_conexion': 1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'ultima_conexion': 1}}
             ]);
         }
         else {
             resultado = await Cliente.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'ultima_conexion': -1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'ultima_conexion': -1}}
             ]);
         }
     }
@@ -118,26 +111,20 @@ const getAllUsers = async(req, res = response) => {
         if(Boolean(req.query.mayor) === true) {
             resultado = await Cliente.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'fecha_registro': 1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'fecha_registro': 1}}
             ]);
         }
         else {
             resultado = await Cliente.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'fecha_registro': -1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'fecha_registro': -1}}
             ]);
         }
     }
 
     else {
         resultado = await Cliente.aggregate([
-            {$match: {'baneado': Boolean(baneado)}},
-            {$skip: Number(start)},
-            {$limit: Number(limit)}
+            {$match: {'baneado': Boolean(baneado)}}
         ]);
     }
 
@@ -173,6 +160,7 @@ const getNutriologo = async(req, res = response) => {
             msg: 'Error al encontrar nutriólogo'
         });
     }
+    
 };
 
 
@@ -180,7 +168,7 @@ const getNutriologo = async(req, res = response) => {
 const getAllNutri = async(req, res = response) => {
 
     //Se establece el límite Motivo
-    const {limit = 10, start = 0, baneado = false} = req.query;
+    const { baneado = false } = req.query;
     let resultado;
 
     //Puntaje
@@ -189,17 +177,13 @@ const getAllNutri = async(req, res = response) => {
         if(Boolean(req.query.mayor) === true) {
             resultado = await Nutriologo.aggregate([
                 {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
-                {$sort: {'puntajeBaneo': -1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'puntajeBaneo': -1}}
             ]);
         }
         else {
             resultado = await Nutriologo.aggregate([
                 {$match: {$and: [{'puntajeBaneo': {$gt: 6}}, {'baneado': Boolean(baneado)}]}},
-                {$sort: {'puntajeBaneo': 1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'puntajeBaneo': 1}}
             ]);
         }
 
@@ -212,17 +196,13 @@ const getAllNutri = async(req, res = response) => {
         if(Boolean(req.query.mayor) === true)  {
             resultado = await Nutriologo.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'ultima_conexion': -1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'ultima_conexion': -1}}
             ]);
         }
         else {
             resultado = await Nutriologo.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'ultima_conexion': 1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'ultima_conexion': 1}}
             ]);
         }
     }
@@ -234,26 +214,20 @@ const getAllNutri = async(req, res = response) => {
         if(Boolean(req.query.mayor) === true) {
             resultado = await Nutriologo.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'fecha_registro': 1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'fecha_registro': 1}}
             ]);
         }
         else {
             resultado = await Nutriologo.aggregate([
                 {$match: {'baneado': Boolean(baneado)}},
-                {$sort: {'fecha_registro': -1}},
-                {$skip: Number(start)},
-                {$limit: Number(limit)}
+                {$sort: {'fecha_registro': -1}}
             ]);
         }
     }
 
     else {
         resultado = await Nutriologo.aggregate([
-            {$match: {'baneado': Boolean(baneado)}},
-            {$skip: Number(start)},
-            {$limit: Number(limit)}
+            {$match: {'baneado': Boolean(baneado)}}
         ]);
     }
 
@@ -270,7 +244,7 @@ const getAllNutri = async(req, res = response) => {
     }
 
     res.status(200).json(resultado);
-}
+};
 
 //Ver todas las solicitudes de empleo
 const getSolicitudes = async(req, res = response) => {
