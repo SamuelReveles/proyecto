@@ -34,7 +34,7 @@ const NutrilogoSchema = Schema({
     },
     celular: {
         type: String,
-        unique: true
+        required: [true, 'El celular es obligatorio']
     },
     correo: {
         type: String,
@@ -51,8 +51,7 @@ const NutrilogoSchema = Schema({
         ref:'preterminado'
     }],
     especialidades: [{
-        type: String,
-        required: true
+        type: String
     }],
     puntajeBaneo: {
         type: Number,

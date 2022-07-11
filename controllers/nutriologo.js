@@ -136,7 +136,7 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
     try {
 
-        const { precio, descripcion, activo, indicaciones } = req.body;
+        const { precio, descripcion, activo, indicaciones, categorias } = req.body;
         const id = req.id;
 
         const nutriologo = await Nutriologo.findById(id);
@@ -145,6 +145,7 @@ const nutriologoUpdateServicio = async (req, res = response) => {
         if(descripcion) nutriologo.descripcion = descripcion;
         if(activo) nutriologo.activo = Boolean(activo);
         if(indicaciones) nutriologo.indicaciones = indicaciones;
+        if(categorias) nutriologo.categorias = categorias;
 
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
@@ -312,6 +313,8 @@ const llenarCalendario = async (req, res = response) => {
         const id_servicio = req.body.id_servicio;
         let tipo = 'Cliente';
 
+        console.log(req.body.calendario);
+
         const servicio = await Servicio.findById(id_servicio);
 
         if(servicio.calendario === true) {
@@ -330,78 +333,78 @@ const llenarCalendario = async (req, res = response) => {
             return;
         }
 
-        let paciente = await Cliente.findById(servicio.id_paciente); //Paciente es a quien se le llena el calendario
-        let cliente = paciente; //Cliente a quien se le envía la notificación
+        // let paciente = await Cliente.findById(servicio.id_paciente); //Paciente es a quien se le llena el calendario
+        // let cliente = paciente; //Cliente a quien se le envía la notificación
 
-        if(!paciente) {
-            tipo = 'Extra';
-            paciente = await Extra.findById(servicio.id_paciente);
-            let clientes = await Cliente.find();
-            for await (const client of clientes) {
-                console.log('Servicio: ' + servicio.id_paciente);
-                console.log('Extra:    ' + client.extra1);
-                console.log('Extra: ' + client.extra2);
-                console.log(client.extra1 == servicio.id_paciente)
-                if(client.extra1 == servicio.id_paciente || client.extra2 == servicio.id_paciente){
-                    console.log('OSI');
-                    cliente = client;
-                    break;
-                }
-            }
-        }
-
-        const calendario = req.body.calendario;
-        // const compras = req.body.lista_compras;
-
-        // let calendarioCliente = [];
-
-        // //Arreglo con 7 días de la semana
-        // for (let i = 0; i < 7; i++) {
-
-        //     //Posición 0 = Desayuno
-        //     calendarioCliente[i][1] = calendario[i][1];
-
-        //     //Posición 1 = Comida
-        //     calendarioCliente[i][2] = calendario[i][2];
-
-        //     //Posición 2 = Cena
-        //     calendarioCliente[i][3] = calendario[i][3];
-
-        //     //Posición 3 = Notas
-        //     calendarioCliente[i][4] = calendario[i][4];
-
+        // if(!paciente) {
+        //     tipo = 'Extra';
+        //     paciente = await Extra.findById(servicio.id_paciente);
+        //     let clientes = await Cliente.find();
+        //     for await (const client of clientes) {
+        //         console.log('Servicio: ' + servicio.id_paciente);
+        //         console.log('Extra:    ' + client.extra1);
+        //         console.log('Extra: ' + client.extra2);
+        //         console.log(client.extra1 == servicio.id_paciente)
+        //         if(client.extra1 == servicio.id_paciente || client.extra2 == servicio.id_paciente){
+        //             console.log('OSI');
+        //             cliente = client;
+        //             break;
+        //         }
+        //     }
         // }
 
-        // calendarioCliente[7][0] = compras;
+        // const calendario = req.body.calendario;
+        // // const compras = req.body.lista_compras;
 
-        // cliente.calendario = calendarioCliente;
+        // // let calendarioCliente = [];
 
-        //Crear el historial del cliente
-        let ultimodato;
-        if(!paciente.datoInicial) ultimodato = paciente.datoConstante[paciente.datoConstante - 1];
-        else ultimodato = paciente.datoInicial;
-        const historial = new Historial({
-            dieta: calendario,
-            datos: ultimodato
-        });
+        // // //Arreglo con 7 días de la semana
+        // // for (let i = 0; i < 7; i++) {
 
-        if(tipo === 'Cliente'){
-            cliente.calendario = calendario;
-            cliente.historial.push(historial);
-        }
-        else {
-            paciente.calendario = calendario;
-            paciente.historial.push(historial);
-            await Extra.findByIdAndUpdate(paciente._id, paciente);
-        }
-        historial.save();
+        // //     //Posición 0 = Desayuno
+        // //     calendarioCliente[i][1] = calendario[i][1];
 
-        //Enviar notificación
-        const notificacion = new Notificacion('Se ha actualizado el calendario de ' + paciente.nombre);
-        cliente.notificaciones.push(notificacion);
-        await Cliente.findByIdAndUpdate(cliente._id, cliente);
+        // //     //Posición 1 = Comida
+        // //     calendarioCliente[i][2] = calendario[i][2];
 
-        res.status(200).json(calendario);
+        // //     //Posición 2 = Cena
+        // //     calendarioCliente[i][3] = calendario[i][3];
+
+        // //     //Posición 3 = Notas
+        // //     calendarioCliente[i][4] = calendario[i][4];
+
+        // // }
+
+        // // calendarioCliente[7][0] = compras;
+
+        // // cliente.calendario = calendarioCliente;
+
+        // //Crear el historial del cliente
+        // let ultimodato;
+        // if(!paciente.datoInicial) ultimodato = paciente.datoConstante[paciente.datoConstante - 1];
+        // else ultimodato = paciente.datoInicial;
+        // const historial = new Historial({
+        //     dieta: calendario,
+        //     datos: ultimodato
+        // });
+
+        // if(tipo === 'Cliente'){
+        //     cliente.calendario = calendario;
+        //     cliente.historial.push(historial);
+        // }
+        // else {
+        //     paciente.calendario = calendario;
+        //     paciente.historial.push(historial);
+        //     await Extra.findByIdAndUpdate(paciente._id, paciente);
+        // }
+        // historial.save();
+
+        // //Enviar notificación
+        // const notificacion = new Notificacion('Se ha actualizado el calendario de ' + paciente.nombre);
+        // cliente.notificaciones.push(notificacion);
+        // await Cliente.findByIdAndUpdate(cliente._id, cliente);
+
+        // res.status(200).json(calendario);
 
     } catch (error) {
         console.log(error);

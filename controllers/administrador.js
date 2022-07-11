@@ -308,94 +308,93 @@ const postSolicitud = async(req, res = response) => {
 //Aceptar solicitud
 const solicitudAccepted = async (req, res = response) => {
 
-    const id = req.body.id;
+    try {
+        const id = req.body.id;
 
-    const solicitud = await Solicitud.findById(id)
-        .catch(() => {
-            res.status(400).json({
-                success: false,
-                msg: 'No se ha encontrado la solicitud con id ' + id
-            });
-        })
+        const solicitud = await Solicitud.findById(id)
+            .catch(() => {
+                res.status(400).json({
+                    success: false,
+                    msg: 'No se ha encontrado la solicitud con id ' + id
+                });
+            })
+            
+        if(!solicitud) return;
 
-    if(!solicitud) return;
-
-    //Actualizar la solicitud
-    solicitud.estado = true;
-    await Solicitud.findByIdAndUpdate(id, solicitud);
-
-    //Eliminar la solicitud
-
-    const htmlOutput = mjml2html(`
-        <mjml>
-            <mj-body>
-            <mj-section>
-                <mj-column>
+        //Foto de perfil default
+        let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png';
         
-                <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Solicitud de alta aceptada</mj-text>
-        
-                <mj-text font-size="30px" color="lightblue" font-family="helvetica" align="center">¡BIENVENIDO A JOPAKA!</mj-text>
-        
-                <mj-text font-size="20px" color="black" font-family="helvetica">Hola ${solicitud.nombre} tu solicitud de alta ha sido aceptada, ¡ya puedes iniciar sesión con tu cuenta de nutriólogo!</mj-text>
-        
-                <mj-divider border-color="lightgreen"></mj-divider>
-        
-                <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
-        
-                </mj-column>
-            </mj-section>
-            </mj-body>
-        </mjml>
-        `, {
-            keepComments: false
+        //Crear el objeto 
+        const nutriologo = new Nutriologo({
+            nombre: solicitud.nombre,
+            apellidos: solicitud.apellidos,
+            nombreCompleto: solicitud.nombre + ' ' + solicitud.apellidos,
+            cedula: solicitud.cedula,
+            celular: solicitud.celular,
+            correo: solicitud.correo,
+            CURP: solicitud.CURP,
+            domicilio: solicitud.domicilio,
+            imagen: linkImagen,
+            sexo: solicitud.sexo,
+            fecha_nacimiento: solicitud.fecha_nacimiento
         });
 
-    //Mensaje de correo electrónico
-    const msg = {
-        to: solicitud.correo, // Change to your recipient
-        from: 'a18300384@ceti.mx', // Change to your verified sender
-        subject: 'Estado de la solicitud de alta',
-        text: 'Text',
-        html: htmlOutput.html,
-    }
+        await nutriologo.save();
+            
+        //Actualizar la solicitud
+        solicitud.estado = true;
+        await Solicitud.findByIdAndUpdate(id, solicitud);
+        
+        //Eliminar la solicitud
 
-    //Registro del nutriólogo
-    //Foto de perfil default
-    let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png';
+        const htmlOutput = mjml2html(`
+            <mjml>
+                <mj-body>
+                <mj-section>
+                    <mj-column>
+            
+                    <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Solicitud de alta aceptada</mj-text>
+            
+                    <mj-text font-size="30px" color="lightblue" font-family="helvetica" align="center">¡BIENVENIDO A JOPAKA!</mj-text>
+            
+                    <mj-text font-size="20px" color="black" font-family="helvetica">Hola ${solicitud.nombre} tu solicitud de alta ha sido aceptada, ¡ya puedes iniciar sesión con tu cuenta de nutriólogo!</mj-text>
+            
+                    <mj-divider border-color="lightgreen"></mj-divider>
+            
+                    <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
+            
+                    </mj-column>
+                </mj-section>
+                </mj-body>
+            </mjml>
+            `, {
+                keepComments: false
+            });
 
-    //Crear el objeto 
-    const nutriologo = new Nutriologo({
-        nombre: solicitud.nombre,
-        apellidos: solicitud.apellidos,
-        nombreCompleto: solicitud.nombre + ' ' + solicitud.apellidos,
-        cedula: solicitud.cedula,
-        celular: solicitud.celular,
-        correo: solicitud.correo,
-        CURP: solicitud.CURP,
-        domicilio: solicitud.domicilio,
-        imagen: linkImagen,
-        sexo: solicitud.sexo,
-        especialidades: req.body.especialidades,
-        fecha_nacimiento: solicitud.fecha_nacimiento
-    });
+        //Mensaje de correo electrónico
+        const msg = {
+            to: solicitud.correo, // Change to your recipient
+            from: 'a18300384@ceti.mx', // Change to your verified sender
+            subject: 'Estado de la solicitud de alta',
+            text: 'Text',
+            html: htmlOutput.html,
+        }
 
-    await nutriologo.save();
+        //Enviar el correo de respuesta
+        sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
+        sgMail
+        .send(msg);
 
-    //Enviar el correo de respuesta
-    sgMail.setApiKey(process.env.TWILIO_EMAIL_KEY);
-    sgMail
-    .send(msg)
-    .then(() => {
         res.status(200).json({
             success: true
         });
-    })
-    .catch((error) => {
+    }
+    catch(error) {
         console.error(error);
         res.status(400).json({
             success: false
         });
-    })
+    }
 
 }
 

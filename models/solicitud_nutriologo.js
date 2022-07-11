@@ -17,6 +17,10 @@ const SolicitudNutriologoSchema = Schema({
         type: Boolean,
         default: null
     },
+    celular: {
+        type: String,
+        required: [true, 'El celular es obligatorio']
+    },
     correo: {
         type: String,
         required: [true, 'El correo es obligatorio']
