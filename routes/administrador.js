@@ -47,10 +47,10 @@ router.get('/user', getAllUsers);
 router.get('/soli', getSolicitudes);
 
 //Aceptar la solicitud
-router.put('/soli/accepted', solicitudAccepted);
+router.post('/soli/accepted', solicitudAccepted);
 
 //Denegar solicitud
-router.post('/soli/denied', solicitudDenied);
+router.put('/soli/denied', solicitudDenied);
  
 //Listado de todos los nutriólogos
 router.get('/nutriologo', getAllNutri);

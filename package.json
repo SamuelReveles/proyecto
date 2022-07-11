@@ -22,6 +22,7 @@
     "google-auth-library": "^7.14.1",
     "googleapis": "^39.2.0",
     "jsonwebtoken": "^8.5.1",
+    "mjml": "^4.13.0",
     "mongoose": "^6.1.8",
     "pdfkit": "^0.13.0",
     "pdfkit-construct": "^1.2.3",

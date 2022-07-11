@@ -34,7 +34,6 @@ const NutrilogoSchema = Schema({
     },
     celular: {
         type: String,
-        required: [true, 'El celular es obligatorio'],
         unique: true
     },
     correo: {
@@ -44,7 +43,8 @@ const NutrilogoSchema = Schema({
     },
     fecha_registro: {
         type: Date,
-        required: [true, 'La fecha de registro es obligatoria']
+        required: [true, 'La fecha de registro es obligatoria'],
+        default: new Date()
     },
     predeterminados: [{
         type: Object, 

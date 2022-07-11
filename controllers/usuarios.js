@@ -5,6 +5,7 @@ const PDF = require('pdfkit-construct');
 const format = require('date-fns/format');
 const es = require('date-fns/locale/es');
 const sgMail = require('@sendgrid/mail');
+const mjml2html = require('mjml');
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
@@ -30,7 +31,6 @@ const Historial = require('../models/historial');
 
 const usuariosPost = async (req, res = response) => {
     
-
     try {
         //Foto de perfil default
         const linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png';
@@ -54,12 +54,37 @@ const usuariosPost = async (req, res = response) => {
 
         //Enviar correo de que se registró
         //Mensaje de correo electrónico
+
+        const htmlOutput = mjml2html(`
+            <mjml>
+                <mj-body>
+                <mj-section>
+                    <mj-column>
+            
+                    <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
+            
+                    <mj-divider border-color="lightgreen"></mj-divider>
+            
+                    <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Bienvenido a Jopaka</mj-text>
+            
+                    <mj-text font-size="20px" color="black" font-family="helvetica">Ahora puedes usar nuestros servicios dentro de la plataforma, realiza la búsqueda del nutriólogo que necesites. </mj-text>
+            
+                    <mj-text font-size="20px" color="black" font-family="helvetica">Navega entre las categorías de tus necesidades y da seguimiento a tus consultas</mj-text>
+            
+                    </mj-column>
+                </mj-section>
+                </mj-body>
+            </mjml>
+        `, {
+            keepComments: false
+        });
+
         const msg = {
             to: user.correo,
             from: 'a18300384@ceti.mx', 
             subject: '¡BIENVENIDO A JOPAKA!',
             text: 'Text',
-            html: 'Hola ' + user.nombre + ' te damos la bienvenida a nuetra plataforma',
+            html: htmlOutput.html,
         }
 
         //Enviar el correo

@@ -793,7 +793,6 @@ const getPacientes = async (req, res  = response) => {
                     const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
                     const fechaArr = fecha.split('-');
                     const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-                    
                     paciente = await Extra.findById(servicio.id_paciente);
                     pacientes.push({
                         nombre: paciente.nombre,

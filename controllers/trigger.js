@@ -1,6 +1,7 @@
 //Librerias
 const { response } = require('express');
 const sgMail = require('@sendgrid/mail');
+const mjml2html = require('mjml');
 
 const isMonday = require('date-fns/isMonday');
 const isTuesday = require('date-fns/isTuesday');
@@ -24,6 +25,8 @@ const Servicio = require('../models/servicio')
 
 const { crearEvento } = require('../helpers/google-verify');
 
+
+
 //Borrar usuarios por inactividad
 const borrarAutomatico = async(req, res = response) => {
 
@@ -33,12 +36,7 @@ const borrarAutomatico = async(req, res = response) => {
 
         for await (let nutriologo of nutriologos) {
             if(diferenciaMeses(new Date(nutriologo.ultima_conexion), new Date(Date.now())) >= 6){
-                //Método de baneo
-                // let desban = new Date(Date.now());  
-                // desban.setMonth(desban.getMonth() + 6);
-                // nutriologo.baneado = true;
-                // nutriologo.fecha_desban = desban;
-                // await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+                //Borrar cuenta
                 await Nutriologo.findByIdAndDelete(nutriologo._id);
             }
         }
@@ -77,13 +75,35 @@ const avisoBaneo = async (req, res = response) => {
             if(diferenciaDias( new Date(nutriologo.ultima_conexion), new Date(Date.now())) >= 165){
                 //Enviar correo de aviso
 
+                const htmlOutput = mjml2html(`
+                    <mjml>
+                        <mj-body>
+                        <mj-section>
+                            <mj-column>
+                    
+                            <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Tu cuenta está a pocos días de ser eliminada</mj-text>
+                    
+                            <mj-text font-size="20px" color="black" font-family="helvetica">Este mensaje es debido a la inactividad que hemos detectado dentro de tu cuenta, entra de nuevo para que no sea borrada y puedas conservar tu usuario.</mj-text>
+                    
+                            <mj-divider border-color="lightgreen"></mj-divider>
+                    
+                            <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
+                    
+                            </mj-column>
+                        </mj-section>
+                        </mj-body>
+                    </mjml>
+                `, {
+                    keepComments: false
+                });
+
                 //Mensaje de correo electrónico
                 const msg = {
                     to: nutriologo.correo, // Change to your recipient
                     from: 'a18300384@ceti.mx', // Change to your verified sender
-                    subject: 'Tu cuenta será suspendida en un mes',
+                    subject: 'Tu cuenta puede ser suspendida pronto',
                     text: 'Text',
-                    html: 'Hola ' + nutriologo.nombre + ' tu este correo automático es un aviso, pues tu cuenta lleva mucho tiempo inactiva y en un mes, será suspendida',
+                    html: htmlOutput.html,
                 }
 
                 //Enviar el correo de respuesta
@@ -112,13 +132,35 @@ const avisoBaneo = async (req, res = response) => {
                 console.log('Se pasó: ' + cliente.nombre);
                 //Enviar correo de aviso
                 
+                const htmlOutput = mjml2html(`
+                    <mjml>
+                        <mj-body>
+                        <mj-section>
+                            <mj-column>
+                    
+                            <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Tu cuenta está a pocos días de ser eliminada</mj-text>
+                    
+                            <mj-text font-size="20px" color="black" font-family="helvetica">Este mensaje es debido a la inactividad que hemos detectado dentro de tu cuenta, entra de nuevo para que no sea borrada y puedas conservar tu usuario.</mj-text>
+                    
+                            <mj-divider border-color="lightgreen"></mj-divider>
+                    
+                            <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
+                    
+                            </mj-column>
+                        </mj-section>
+                        </mj-body>
+                    </mjml>
+                `, {
+                    keepComments: false
+                });
+
                 //Mensaje de correo electrónico
                 const msg = {
                     to: cliente.correo, // Change to your recipient
                     from: 'a18300384@ceti.mx', // Change to your verified sender
-                    subject: 'Tu cuenta será eliminada dentro de unos días',
+                    subject: 'Tu cuenta puede ser suspendida pronto',
                     text: 'Text',
-                    html: 'Hola ' + cliente.nombre + ' tu este correo automático es un aviso, pues tu cuenta lleva mucho tiempo inactiva y en unos días será suspendida',
+                    html: htmlOutput.html,
                 }
     
                 //Enviar el correo de respuesta

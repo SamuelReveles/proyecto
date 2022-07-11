@@ -5,6 +5,7 @@ const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
 const formatDistance = require('date-fns/formatDistance');
 const es = require('date-fns/locale/es');
+const mjml2html = require('mjml');
 
 //Helpers
 const { generarJWT } = require('../helpers/verificacion');
@@ -252,13 +253,14 @@ const getSolicitudes = async(req, res = response) => {
     const solicitudes = await Solicitud.aggregate([
         {$match: {'estado': null}}
     ])
-        .then(res.status(200).json(solicitudes))
         .catch(() => {
             res.status(400).json({
                 success: false,
                 msg: 'Error al ejectuar la búsqueda'
             });
-        })
+        });
+        
+    res.status(200).json(solicitudes);
 };
 
 const postSolicitud = async(req, res = response) => {
@@ -321,7 +323,32 @@ const solicitudAccepted = async (req, res = response) => {
     //Actualizar la solicitud
     solicitud.estado = true;
     await Solicitud.findByIdAndUpdate(id, solicitud);
+
     //Eliminar la solicitud
+
+    const htmlOutput = mjml2html(`
+        <mjml>
+            <mj-body>
+            <mj-section>
+                <mj-column>
+        
+                <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Solicitud de alta aceptada</mj-text>
+        
+                <mj-text font-size="30px" color="lightblue" font-family="helvetica" align="center">¡BIENVENIDO A JOPAKA!</mj-text>
+        
+                <mj-text font-size="20px" color="black" font-family="helvetica">Hola ${solicitud.nombre} tu solicitud de alta ha sido aceptada, ¡ya puedes iniciar sesión con tu cuenta de nutriólogo!</mj-text>
+        
+                <mj-divider border-color="lightgreen"></mj-divider>
+        
+                <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
+        
+                </mj-column>
+            </mj-section>
+            </mj-body>
+        </mjml>
+        `, {
+            keepComments: false
+        });
 
     //Mensaje de correo electrónico
     const msg = {
@@ -329,17 +356,14 @@ const solicitudAccepted = async (req, res = response) => {
         from: 'a18300384@ceti.mx', // Change to your verified sender
         subject: 'Estado de la solicitud de alta',
         text: 'Text',
-        html:'<h1 font-family="Times New Roman"> Solicitud de alta aceptada. Bienvenido a Jopaka</h1><p>Hola ' + solicitud.nombre + 
-        'tu solicitud de alta ha sido aceptada, ya puedes iniciar sesión con tu cuenta de nutriologo!</p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">'
-        //html: 'Hola ' + solicitud.nombre + ' tu solicitud de empleo ha sido aceptada',
+        html: htmlOutput.html,
     }
 
     //Registro del nutriólogo
     //Foto de perfil default
     let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png';
 
-
-    //Crear el objeto
+    //Crear el objeto 
     const nutriologo = new Nutriologo({
         nombre: solicitud.nombre,
         apellidos: solicitud.apellidos,
@@ -350,8 +374,9 @@ const solicitudAccepted = async (req, res = response) => {
         CURP: solicitud.CURP,
         domicilio: solicitud.domicilio,
         imagen: linkImagen,
-        sexo: solicitud.genero,
-        especialidades: req.body.especialidades 
+        sexo: solicitud.sexo,
+        especialidades: req.body.especialidades,
+        fecha_nacimiento: solicitud.fecha_nacimiento
     });
 
     await nutriologo.save();
@@ -379,7 +404,7 @@ const solicitudDenied = async (req, res = response) => {
 
     const id = req.body.id;
 
-    const solicitud = await Solicitud_empleo.findById(id)
+    const solicitud = await Solicitud.findById(id)
     .catch(() => {
         res.status(400).json({
             success: false,
@@ -387,12 +412,35 @@ const solicitudDenied = async (req, res = response) => {
         });
     })
 
-    if(!solicitud) return;;
+    if(!solicitud) return;
 
     //Actualizar la solicitud
-    solicitud.estado = true;
-    await Solicitud.findByIdAndUpdate(id, solicitud);
+    await Solicitud.findByIdAndDelete(id);
+
     //Eliminar la solicitud
+
+    const htmlOutput = mjml2html(`
+        <mjml>
+            <mj-body>
+            <mj-section>
+                <mj-column>
+        
+                <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Solicitud de alta denegada</mj-text>
+        
+                <mj-text font-size="20px" color="black" font-family="helvetica">Hola ${solicitud.nombre} tu solicitud de alta ha sido denegada. 
+                Por favor en caso de alguna duda ponte en contacto con un administrador</mj-text>
+        
+                <mj-divider border-color="lightgreen"></mj-divider>
+        
+                <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
+        
+                </mj-column>
+            </mj-section>
+            </mj-body>
+        </mjml>
+        `, {
+            keepComments: false
+        });
 
     const msg = {
         to: solicitud.correo, // Change to your recipient
@@ -400,9 +448,7 @@ const solicitudDenied = async (req, res = response) => {
         subject: 'Estado de la solicitud de alta',
         text: 'Text',
         type:'type/html',
-        html: '<h1 font-family="Times New Roman"> Solicitud de alta denegada.</h1><p>Hola ' + solicitud.nombre + 
-        'tu solicitud de alta ha sido denegada. Por favor en caso de alguna duda ponte en contacto con un administrador' + 
-        '- Jopaka </p><img src="./JOPAKA_LOGO.png" alt="logo_jopaka" width="350px" height="75px">',
+        html: htmlOutput.html,
     }
     
     //Enviar el correo de respuesta
@@ -692,8 +738,7 @@ const UnBanear = async (req, res = response) => {
 const getInfo = async (req, res = response)  => {
     //id del admin
     const id = req.id;
-
-
+    
     try {
         const admin = await Administrador.findById(id);
 
