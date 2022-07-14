@@ -22,7 +22,8 @@ const {
     llenarCalendario,
     getMotivosNutriologo
 } = require('../controllers/nutriologo');
-const { mostrarHistorial } = require('../controllers/usuarios');
+
+const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
 
 const { validarToken, verificarNutriologo } = require('../middlewares/validar-jwt');
 
@@ -71,13 +72,17 @@ router.get('/data', getInfo);
 //Reportar a un usuario
 router.put('/reportar', [validarBanNutriologo], reportar);
 
-//Historial de cliente
+//Lista de dietas del cliente
+router.get('/dietas', getDietas);
+
+//PDF de dieta de cliente
 router.get('/historial', mostrarHistorial);
 
 //Llenar calendario del cliente
 router.put('/llenarCalendario', llenarCalendario);
 
 //Ver motivos de reporte
-router.get('/motivos', getMotivosNutriologo)
+router.get('/motivos', getMotivosNutriologo);
+
 
 module.exports = router;

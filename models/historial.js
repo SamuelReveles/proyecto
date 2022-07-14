@@ -9,6 +9,10 @@ const historialSchema = Schema({
         type: Schema.ObjectId,
         ref: 'dato',
         required: false
+    },
+    fecha: {
+        type: Date,
+        default: new Date()
     }
 });
 

@@ -344,8 +344,6 @@ const solicitudAccepted = async (req, res = response) => {
         //Actualizar la solicitud
         solicitud.estado = true;
         await Solicitud.findByIdAndUpdate(id, solicitud);
-        
-        //Eliminar la solicitud
 
         const htmlOutput = mjml2html(`
             <mjml>

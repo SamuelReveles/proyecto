@@ -839,7 +839,50 @@ const usuariosUpdate = async (req, res = response) => {
     }
 }
 
-//Historial de dietas del cliente
+//Motrar las dietas previas
+const getDietas = async (req, res = response) => {
+    try {
+
+        //Id del cliente
+        const id = req.query.id;
+
+        let cliente = await Cliente.findById(id);
+        if(!cliente) cliente = await Extra.findById(id);
+
+        const { historial } = cliente;
+
+        if(!historial) {
+            res.status(200);
+            return;
+        }
+
+        let dietas = [];
+
+        for await (const obj of historial) {
+
+            const dieta = await Historial.findById(obj);
+
+            const fechaArr = format(dieta.fecha, 'dd-MMMM-yyyy', {locale: es}).split('-');
+            const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+            dietas.push({
+                fecha: fechaString,
+                id
+            });
+        }
+
+        res.status(200).json(dietas);
+
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Error al encontrar la lista de dietas'
+        });
+    }
+}
+
+//PDF del historial de dietas del cliente
 const mostrarHistorial = async (req, res = response) => {
 
     try {
@@ -1233,5 +1276,6 @@ module.exports = {
     aceptarSolicitud,
     estadoVerDatos,
     getMotivosUsuario,
-    getServicios
+    getServicios,
+    getDietas
 }

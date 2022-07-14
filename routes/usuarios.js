@@ -24,7 +24,8 @@ const {
     aceptarSolicitud,
     estadoVerDatos,
     getServicios,
-    getMotivosUsuario
+    getMotivosUsuario,
+    getDietas
 } = require('../controllers/usuarios');
 
 //Paypal
@@ -65,8 +66,10 @@ router.put('/reportar', [validarBanCliente], reportar);
 //Eliminar cuenta
 router.delete('/', [validarBanCliente], usuariosDelete);
 
-//Ver historial del cliente
-router.get('/historial', mostrarHistorial);
+router.get('/dietas', getDietas)
+
+//Ver pdf del historial del cliente
+router.get('/historial/one', mostrarHistorial);
 
 //Ver registro de pagos del cliente
 router.get('/registroPagos', listadoPagos);
