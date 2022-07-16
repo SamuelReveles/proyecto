@@ -411,10 +411,8 @@ const solicitudDenied = async (req, res = response) => {
 
     if(!solicitud) return;
 
-    //Actualizar la solicitud
-    await Solicitud.findByIdAndDelete(id);
-
     //Eliminar la solicitud
+    await Solicitud.findByIdAndDelete(id);
 
     const htmlOutput = mjml2html(`
         <mjml>
@@ -732,7 +730,7 @@ const UnBanear = async (req, res = response) => {
 
 }
 
-const getInfo = async (req, res = response)  => {
+const getInfo = async (req, res = response) => {
     //id del admin
     const id = req.id;
     
@@ -746,6 +744,26 @@ const getInfo = async (req, res = response)  => {
         res.status(400).json({
             success: false,
             msg: 'Error al obtener información'
+        });
+    }
+}
+
+//Reiniciar ingresos de los nutriólogos
+const resetIngresosNutriologo = async (req, res = response) => {
+    try {
+
+        const id = req.body.id; 
+
+        await Nutriologo.findByIdAndUpdate(id, {ingresos: 0});
+
+        res.status(200).json({
+            success: true
+        });
+
+    } catch ( error ) {
+        res.status(400).json({
+            success: false,
+            msg: 'Error al resetear el dinero pendiente de pago'
         });
     }
 }
@@ -767,5 +785,6 @@ module.exports = {
     reportesUsuario,
     UnBanear,
     postAdmin,
-    borrarReporte
+    borrarReporte,
+    resetIngresosNutriologo
 }

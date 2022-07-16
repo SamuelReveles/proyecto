@@ -107,7 +107,7 @@ const ordenPagada = async(req, res = response) => {
         //Si es para un extra, se cambia id y se cambia el objeto
         const cliente = await Cliente.findById(id);
 
-        const { precio, nombreCompleto, fechaDisponible } = await Nutriologo.findById(id_nutriologo);
+        let { precio, nombreCompleto, ingresos } = await Nutriologo.findById(id_nutriologo);
 
         //Crear objeto a añadir en el registro de pagos
         const historial = new Historial_pago(
@@ -115,6 +115,9 @@ const ordenPagada = async(req, res = response) => {
             cliente.nombre,
             nombreCompleto
         );
+
+        //Nuevos ingresos del nutriólogo
+        ingresos += (precio * 0.95); // Rebaja de comisión de Paypal
 
         //Guardar en el registro del cliente
         let historial_cliente = [];
@@ -131,6 +134,7 @@ const ordenPagada = async(req, res = response) => {
         notificaciones.push(notificacion);
         cliente.notificaciones = notificaciones;
 
+        await Nutriologo.findByIdAndUpdate(id_nutriologo, {ingresos: ingresos})
         await Cliente.findByIdAndUpdate(id, cliente);
 
         //Crear servicio
@@ -160,8 +164,6 @@ const ordenPagada = async(req, res = response) => {
                 }
             });
         }
-
-        console.log(servicio);
 
         if(!servicio) {
 

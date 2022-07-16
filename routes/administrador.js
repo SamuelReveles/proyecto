@@ -17,7 +17,8 @@ const {
     reportesUsuario,
     UnBanear,
     borrarReporte,
-    getInfo
+    getInfo,
+    resetIngresosNutriologo
 } = require('../controllers/administrador');
 
 //Helpers
@@ -75,6 +76,9 @@ router.get('/reporte/user', reportesUsuario);
 
 //Eliminar un reporte
 router.put('/reporte/quitar', borrarReporte);
+
+//Reiniciar ingresos de nutriólogo
+router.put('/ingresos', resetIngresosNutriologo);
 
 //Exportar instancia
 module.exports = router;

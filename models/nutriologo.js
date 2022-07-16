@@ -105,7 +105,11 @@ const NutrilogoSchema = Schema({
     },
     notificaciones: [{
         type: Object
-    }]
+    }],
+    ingresos: {
+        type: Number,
+        default: 0
+    }
 });
 
 NutrilogoSchema.methods.toJSON = function(){

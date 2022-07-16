@@ -49,7 +49,7 @@ class Historial_Pago {
         // Logo jopaka
         doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 480, 730, {scale: 0.04})
         doc.fontSize(20);
-        doc.text('Ticket de compra', {
+        doc.text('Datos de compra', {
             align: 'center'
         });
 

@@ -101,19 +101,23 @@ const usuariosPost = async (req, res = response) => {
     }
 }
 
+//Eliminar perfil de usuario
 const usuariosDelete = async (req, res = response) => {
    
-    //Id del cliente
-   const id = req.id;
+    try {
 
-   try {
+        //Id del cliente
+        const id = req.id;
 
         const { baneado } = await Cliente.findById(id);
         if(baneado) throw new Error('Cliente baneado');
 
         await Cliente.findByIdAndDelete(id);
 
-        res.status(201).json(true);
+        res.status(201).json({
+            success: true
+        });
+
    } catch (error) {
         res.status(400).json({
             success: false,
@@ -607,11 +611,12 @@ const calificar = async (req, res = response) => {
 
 //Ver información de un nutriólogo
 const getNutriologo = async (req, res = response) => {
-
-    //Id del nutriologo
-    const id = req.query.id;
-
+    
     try {
+    
+        //Id del nutriologo
+        const id = req.query.id;
+        
         const nutriologo = await Nutriologo.findById(id);
 
         //No mostrar datos de alguien baneado
@@ -1023,20 +1028,15 @@ const verHistorialPagos = async (req, res = response) => {
             nombreCliente,
             nombreNutriologo,
             fecha_pago,
-            categoria,
-            calendario_precio,
-            lista_compras_precio
         } = historial_pagos[req.query.index];
 
-        const historial = new Historial_Pago(
+        let historial = new Historial_Pago(
             precio_servicio,
             nombreCliente,
-            nombreNutriologo,
-            fecha_pago,
-            categoria,
-            calendario_precio,
-            lista_compras_precio
+            nombreNutriologo
         );
+
+        historial.fecha_pago = fecha_pago;
 
         const doc = historial.toPDF();
 
@@ -1062,7 +1062,6 @@ const verHistorialPagos = async (req, res = response) => {
         doc.end();
 
     } catch (error) {
-        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Hubo un error :/'

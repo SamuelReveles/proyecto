@@ -98,6 +98,7 @@ router.put('/verDatos', estadoVerDatos);
 //Ver motivos de reporete
 router.get('/motivos', getMotivosUsuario);
 
+//Ver servicios de la cuenta
 router.get('/servicio', getServicios);
 
 module.exports = router;
