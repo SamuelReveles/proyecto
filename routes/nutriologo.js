@@ -20,7 +20,9 @@ const {
     updateClientData,
     reportar,
     llenarCalendario,
-    getMotivosNutriologo
+    getMotivosNutriologo,
+    fechasUpdate,
+    getFechas
 } = require('../controllers/nutriologo');
 
 const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
@@ -84,5 +86,10 @@ router.put('/llenarCalendario', llenarCalendario);
 //Ver motivos de reporte
 router.get('/motivos', getMotivosNutriologo);
 
+//Actualizar fechas del nutriólogo
+router.put('/fechas', fechasUpdate);
+
+//Ver la configuración de fechas
+router.get('/fechas', getFechas)
 
 module.exports = router;

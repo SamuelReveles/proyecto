@@ -53,6 +53,7 @@ const verificarAdmin = async (req = request, res = response, next) => {
 }
 
 const verificarNutriologo = async (req = request, res = response, next) => {
+    
     //Obtener id de req
     const id = req.id;
 
@@ -71,6 +72,7 @@ const verificarNutriologo = async (req = request, res = response, next) => {
 }
 
 const verificarCliente = async (req = request, res = response, next) => {
+
     //Obtener id de req
     const id = req.id;
 

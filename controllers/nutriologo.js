@@ -161,15 +161,20 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 }
 
 //Actualización de fechas disponibles
-const fechasUpdate = async (id) => {
+const fechasUpdate = async (req, res = response) => {
     
     try {
+
+        const id = req.id;
+
         const nutriologo = await Nutriologo.findById(id);
 
-        const config = nutriologo.configuracion_fechas;
-        const fechasDisponibles = nutriologo.fechaDisponible;
+        let config = req.body.fechas;
+        let fechasDisponibles = nutriologo.fechaDisponible;
 
         let today = addDays(new Date(), 1); //Iniciar desde mañana
+
+        console.log(config);
 
         if(!fechasDisponibles) { //Si se configura por primera vez
             fechasDisponibles = [];
@@ -242,8 +247,8 @@ const fechasUpdate = async (id) => {
 
                     AND
                 */
-                //Configurar la fecha según el día
 
+                //Configurar la fecha según el día
                 if(isMonday(today)) {
                     diaConfig = config[0]; //Configurando como lunes
                     for (let j = 0; j < fechasDisponibles.length; j++) {
@@ -294,11 +299,15 @@ const fechasUpdate = async (id) => {
             }
             fechasDisponibles = nuevasFechasDisponibles;
         }
-        nutriologo.fechaDisponible = fechasDisponibles;
-        await Nutriologo.findByIdAndUpdate(id, nutriologo);
+        
+        // nutriologo.configuracion_fechas = config;
+        // nutriologo.fechaDisponible = fechasDisponibles;
+        // await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
-        return res.status(200).json(fechasDisponibles);
+        res.status(200).json(fechasDisponibles);
+
     } catch(error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'No se han podido actualizar las fechas'
@@ -1182,5 +1191,7 @@ module.exports = {
     solicitarReagendacion,
     rechazarSolicitud,
     llenarCalendario,
-    getMotivosNutriologo
+    getMotivosNutriologo,
+    fechasUpdate,
+    getFechas
 };
