@@ -260,7 +260,7 @@ const deleteNotificaciones = async(req, res = response) => {
             let notificaciones = [];
             for (let noti of cliente.notificaciones) {
                 if (noti.visto !== false)
-                    if(diferenciaDias(noti.visto, new Date()) < 7) 
+                    if(diferenciaDias(noti.vista, new Date()) < 7) 
                         notificaciones.push(noti)
             }
             cliente.notificaciones = notificaciones;
@@ -272,7 +272,7 @@ const deleteNotificaciones = async(req, res = response) => {
             let notificaciones = [];
             for (let noti of nutriologo.notificaciones) {
                 if (noti.visto !== false)
-                    if(diferenciaDias(noti.visto, new Date()) < 7) 
+                    if(diferenciaDias(noti.vista, new Date()) < 7) 
                         notificaciones.push(noti)
             }
             nutriologo.notificaciones = notificaciones;
@@ -284,22 +284,26 @@ const deleteNotificaciones = async(req, res = response) => {
             let notificaciones = [];
             for (let noti of admin.notificaciones) {
                 if (noti.visto !== false)
-                    if(diferenciaDias(noti.visto, new Date()) < 7) 
+                    if(diferenciaDias(noti.vista, new Date()) < 7) 
                         notificaciones.push(noti)
             }
             admin.notificaciones = notificaciones;
-            await Nutriologo.findByIdAndUpdate(admin._id, admin);
+            await Administrador.findByIdAndUpdate(admin._id, admin);
         }
 
         res.status(200).json({
             success: true,
             msg: 'Notificaciones eliminadas correctamente'
-        })
+        });
+
     } catch (error) {
+
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Error: ' + error
         });
+
     }
     
 

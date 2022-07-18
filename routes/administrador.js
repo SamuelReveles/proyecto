@@ -24,6 +24,7 @@ const {
 //Helpers
 const { validarToken, verificarAdmin } = require('../middlewares/validar-jwt');
 const { validarCelular } = require('../middlewares/validar-campos');
+const { verNotificaciones } = require('../helpers/verificacion');
 
 //Router instance
 const router = Router();
@@ -79,6 +80,9 @@ router.put('/reporte/quitar', borrarReporte);
 
 //Reiniciar ingresos de nutriólogo
 router.put('/ingresos', resetIngresosNutriologo);
+
+//Marcar vistas las notificaciones
+router.put('/notificaciones', verNotificaciones);
 
 //Exportar instancia
 module.exports = router;

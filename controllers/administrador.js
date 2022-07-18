@@ -137,14 +137,6 @@ const getAllUsers = async(req, res = response) => {
         return;
     }
 
-    for await (const cliente of resultado) {
-        try {
-            cliente.ultima_conexion = formatDistance(cliente.ultima_conexion, new Date(), { locale: es });
-        } catch (error) {
-            console.log(error);
-        }
-    }  
-
     res.status(200).json(resultado);
 };
 
@@ -238,10 +230,6 @@ const getAllNutri = async(req, res = response) => {
             msg: 'Fallo al buscar'
         });
         return;
-    }
-
-    for await (const nutriologo of resultado) {
-        nutriologo.ultima_conexion = formatDistance(nutriologo.ultima_conexion, new Date(), { locale: es });
     }
 
     res.status(200).json(resultado);

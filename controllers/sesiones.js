@@ -52,6 +52,9 @@ const logIn = async (req, res = response) => {
             const { _id } = user;
             const jwt = await generarJWT(_id);
 
+            if(tipo === 'Cliente') await Cliente.findByIdAndUpdate(_id, {ultima_conexion: new Date()});
+            else if(tipo === 'Nutriólogo') await Nutriologo.findByIdAndUpdate(_id, {ultima_conexion: new Date()});
+
             res.status(200).json({registrado, jwt, tipo});
         }
 

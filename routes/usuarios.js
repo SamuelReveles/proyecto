@@ -34,11 +34,13 @@ const {
     ordenPagada
 } = require('../controllers/pagos');
 
+//Helpers
+const { verNotificaciones } = require('../helpers/verificacion');
+
 //Router instance
 const router = Router();
 
 //Verificar que exista sesión iniciada el token
-//GODO COMENTA LA LINEA DE ABAJO SI ES QUE TE DICE QUE NO TIENES TOKEN XD
 router.use(validarToken);
 router.use(verificarCliente);
 
@@ -66,7 +68,8 @@ router.put('/reportar', [validarBanCliente], reportar);
 //Eliminar cuenta
 router.delete('/', [validarBanCliente], usuariosDelete);
 
-router.get('/dietas', getDietas)
+//Ver dietas de un cliente
+router.get('/dietas', getDietas);
 
 //Ver pdf del historial del cliente
 router.get('/historial/one', mostrarHistorial);
@@ -100,5 +103,8 @@ router.get('/motivos', getMotivosUsuario);
 
 //Ver servicios de la cuenta
 router.get('/servicio', getServicios);
+
+//Marcar vistas las notificaciones
+router.put('/notificaciones', verNotificaciones);
 
 module.exports = router;

@@ -81,7 +81,9 @@ const nutriologoUpdate = async (req, res = response) => {
 
         const id = req.id;
 
-        const { tempFilePath } = req.files.imagen;
+        let tempFilePath;
+
+        if(req.files) tempFilePath = req.files.imagen.tempFilePath;
 
         const nutriologo = await Nutriologo.findById(id);
 
@@ -908,6 +910,7 @@ const reportar = async (req, res = response) => {
             let fecha_desban = new Date();
             fecha_desban.setMonth(fecha_desban.getMonth() + 2);
             cliente.fecha_desban = fecha_desban;
+            cliente.baneado = true;
 
             //Enviar notificación a los admins
             const notiAdmin = new Notificacion('Nuevo usuario baneado ' + cliente.nombre + ' ' + cliente.apellidos); //Posible cambio por ID del reporte

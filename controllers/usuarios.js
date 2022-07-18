@@ -297,7 +297,7 @@ const busqueda = async (req, res = response) => {
     }
 
     //Responder con los resultados
-    res.status(200).json({total, resultados});
+    res.status(200).json(resultados);
 }
 
 //Dar de alta un extra

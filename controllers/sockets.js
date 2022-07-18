@@ -28,28 +28,6 @@ const socketController = (socket) => {
         if(!user) user = await Nutriologo.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
     });
 
-    //Ver las notificaciones
-    socket.on('notificacion', async (payload) => {
-        //Obtener datos del cliente
-        let esCliente = true;
-        const user = await Cliente.findById(payload.id);
-        if(!user) {
-            user = await Nutriologo.findById(id);
-            esCliente = false;
-        }
-
-        //Actualizar notificaciones
-        const notificaciones = user.notificaciones;
-
-        notificaciones.forEach(notificacion => {
-            if(notificacion.visto === false) notificacion.ver();
-        })
-
-        //Actualizar el objeto
-        user.notifiaciones = notificaciones;
-        if(esCliente === true) await Cliente.findByIdAndUpdate(payload.id, user);
-        else await Nutriologo.findByIdAndUpdate(payload.id, user);
-    });
 
     //Recibir mensaje
     socket.on('mensaje', async ( payload ) => {
@@ -71,18 +49,6 @@ const socketController = (socket) => {
         //Crear objeto notificación y mensaje
         const notificacion = new Notificacion('Nuevo mensaje de ' + usuarioEmisor.nombre + ': ' + contenido);
         const mensaje = new Mensaje(contenido, emisor);
-
-        //Actualizar los mensajes en el servicio
-        // let servicio;
-        // if(type === 'Nutriologo') {
-        //     servicio = await Servicio.aggregate([
-        //         {$match: {$and: [{'id_paciente': emisor}, {'id_nutriologo': receptor}]}}
-        //     ]);
-        // } else {
-        //     servicio = await Servicio.aggregate([
-        //         {$match: {$and: [{'id_paciente': receptor}, {'id_nutriologo': emisor}]}}
-        //     ]);
-        // }
 
         const servicio = await Servicio.findById(id_servicio);
 

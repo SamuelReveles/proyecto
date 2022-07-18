@@ -29,6 +29,8 @@ const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
 
 const { validarToken, verificarNutriologo } = require('../middlewares/validar-jwt');
 
+const { verNotificaciones } = require('../helpers/verificacion');
+
 const router = Router();
 
 //Verificar que exista sesión iniciada el token
@@ -90,6 +92,9 @@ router.get('/motivos', getMotivosNutriologo);
 router.put('/fechas', fechasUpdate);
 
 //Ver la configuración de fechas
-router.get('/fechas', getFechas)
+router.get('/fechas', getFechas);
+
+//Marcar vistas las notificaciones
+router.put('/notificaciones', verNotificaciones);
 
 module.exports = router;
