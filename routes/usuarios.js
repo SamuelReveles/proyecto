@@ -81,9 +81,6 @@ router.get('/registroPagos', listadoPagos);
 //Ver historial de pagos del cliente
 router.get('/pagos', verHistorialPagos);
 
-//Agregar a historial de pagos posteriomente a pagar
-router.post('/pagos', ordenPagada);
-
 //Crear orden de paypal (paso para el check-in)
 router.post('/crearOrden', [validarBanCliente], crearOrden);
 

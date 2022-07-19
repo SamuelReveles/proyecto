@@ -138,7 +138,7 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
     try {
 
-        const { precio, descripcion, activo, indicaciones, categorias } = req.body;
+        const { precio, descripcion, activo, indicaciones, especialidades } = req.body;
         const id = req.id;
 
         const nutriologo = await Nutriologo.findById(id);
@@ -147,7 +147,7 @@ const nutriologoUpdateServicio = async (req, res = response) => {
         if(descripcion) nutriologo.descripcion = descripcion;
         nutriologo.activo = activo;
         if(indicaciones) nutriologo.indicaciones = indicaciones;
-        if(categorias) nutriologo.categorias = categorias;
+        if(especialidades) nutriologo.especialidades = especialidades;
 
         await Nutriologo.findByIdAndUpdate(id, nutriologo);
 

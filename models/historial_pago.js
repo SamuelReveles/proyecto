@@ -32,11 +32,6 @@ class Historial_Pago {
             }
         ];
 
-        // arreglo.push({
-        //     tipo: 'Total',
-        //     valor: total + ' MXN'
-        // });
-
         return arreglo;
     }
 
