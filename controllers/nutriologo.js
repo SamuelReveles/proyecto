@@ -145,7 +145,7 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
         if(precio) nutriologo.precio = precio;
         if(descripcion) nutriologo.descripcion = descripcion;
-        if(activo) nutriologo.activo = Boolean(activo);
+        nutriologo.activo = activo;
         if(indicaciones) nutriologo.indicaciones = indicaciones;
         if(categorias) nutriologo.categorias = categorias;
 
@@ -798,7 +798,8 @@ const getPacientes = async (req, res  = response) => {
                         sexo: paciente.sexo,
                         id_servicio: servicio._id,
                         servicio: servicio.vigente,
-                        cita: fechaString
+                        cita: fechaString,
+                        reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
 
@@ -815,7 +816,8 @@ const getPacientes = async (req, res  = response) => {
                         sexo: paciente.sexo,
                         id_servicio: servicio._id,
                         servicio: servicio.vigente,
-                        cita: fechaString
+                        cita: fechaString,
+                        reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
             }
@@ -1084,6 +1086,49 @@ const solicitarReagendacion = async (req, res = response) => {
 
 }
 
+const getReagendaciones = async (req, res = response) => {
+    
+    try {
+
+        const id = req.id;
+
+        const solicitudes = await Reagendacion.find({remitente: id});
+        const { nombre } = await Nutriologo.findById(id);
+
+        let solicitudesUsuario = [];
+
+        for await (const solicitud of solicitudes) {
+
+            const fecha = format(solicitud.fecha_nueva, 'dd-MMMM-yyyy', {locale: es});
+            const fechaArr = fecha.split('-');
+            const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+            const { id_paciente } = await Servicio.findById(solicitud.id_servicio);
+
+            let paciente = await Cliente.findById(id_paciente);
+            if( !paciente ) paciente = await Extra.findById(id_paciente);
+
+            solicitudesUsuario.push({
+                solicitud: solicitud._id,
+                emisor: paciente.nombre,
+                remitente: nombre,
+                fecha_nueva: fechaString,
+                mensaje: solicitud.mensaje
+            });
+
+        }
+
+        res.status(200).json(solicitudesUsuario);
+
+    } catch ( error ) {
+        console.log(error);
+        res.status(400).json({
+            success: false
+        })
+    }
+
+}
+
 //Rechazar solicitud de reagendación PUT
 const rechazarSolicitud = async (req, res = response) => {
     try {
@@ -1142,6 +1187,50 @@ const rechazarSolicitud = async (req, res = response) => {
     }
 }
 
+//Aceptar solicitud de reagendación PUT
+const aceptarSolicitud = async (req, res = response) => {
+    try {
+        //Datos de solicitud
+        const { id_solicitud, fecha } = req.body;
+
+        const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: true});
+
+        const servicio = await Servicio.findById(reagendacion.id_servicio);
+        const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+
+        let nueva_fecha = new Date();
+        nueva_fecha.setDate(nueva_fecha.getDate() + 2);
+
+        //Modificar fecha de evento
+        cambiarFecha(servicio, nueva_fecha);
+
+        const fechaArr = format(nueva_fecha, 'dd-MMMM-yyyy', {locale: es}).split('-');
+        const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+        //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
+        const notificacion = new Notificacion('Tu solicitud de reagendación ha sido aceptada para el día ' + fechaString);
+        let notificaciones = [];
+
+        if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+
+        notificaciones.push(notificacion);
+        nutriologo.notificaciones = notificaciones;
+
+        await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+
+        //Eliminar solicitud
+        await Reagendacion.findByIdAndDelete(id_solicitud);
+
+        res.status(201).json(reagendacion);
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            msg: 'No se ha podido aceptar la solicitud'
+        })
+    }
+}
+
 const getMotivosNutriologo = async(req, res = response) => {
     try {
         let motivosNutriologo = [];
@@ -1196,5 +1285,6 @@ module.exports = {
     llenarCalendario,
     getMotivosNutriologo,
     fechasUpdate,
-    getFechas
+    getFechas,
+    getReagendaciones
 };

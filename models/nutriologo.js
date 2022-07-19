@@ -90,7 +90,7 @@ const NutrilogoSchema = Schema({
         default: new Date()
     },
     precio: {
-        type: Number,
+        type: Number
     },
     indicaciones: {
         type: String

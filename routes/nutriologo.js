@@ -12,7 +12,6 @@ const {
     postPredeterminado,
     getPredeterminados,
     getPredeterminado,
-    putActualizarDatos,
     putPredeterminado,
     deletePredeterminado,
     getClientData,
@@ -22,7 +21,10 @@ const {
     llenarCalendario,
     getMotivosNutriologo,
     fechasUpdate,
-    getFechas
+    getFechas,
+    getReagendaciones,
+    solicitarReagendacion,
+    rechazarSolicitud
 } = require('../controllers/nutriologo');
 
 const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
@@ -96,5 +98,17 @@ router.get('/fechas', getFechas);
 
 //Marcar vistas las notificaciones
 router.put('/notificaciones', verNotificaciones);
+
+//Ver solicitudes de reagendación
+router.get('/reagendar', getReagendaciones);
+
+//Solicitar reagendación
+router.post('/reagendar', solicitarReagendacion);
+
+//Denegar reagendación
+router.put('/denegar', rechazarSolicitud);
+
+// //Aceptar reagendación
+// router.put('/aceptar', aceptarSolicitud);
 
 module.exports = router;

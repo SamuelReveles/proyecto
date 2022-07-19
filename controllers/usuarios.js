@@ -1,8 +1,9 @@
 //Librerías externas
 const { response } = require('express');
-const bcryptjs = require('bcryptjs');
 const PDF = require('pdfkit-construct');
 const format = require('date-fns/format');
+const differenceInDays = require('date-fns/differenceInDays');
+const isAfter = require('date-fns/isAfter');
 const es = require('date-fns/locale/es');
 const sgMail = require('@sendgrid/mail');
 const mjml2html = require('mjml');
@@ -707,6 +708,7 @@ const getInfo = async (req, res = response)  => {
     }
 }
 
+//Ver servicios de los usuarios de la cuenta
 const getServicios = async (req, res = response) => {
 
     try {
@@ -719,6 +721,7 @@ const getServicios = async (req, res = response) => {
         for await (let servicio of servicios) {
             if(servicio.id_paciente == id){
                 
+                //Fecha de la cita
                 const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
                 const fechaArr = fecha.split('-');
                 const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
@@ -732,7 +735,8 @@ const getServicios = async (req, res = response) => {
                     id_nutriologo: servicio.id_nutriologo,
                     nutriologo: nutriologo.nombre,
                     imagen: nutriologo.imagen,
-                    activo: servicio.vigente
+                    activo: servicio.vigente,
+                    reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                 });
             }
             if(extra1) {
@@ -751,7 +755,8 @@ const getServicios = async (req, res = response) => {
                         id_nutriologo: servicio.id_nutriologo,
                         nutriologo: nutriologo.nombre,
                         imagen: nutriologo.imagen,
-                        activo: servicio.vigente
+                        activo: servicio.vigente,
+                        reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
             }
@@ -771,13 +776,92 @@ const getServicios = async (req, res = response) => {
                         id_nutriologo: servicio.id_nutriologo,
                         nutriologo: nutriologo.nombre,
                         imagen: nutriologo.imagen,
-                        activo: servicio.vigente
+                        activo: servicio.vigente,
+                        reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
             }
         }
 
         res.status(200).json(serviciosUsuario);
+
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Error al encontrar al cliente, verifique el id'
+        });
+    }
+
+}
+
+//Ver servicios de los usuarios de la cuenta
+const getReagendaciones = async (req, res = response) => {
+
+    try {
+        const id = req.id;
+        let solicitudesUsuario = [];
+        const { extra1, extra2, nombre } = await Cliente.findById(id);
+
+        const solicitudes = await Reagendacion.find();
+
+        for await (let solicitud of solicitudes) {
+            if(solicitud.remitente == id){
+                
+                const fecha = format(solicitud.fecha_nueva, 'dd-MMMM-yyyy', {locale: es});
+                const fechaArr = fecha.split('-');
+                const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+                const nutriologo = await Nutriologo.findById(solicitud.emisor);
+
+                solicitudesUsuario.push({
+                    solicitud: solicitud._id,
+                    emisor: nutriologo.nombre,
+                    remitente: nombre,
+                    fecha_nueva: fechaString,
+                    mensaje: solicitud.mensaje
+                });
+            }
+            if(extra1) {
+                if (String(extra1) == String(solicitud.remitente)){
+                    const fecha = format(solicitud.fecha_nueva, 'dd-MMMM-yyyy', {locale: es});
+                    const fechaArr = fecha.split('-');
+                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+    
+                    const nutriologo = await Nutriologo.findById(solicitud.emisor);
+                    const paciente = await Extra.findById(extra1);
+    
+                    solicitudesUsuario.push({
+                        solicitud: solicitud._id,
+                        emisor: nutriologo.nombre,
+                        remitente: paciente.nombre,
+                        fecha_nueva: fechaString,
+                        mensaje: solicitud.mensaje
+                    });
+                }
+            }
+            if(extra2) {
+                if (String(extra2) == String(solicitud.remitente)){
+
+                    const fecha = format(solicitud.fecha_nueva, 'dd-MMMM-yyyy', {locale: es});
+                    const fechaArr = fecha.split('-');
+                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+    
+                    const nutriologo = await Nutriologo.findById(solicitud.emisor);
+                    const paciente = await Extra.findById(extra2);
+    
+                    solicitudesUsuario.push({
+                        solicitud: solicitud._id,
+                        emisor: nutriologo.nombre,
+                        remitente: paciente.nombre,
+                        fecha_nueva: fechaString,
+                        mensaje: solicitud.mensaje
+                    });
+                }
+            }
+        }
+
+        res.status(200).json(solicitudesUsuario);
 
     } catch (error) {
         console.log(error);
@@ -846,6 +930,7 @@ const usuariosUpdate = async (req, res = response) => {
 
 //Motrar las dietas previas
 const getDietas = async (req, res = response) => {
+
     try {
 
         //Id del cliente
@@ -879,11 +964,13 @@ const getDietas = async (req, res = response) => {
         res.status(200).json(dietas);
 
     } catch (error) {
+
         console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Error al encontrar la lista de dietas'
         });
+
     }
 }
 
@@ -1077,11 +1164,11 @@ const solicitarReagendacion = async (req, res = response) => {
         const id_emisor = req.id;
 
         //Datos del servicio y reagendación
-        const { id_servicio, fecha, msg } = req.body;
+        let { id_servicio, fecha, msg } = req.body;
 
         const { id_nutriologo, fecha_cita } = await Servicio.findById(id_servicio);
 
-        if(fecha < new Date()) { //Por si ocurre un bug
+        if(isAfter(fecha, new Date())) { //Por si ocurre un bug
             res.status(400).json({
                 success: false,
                 msg: 'Fecha inválida'
@@ -1089,7 +1176,7 @@ const solicitarReagendacion = async (req, res = response) => {
             return;
         }
 
-        if(fecha < fecha_cita) { //Por si se quiere reagendar una vez tomada la cita
+        if(isAfter(fecha, fecha_cita)) { //Por si se quiere reagendar una vez tomada la cita
             res.status(400).json({
                 success: false,
                 msg: 'Ya fue tomada la cita'
@@ -1109,6 +1196,7 @@ const solicitarReagendacion = async (req, res = response) => {
         await reagendacion.save();
 
         res.status(201).json(reagendacion);
+
     } catch (error) {
 
         console.log(error);
@@ -1276,5 +1364,6 @@ module.exports = {
     estadoVerDatos,
     getMotivosUsuario,
     getServicios,
-    getDietas
+    getDietas,
+    getReagendaciones
 }

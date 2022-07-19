@@ -25,7 +25,8 @@ const {
     estadoVerDatos,
     getServicios,
     getMotivosUsuario,
-    getDietas
+    getDietas,
+    getReagendaciones
 } = require('../controllers/usuarios');
 
 //Paypal
@@ -85,6 +86,9 @@ router.post('/pagos', ordenPagada);
 
 //Crear orden de paypal (paso para el check-in)
 router.post('/crearOrden', [validarBanCliente], crearOrden);
+
+//Ver solicitudes de reagendación
+router.get('/reagendar', getReagendaciones);
 
 //Solicitar reagendación
 router.post('/reagendar', solicitarReagendacion);

@@ -15,7 +15,7 @@ const Notificacion = require('../models/notificacion');
 const crearOrden = async(req, res = response) => {
     
     //Extraer datos necesarios para el pago
-    const { id } = req.body;
+    const { id, id_extra = '' } = req.body;
 
     const { precio } = await Nutriologo.findById(id);
 
@@ -37,10 +37,10 @@ const crearOrden = async(req, res = response) => {
                 },
             ],
             application_context: {
-                brand_name: "jopaka.com",
+                brand_name: "Jopaka",
                 landing_page: "LOGIN",
                 user_action: "PAY_NOW",
-                return_url: "http://localhost:8080/api/invitado/capturarOrden",
+                return_url: "http://localhost:8080/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra,
                 cancel_url: "http://localhost:8080"
             }
         };
@@ -69,7 +69,7 @@ const crearOrden = async(req, res = response) => {
 const capturarOrden = async(req, res = response) => {
     try {
         //Datos del pago 
-        const { token } = req.query;
+        const { token, id_nutriologo, id_extra = '', id } = req.query;
 
         const response = await axios.post(process.env.PAYPAL_URLCALL + '/v2/checkout/orders/' + token + '/capture', {}, {
             auth: {
@@ -78,8 +78,23 @@ const capturarOrden = async(req, res = response) => {
             },
         });
         
-        res.status(200).json(response.data);
+        if(response.data.status === 'COMPLETED') {
+            const { 
+                status,
+                success,
+                historial,
+                servicio } = await ordenPagada(id, id_extra ,id_nutriologo);
+
+                res.status(status).json({
+                    success,
+                    historial,
+                    servicio
+                });
+        }
+        else throw new Error('Fallo al hacer el pago');
+
     } catch (error) {
+        console.log(error);
         res.status(400).json({ 
             success: false,
             msg: 'Hubo un error al ejecutar el pago'
@@ -92,17 +107,9 @@ const cancelarOrden = async(req, res = response) => {
 
 }
 
-const ordenPagada = async(req, res = response) => {
+const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
            
     try {
-        let id = req.id;
-
-        let { 
-            id_extra = ''
-            //horario
-        } = req.body;
-
-        let id_nutriologo = req.body.id_nutriologo;
 
         //Si es para un extra, se cambia id y se cambia el objeto
         const cliente = await Cliente.findById(id);
@@ -203,17 +210,19 @@ const ordenPagada = async(req, res = response) => {
         //Crear el evento de calendar
         await crearEvento(servicio.fecha_inicio, id, id_nutriologo, servicio._id);
         
-        res.status(200).json({
+        return{
+            status: 200,
             historial: cliente.historial_pagos, 
+            success: true,
             servicio
-        });
+        };
 
     } catch (error) {
         console.log(error);
-        res.status(400).json({
-            success: false,
-            msg: 'Hubo un error al crear servicio o historial'
-        });
+        return{
+            status: 400,
+            success: false
+        };
     }
 }
 
