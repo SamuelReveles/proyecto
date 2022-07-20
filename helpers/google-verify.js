@@ -33,19 +33,23 @@ async function googleVerify(token = '') {
 
 }
 
-async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, idServicio) {
+async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, idServicio, extra = '') {
 
   try {
     const nutriologo = await Nutriologo.findById(idNutriologo);
     const cliente = await Cliente.findById(idCliente);
+
+    let nombre = cliente.nombre;
+
+    if(extra != '') nombre = extra;
   
     //Hora de finalización de la llamada
-    let hora_cierre = new Date();
+    let hora_cierre = new Date(hora_inicio);
     hora_cierre.setMinutes(hora_inicio.getMinutes() + 30);
   
     const event = {
         summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
-        description: 'Evento de llamada para la atención del servicio de nutrición de ' + cliente.nombre + 
+        description: 'Evento de llamada para la atención del servicio de nutrición de ' + nombre + 
         '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
         start: {
           dateTime: hora_inicio,

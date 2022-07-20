@@ -311,13 +311,19 @@ const deleteNotificaciones = async(req, res = response) => {
 
 const vigenciaServicios = async(req, res = response) => {
     try {
-        const servicios = await Servicio.find();
+        // const servicios = await Servicio.find();
 
-        for await (const servicio of servicios){
-            if(servicio.fecha_finalizacion < new Date() && servicio.vigente === true) {
-                servicio.vigente = false;
-                await Servicio.findByIdAndUpdate(servicio._id, servicio);
-            }
+        // for await (const servicio of servicios){
+        //     if(servicio.fecha_finalizacion < new Date() && servicio.vigente === true) {
+        //         servicio.vigente = false;
+        //         await Servicio.findByIdAndUpdate(servicio._id, servicio);
+        //     }
+        // }
+
+        const nutriologos = await Nutriologo.find();
+
+        for await (const nutriologo of nutriologos) {
+            await Nutriologo.findByIdAndUpdate(nutriologo._id, {fechaDisponible : []});
         }
         
         res.status(200).json({

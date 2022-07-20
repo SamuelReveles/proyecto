@@ -10,12 +10,13 @@ const Historial_pago = require('../models/historial_pago');
 const Nutriologo = require('../models/nutriologo');
 const Cliente = require('../models/cliente');
 const Servicio = require('../models/servicio');
+const Extra = require('../models/extra');
 const Notificacion = require('../models/notificacion');
 
 const crearOrden = async(req, res = response) => {
     
     //Extraer datos necesarios para el pago
-    const { id, id_extra = '' } = req.body;
+    const { id, id_extra = '', dia, hora } = req.body;
 
     const { precio } = await Nutriologo.findById(id);
 
@@ -40,7 +41,8 @@ const crearOrden = async(req, res = response) => {
                 brand_name: "Jopaka",
                 landing_page: "LOGIN",
                 user_action: "PAY_NOW",
-                return_url: "http://localhost:8080/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra,
+                return_url: "http://localhost:8080/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra +
+                "&dia=" + dia + '&hora=' + hora,
                 cancel_url: "http://localhost:8080"
             }
         };
@@ -69,7 +71,7 @@ const crearOrden = async(req, res = response) => {
 const capturarOrden = async(req, res = response) => {
     try {
         //Datos del pago 
-        const { token, id_nutriologo, id_extra = '', id } = req.query;
+        const { token, id_nutriologo, id_extra = '', id, dia, hora } = req.query;
 
         const response = await axios.post(process.env.PAYPAL_URLCALL + '/v2/checkout/orders/' + token + '/capture', {}, {
             auth: {
@@ -83,7 +85,7 @@ const capturarOrden = async(req, res = response) => {
                 status,
                 success,
                 historial,
-                servicio } = await ordenPagada(id, id_extra ,id_nutriologo);
+                servicio } = await ordenPagada(id, id_extra ,id_nutriologo, dia, hora);
 
                 res.status(status).json({
                     success,
@@ -107,14 +109,14 @@ const cancelarOrden = async(req, res = response) => {
 
 }
 
-const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
+const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
            
     try {
 
         //Si es para un extra, se cambia id y se cambia el objeto
         const cliente = await Cliente.findById(id);
 
-        let { precio, nombreCompleto, ingresos } = await Nutriologo.findById(id_nutriologo);
+        let { precio, nombreCompleto, ingresos, fechaDisponible } = await Nutriologo.findById(id_nutriologo);
 
         //Crear objeto a añadir en el registro de pagos
         const historial = new Historial_pago(
@@ -125,6 +127,9 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
 
         //Nuevos ingresos del nutriólogo
         ingresos += (precio * 0.95); // Rebaja de comisión de Paypal
+
+        //Marcar fecha como ocupada
+        fechaDisponible[dia].hora[hora] = false;
 
         //Guardar en el registro del cliente
         let historial_cliente = [];
@@ -141,14 +146,15 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
         notificaciones.push(notificacion);
         cliente.notificaciones = notificaciones;
 
-        await Nutriologo.findByIdAndUpdate(id_nutriologo, {ingresos: ingresos})
+        await Nutriologo.findByIdAndUpdate(id_nutriologo, {ingresos: ingresos, fechaDisponible: fechaDisponible})
         await Cliente.findByIdAndUpdate(id, cliente);
 
         //Crear servicio
-        //const fecha_cita = fechaDisponible[fechaDisponible.findIndex(horario)]; //Posible error al convertir con objeto clase fecha
+        const fecha_cita = fechaDisponible[dia].date[hora];
+        console.log(fecha_cita);
 
         //Fecha_cita + 30 días
-        let fecha_finalizacion = new Date();
+        let fecha_finalizacion = new Date(fecha_cita);
         fecha_finalizacion.setDate(fecha_finalizacion.getDate() + 30);
 
         let servicio;
@@ -178,7 +184,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
                 servicio = new Servicio({
                     id_paciente: id_extra,
                     id_nutriologo,
-                    fecha_cita: new Date(),
+                    fecha_cita,
                     fecha_finalizacion: fecha_finalizacion,
                 });
             } 
@@ -186,7 +192,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
                 servicio = new Servicio({
                     id_paciente: id,
                     id_nutriologo,
-                    fecha_cita: new Date(),
+                    fecha_cita,
                     fecha_finalizacion: fecha_finalizacion,
                 });
             }
@@ -195,9 +201,8 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
             await servicio.save();
         }
         else {
-            servicio.fecha_cita = new Date();
+            servicio.fecha_cita = fecha_cita;
             servicio.fecha_finalizacion = fecha_finalizacion;
-            //servicio.fecha_finalizacion += 30;
             servicio.calendario = false;
             servicio.llenado_datos = false;
             servicio.reportesCliente = 2;
@@ -208,7 +213,12 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo) => {
         }
 
         //Crear el evento de calendar
-        await crearEvento(servicio.fecha_inicio, id, id_nutriologo, servicio._id);
+        if(id_extra !== ''){
+            const { nombre } = await Extra.findById(id_extra);
+            await crearEvento(fecha_cita, id, id_nutriologo, servicio._id, nombre);
+        }
+        else 
+        await crearEvento(fecha_cita, id, id_nutriologo, servicio._id);
         
         return{
             status: 200,

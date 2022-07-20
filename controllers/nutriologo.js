@@ -13,6 +13,8 @@ const isSaturday = require('date-fns/isSaturday');
 const isSunday = require('date-fns/isSunday');
 const addDays = require('date-fns/addDays');
 const format = require('date-fns/format');
+const setHours = require('date-fns/setHours');
+const setMinutes = require('date-fns/setMinutes');
 const es = require('date-fns/locale/es');
 
 //helpers
@@ -36,7 +38,7 @@ const Historial = require('../models/historial');
 const nutriologoPost = async (req, res = response) => {
 
     try {
-            
+
         //Foto de perfil default
         let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png';
 
@@ -93,7 +95,7 @@ const nutriologoUpdate = async (req, res = response) => {
             //Si la foto de perfil NO es la default se borra
             if(nutriologo.imagen != 'https://res.cloudinary.com/jopaka-com/image/upload/v1650666830/doctor_samuel_zaqdnu.png'){
                 //Borrar la imagen anterior de cloudinary
-            
+
                 //Split del nombre de la imagen
                 const nombreArr = nutriologo.imagen.split('/');
                 const nombre = nombreArr[nombreArr.length - 1];
@@ -164,10 +166,13 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
 //Actualización de fechas disponibles
 const fechasUpdate = async (req, res = response) => {
-    
+
     try {
 
         const id = req.id;
+        let fechas = [];
+
+        let auxDia;
 
         const nutriologo = await Nutriologo.findById(id);
 
@@ -176,53 +181,141 @@ const fechasUpdate = async (req, res = response) => {
 
         let today = addDays(new Date(), 1); //Iniciar desde mañana
 
-        console.log(config);
+        let newConfig = [];
+        for (let dia of config) {
+            const valores = Object.values(dia);
+            const newDia = [];
+            for (const hora of valores) {
+                if(hora === false) newDia.push(null);
+                else newDia.push(hora);
+            }
+            newConfig.push(newDia);
+        }
 
-        if(!fechasDisponibles) { //Si se configura por primera vez
+        if(fechasDisponibles.length === 0) { //Si se configura por primera vez
             fechasDisponibles = [];
+        
             //For con 30 días de posible anticipo
             for (let i = 0; i < 30; i++) {
+                fechas = [];
 
                 if(isMonday(today)) {
+
+                    for (let j = 7; j < 21; j++) {
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 0);
+                        fechas.push(auxDia);
+
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 30);
+                        fechas.push(auxDia);
+                    }
+
                     fechasDisponibles.push({
-                        fecha: today,
-                        horario: config[0]
+                        hora: newConfig[0],
+                        date: fechas
                     });
                 }
                 else if(isTuesday(today)) {
+
+                    for (let j = 7; j < 21; j++) {
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 0);
+                        fechas.push(auxDia);
+
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 30);
+                        fechas.push(auxDia);
+                    }
+
                     fechasDisponibles.push({
-                        fecha: today,
-                        horario: config[1]
+                        hora: newConfig[1],
+                        date: fechas
                     });
                 }
                 else if(isWednesday(today)) {
+
+                    for (let j = 7; j < 21; j++) {
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 0);
+                        fechas.push(auxDia);
+
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 30);
+                        fechas.push(auxDia);
+                    }
+
                     fechasDisponibles.push({
-                        fecha: today,
-                        horario: config[2]
+                        hora: newConfig[2],
+                        date: fechas
                     });
                 }
                 else if(isThursday(today)) {
+
+                    for (let j = 7; j < 21; j++) {
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 0);
+                        fechas.push(auxDia);
+
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 30);
+                        fechas.push(auxDia);
+                    }
+
                     fechasDisponibles.push({
-                        fecha: today,
-                        horario: config[3]
+                        hora: newConfig[3],
+                        date: fechas
                     });
                 }
                 else if(isFriday(today)) {
+
+                    for (let j = 7; j < 21; j++) {
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 0);
+                        fechas.push(auxDia);
+
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 30);
+                        fechas.push(auxDia);
+                    }
+
                     fechasDisponibles.push({
-                        fecha: today,
-                        horario: config[4]
+                        hora: newConfig[4],
+                        date: fechas
                     });
                 }
                 else if(isSaturday(today)) {
+
+                    for (let j = 7; j < 21; j++) {
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 0);
+                        fechas.push(auxDia);
+
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 30);
+                        fechas.push(auxDia);
+                    }
+
                     fechasDisponibles.push({
-                        fecha: today,
-                        horario: config[5]
+                        hora: newConfig[5],
+                        date: fechas
                     });
                 }
                 else if(isSunday(today)) {
+
+                    for (let j = 7; j < 21; j++) {
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 0);
+                        fechas.push(auxDia);
+
+                        auxDia = setHours(today, j);
+                        auxDia = setMinutes(auxDia, 30);
+                        fechas.push(auxDia);
+                    }
+
                     fechasDisponibles.push({
-                        fecha: today,
-                        horario: config[6]
+                        hora: newConfig[6],
+                        date: fechas
                     });
                 }
                 today = addDays(today, 1); //Avanzar de dia
@@ -233,78 +326,84 @@ const fechasUpdate = async (req, res = response) => {
             let nuevasFechasDisponibles = [];
             //For con 30 días de posible anticipo
             for (let i = 0; i < 30; i++) {
-                let dia = [];
+
+                let obj = {
+                    hora: [],
+                    date: []
+                };
+
+                obj.date = fechasDisponibles[i].date;
+                let hora = [];
+
                 let diaConfig;
-
-                /* Operaciones de disponibilidad
-                    True - Disponible
-                    False - Ocupada
-
-                    Si no está marcada como disponible, se cuenta como ocupada
-                    Config = true & fechasDisponibles = false -> False
-                    Config = false & fechasDisponibles = false -> False
-
-                    Config = false & fechasDisponibles = true -> False
-                    Config = true & fechasDisponibles = true -> True
-
-                    AND
-                */
 
                 //Configurar la fecha según el día
                 if(isMonday(today)) {
-                    diaConfig = config[0]; //Configurando como lunes
-                    for (let j = 0; j < fechasDisponibles.length; j++) {
-                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    diaConfig = newConfig[0]; //Configurando como lunes
+                    for (let j = 0; j < fechasDisponibles[0].hora.length ; j++) {
+                        // Fecha ocupada
+                        if(fechasDisponibles[0].hora[j] === false) hora.push(false);
+                        else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isTuesday(today)) {
-                    diaConfig = config[1]; //Configurando como martes
-                    for (let j = 0; j < fechasDisponibles.length; j++) {
-                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    diaConfig = newConfig[1]; //Configurando como martes
+                    for (let j = 0; j < fechasDisponibles[1].hora.length ; j++) {
+                        // Fecha ocupada
+                        if(fechasDisponibles[1].hora[j] === false) hora.push(false);
+                        else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isWednesday(today)) {
-                    diaConfig = config[2]; //Configurando como miércoles
-                    for (let j = 0; j < fechasDisponibles.length; j++) {
-                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    diaConfig = newConfig[2]; //Configurando como miércoles
+                    for (let j = 0; j < fechasDisponibles[2].hora.length ; j++) {
+                        // Fecha ocupada
+                        if(fechasDisponibles[2].hora[j] === false) hora.push(false);
+                        else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isThursday(today)) {
-                    diaConfig = config[3]; //Configurando como jueves
-                    for (let j = 0; j < fechasDisponibles.length; j++) {
-                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    diaConfig = newConfig[3]; //Configurando como jueves
+                    for (let j = 0; j < fechasDisponibles[3].hora.length ; j++) {
+                        // Fecha ocupada
+                        if(fechasDisponibles[3].hora[j] === false) hora.push(false);
+                        else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isFriday(today)) {
-                    diaConfig = config[4]; //Configurando como viernes
-                    for (let j = 0; j < fechasDisponibles.length; j++) {
-                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    diaConfig = newConfig[4]; //Configurando como viernes
+                    for (let j = 0; j < fechasDisponibles[4].hora.length ; j++) {
+                        // Fecha ocupada
+                        if(fechasDisponibles[4].hora[j] === false) hora.push(false);
+                        else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isSaturday(today)) {
-                    diaConfig = config[5]; //Configurando como sábado
-                    for (let j = 0; j < fechasDisponibles.length; j++) {
-                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    diaConfig = newConfig[5]; //Configurando como sábado
+                    for (let j = 0; j < fechasDisponibles[5].hora.length ; j++) {
+                        // Fecha ocupada
+                        if(fechasDisponibles[5].hora[j] === false) hora.push(false);
+                        else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isSunday(today)) {
-                    diaConfig = config[6]; //Configurando como domingo
-                    for (let j = 0; j < fechasDisponibles.length; j++) {
-                        dia[j] = (fechasDisponibles[j] && diaConfig[j]);
+                    diaConfig = newConfig[6]; //Configurando como domingo
+                    for (let j = 0; j < fechasDisponibles[6].hora.length ; j++) {
+                        // Fecha ocupada
+                        if(fechasDisponibles[6].hora[j] === false) hora.push(false);
+                        else hora.push(diaConfig[j]);
                     }
                 }
-                nuevasFechasDisponibles.push({
-                    fecha: today,
-                    horario: dia
-                });
+                obj.hora = hora;
+                nuevasFechasDisponibles.push(obj);
                 today = addDays(today, 1); //Avanzar de dia
             }
             fechasDisponibles = nuevasFechasDisponibles;
         }
-        
-        // nutriologo.configuracion_fechas = config;
-        // nutriologo.fechaDisponible = fechasDisponibles;
-        // await Nutriologo.findByIdAndUpdate(id, nutriologo);
+
+        nutriologo.configuracion_fechas = config;
+        nutriologo.fechaDisponible = fechasDisponibles;
+        await Nutriologo.findByIdAndUpdate(id, nutriologo);
 
         res.status(200).json(fechasDisponibles);
 
@@ -422,7 +521,7 @@ const llenarCalendario = async (req, res = response) => {
         res.status(400).json({
             success: false,
             msg: 'Error al llenar el calendario del paciente'
-        })   
+        })
     }
 }
 
@@ -437,7 +536,7 @@ const postPredeterminado = async (req, res = response) => {
         const predeterminado = new Predeterminado(req.body.nombre, req.body.texto);
 
         //Guardar dentro del arreglo del nutriólogo
-        const nutriologo = await Nutriologo.findById(id); 
+        const nutriologo = await Nutriologo.findById(id);
 
         let predeterminados = nutriologo.predeterminados;
 
@@ -529,7 +628,7 @@ const putPredeterminado = async (req, res = response) => {
             resultado = alimento;
             break;
         }
-    } 
+    }
 
     if(!resultado){
         res.status(400).json({
@@ -651,7 +750,7 @@ const getClientData = async (req, res = response) => {
                     const idDato = datoConstante[datoConstante.length - 1];
                     datos = await Dato.findById(idDato);
                 }
-                
+
                 res.status(200).json({nombre, apellidos, datos, imagen});
             }
             else{
@@ -679,7 +778,7 @@ const getClientData = async (req, res = response) => {
                     const idDato = datoConstante[datoConstante.length - 1];
                     datos = await Dato.findById(idDato);
                 }
-                
+
                 res.status(200).json({nombre, apellidos, datos});
             }
             else{
@@ -702,7 +801,7 @@ const getClientData = async (req, res = response) => {
 //Update datos del clientes
 const updateClientData = async (req, res = response) => {
 
-    
+
     try {
         //Extraer datos del query
         const id_servicio = req.body.id;
@@ -766,7 +865,7 @@ const updateClientData = async (req, res = response) => {
     } catch (error) {
         console.log(error);
         res.status(400).json({
-            success: false, 
+            success: false,
             msg: 'No se ha podido actualizar'
         });
     }
@@ -782,7 +881,7 @@ const getPacientes = async (req, res  = response) => {
         const servicios = await Servicio.find();
         for await (const servicio of servicios) {
             if(servicio.id_nutriologo == id){
-                
+
                 //Si el paciente es cliente
                 let paciente = await Cliente.findById(servicio.id_paciente);
                 if(paciente) {
@@ -790,7 +889,7 @@ const getPacientes = async (req, res  = response) => {
                     const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
                     const fechaArr = fecha.split('-');
                     const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-                   
+
                     pacientes.push({
                         nombre: paciente.nombre,
                         apellidos: paciente.apellidos,
@@ -826,16 +925,16 @@ const getPacientes = async (req, res  = response) => {
     } catch (error) {
         console.log(error);
         res.status(400).json({
-            success: false, 
+            success: false,
             msg: 'No se encontró al nutriologo, verifique el id'
-        });        
+        });
     }
 
 }
 
 //Reportar a un paciente
 const reportar = async (req, res = response) => {
-    
+
     try {
         //Extraer datos del reporte
         const { idServicio, idReporte, msg } = req.body;
@@ -849,7 +948,7 @@ const reportar = async (req, res = response) => {
                 msg: 'Límite de reportes'
             });
             return;
-        } 
+        }
 
         const idCliente = servicio.id_paciente;
 
@@ -881,7 +980,7 @@ const reportar = async (req, res = response) => {
 
         let reportes = [];
         if(cliente.reportes) reportes = cliente.reportes;
-        
+
         reportes.push(reporte);
         cliente.reportes = reportes;
 
@@ -919,7 +1018,7 @@ const reportar = async (req, res = response) => {
 
             const admins = await Administrador.find();
             for await (const admin of admins) {
-                
+
                 let notificaciones = [];
 
                 if(admin.notificaciones) notificaciones = admin.notificaciones;
@@ -937,7 +1036,7 @@ const reportar = async (req, res = response) => {
 
             const admins = await Administrador.find();
             for await (const admin of admins) {
-                
+
                 let notificaciones = [];
 
                 if(admin.notificaciones) notificaciones = admin.notificaciones;
@@ -973,13 +1072,9 @@ const getInfo = async (req, res = response) => {
         //Id del nutriologo
         const id = req.id;
 
-        const solicitudes = await Reagendacion.aggregate([
-            {$match: {$and: [{'remitente':id}, {'fecha_finalizacion': {$gt: new Date()}}]}}
-        ])
-
         const nutriologo = await Nutriologo.findById(id);
 
-        res.status(200).json({nutriologo, solicitudes});
+        res.status(200).json(nutriologo);
     } catch (error) {
         res.status(400).json({
             success: false,
@@ -995,7 +1090,7 @@ const nutriologoDelete = async (req, res = response) => {
 
     try {
         await Nutriologo.findByIdAndDelete(id);
-        
+
         res.status(201).json({
             success: true,
             msg: 'Usuario eliminado correctamente'
@@ -1018,7 +1113,7 @@ const getFechas = async(req, res = response) =>{
         res.status(200).json(configuracion_fechas);
 
     } catch (error) {
-        
+
     }
 }
 
@@ -1044,7 +1139,7 @@ const updateFechas = async (req, res = response) => {
             [false, true, false, true], 7
             [true, false, true, false...], 8
         ]
-        */ 
+        */
 
         nutriologo.configuracion_fechas = req.body.fechas;
         await Nutriologo.findById(id);
@@ -1052,13 +1147,13 @@ const updateFechas = async (req, res = response) => {
         await fechasUpdate(id);
 
     } catch (error) {
-        
+
     }
 }
 
 //Solicitud de reagendación POST
 const solicitarReagendacion = async (req, res = response) => {
-    
+
     try {
         //Emisor
         const id_emisor = req.id;
@@ -1087,7 +1182,7 @@ const solicitarReagendacion = async (req, res = response) => {
 }
 
 const getReagendaciones = async (req, res = response) => {
-    
+
     try {
 
         const id = req.id;
@@ -1150,7 +1245,7 @@ const rechazarSolicitud = async (req, res = response) => {
                     $match: {$or: [{'extra1':reagendacion.emisor}, {'extra2':reagendacion.emisor}]}
                 }
             )
-        } 
+        }
 
         //Modificar fecha de evento
         cambiarFecha(servicio, nueva_fecha);
@@ -1162,7 +1257,7 @@ const rechazarSolicitud = async (req, res = response) => {
         const notificacion = new Notificacion('Tu solicitud de reagendación ha sido aceptada para el día ' + fechaString);
 
         let notificaciones = [];
-        
+
         //Si es un extra, la notifiación se le asigna al dueño de la cuenta
         if(dueno) {
             notificaciones = dueno.notificaciones;
@@ -1234,25 +1329,25 @@ const aceptarSolicitud = async (req, res = response) => {
 const getMotivosNutriologo = async(req, res = response) => {
     try {
         let motivosNutriologo = [];
-        
+
         let temporal = await Motivo.findById('624536db33d1ed94d196ec61');
         motivosNutriologo.push(temporal);
-        
+
         temporal = await Motivo.findById('624536e733d1ed94d196ec63');
         motivosNutriologo.push(temporal);
-        
+
         temporal = await Motivo.findById('624536e733d1ed94d196ec63');
         motivosNutriologo.push(temporal);
-        
+
         temporal = await Motivo.findById('6245371633d1ed94d196ec67');
         motivosNutriologo.push(temporal);
-        
+
         temporal = await Motivo.findById('6245372033d1ed94d196ec69');
         motivosNutriologo.push(temporal);
-        
+
         temporal = await Motivo.findById('6245372833d1ed94d196ec6b');
         motivosNutriologo.push(temporal);
-        
+
         temporal = await Motivo.findById('6245373e33d1ed94d196ec6d');
         motivosNutriologo.push(temporal);
 
