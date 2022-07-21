@@ -55,10 +55,10 @@ router.get('/data', getInfo);
 router.put('/calificar', [validarBanCliente], calificar);
 
 //Dar de alta un nuevo extra
-router.post('/extra/alta', [validarBanCliente], altaExtras);
+router.post('/extra/alta', altaExtras);
 
 //Ver extras del cliente
-router.get('/extra', [validarBanCliente], getExtras);
+router.get('/extra', getExtras);
 
 //Actualizar datos
 router.put('/', [validarBanCliente], usuariosUpdate);

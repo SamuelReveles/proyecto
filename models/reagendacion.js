@@ -21,13 +21,8 @@ const ReagendacionSchema = Schema({
         type: String,
         required: [true, 'El texto es obligatorio']
     },
-    dia: {
-        type: Number,
-        required: true
-    },
     hora: {
-        type: Number,
-        required: true
+        type: Number
     },
     aceptada: {
         type: Boolean,

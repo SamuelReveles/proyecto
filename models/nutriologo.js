@@ -141,6 +141,9 @@ const NutrilogoSchema = Schema({
     notificaciones: [{
         type: Object
     }],
+    calendario: [{
+        type: Object
+    }],
     ingresos: {
         type: Number,
         default: 0

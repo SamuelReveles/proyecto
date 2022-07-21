@@ -7,6 +7,7 @@ const calendar = google.calendar('v3');
 const Nutriologo = require('../models/nutriologo');
 const Cliente = require('../models/cliente');
 const Servicio = require('../models/servicio');
+const Extra = require('../models/extra');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -98,16 +99,47 @@ async function cambiarFecha (idServicio, hora_nueva) {
 
     const idNutriologo = servicio.id_nutriologo;
     const idCliente = servicio.id_paciente;
+
+    let correo, nombre;
   
     const nutriologo = await Nutriologo.findById(idNutriologo);
-    const cliente = await Cliente.findById(idCliente);
-  
+
+    let cliente = await Cliente.findById(idCliente);
+
+    if(cliente){
+      correo = cliente.correo;
+      nombre = cliente.nombre;
+    }
+    //Si es un extra
+    else {
+      const extra = await Extra.findById(idCliente);
+      nombre = extra.nombre;
+
+      const clientes = await Cliente.find();
+
+      for await (const user of clientes) {
+        //Revisar extras
+        if(user.extra1) {
+          if(String(user.extra1) == String(idCliente)){
+            correo = user.correo;
+            break;
+          }
+        }
+        if(user.extra2) {
+          if(String(user.extra2) == String(idCliente)){
+            correo = user.correo;
+            break;
+          }
+        }
+      }
+    }
+
     let hora_cierre = new Date(hora_nueva);
     hora_cierre.setMinutes(hora_nueva.getMinutes() + 30);
   
     const event = {
         summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
-        description: 'Evento de llamada para la atención del servicio de nutrición de ' + cliente.nombre + 
+        description: 'Evento de llamada para la atención del servicio de nutrición de ' + nombre + 
         '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
         start: {
           dateTime: hora_nueva,
@@ -118,7 +150,7 @@ async function cambiarFecha (idServicio, hora_nueva) {
           timeZone: "America/Mexico_City"
         },
         attendees: [
-          {email: cliente.correo},
+          {email: correo},
           {email: nutriologo.correo},
         ],
         conferenceData: {

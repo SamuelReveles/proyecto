@@ -4,18 +4,25 @@ const { response } = require('express');
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
 
+//Date-fns functions
 const isMonday = require('date-fns/isMonday');
 const isTuesday = require('date-fns/isTuesday');
 const isWednesday = require('date-fns/isWednesday');
 const isThursday = require('date-fns/isThursday');
 const isFriday = require('date-fns/isFriday');
+const differenceInDays = require('date-fns/differenceInDays');
+const isAfter = require('date-fns/isAfter');
 const isSaturday = require('date-fns/isSaturday');
 const isSunday = require('date-fns/isSunday');
 const addDays = require('date-fns/addDays');
 const format = require('date-fns/format');
 const setHours = require('date-fns/setHours');
 const setMinutes = require('date-fns/setMinutes');
+const isSameDay = require('date-fns/isSameDay');
 const es = require('date-fns/locale/es');
+
+//Helpers
+const { cambiarFecha } = require('../helpers/google-verify');
 
 //helpers
 const { generarJWT } = require('../helpers/verificacion');
@@ -876,7 +883,8 @@ const getPacientes = async (req, res  = response) => {
 
     try {
         const id = req.id;
-        let pacientes = [];
+        let activos = [];
+        let inactivos = [];
 
         const servicios = await Servicio.find();
         for await (const servicio of servicios) {
@@ -890,7 +898,7 @@ const getPacientes = async (req, res  = response) => {
                     const fechaArr = fecha.split('-');
                     const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
-                    pacientes.push({
+                    const servicioPaciente = {
                         nombre: paciente.nombre,
                         apellidos: paciente.apellidos,
                         imagen: paciente.imagen,
@@ -899,7 +907,11 @@ const getPacientes = async (req, res  = response) => {
                         servicio: servicio.vigente,
                         cita: fechaString,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
-                    });
+                    }
+
+                    if(servicio.vigente === true) activos.push(servicioPaciente);
+                    else inactivos.push(servicioPaciente);
+
                 }
 
                 //Si el paciente es extra
@@ -908,20 +920,34 @@ const getPacientes = async (req, res  = response) => {
                     const fechaArr = fecha.split('-');
                     const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
                     paciente = await Extra.findById(servicio.id_paciente);
-                    pacientes.push({
+
+                    let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1655342366/jopaka_extra_qhsinv.png';
+
+                    if(!paciente) {
+                        paciente = {
+                            nombre: ' Usuario eliminado',
+                            apellidos: ' ',
+                            sexo: 'Ninguno'
+                        };
+                        linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1658381143/sin_cuenta_bcifsz.png';
+                    }
+
+                    const servicioPaciente = {
                         nombre: paciente.nombre,
                         apellidos: paciente.apellidos,
-                        imagen: 'https://res.cloudinary.com/jopaka-com/image/upload/v1655342366/jopaka_extra_qhsinv.png',
+                        imagen: linkImagen,
                         sexo: paciente.sexo,
                         id_servicio: servicio._id,
                         servicio: servicio.vigente,
                         cita: fechaString,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
-                    });
+                    }
+                    if(servicio.vigente === true) activos.push(servicioPaciente);
+                    else inactivos.push(servicioPaciente);
                 }
             }
         }
-        res.status(200).json(pacientes);
+        res.status(200).json({activos, inactivos});
     } catch (error) {
         console.log(error);
         res.status(400).json({
@@ -1159,13 +1185,28 @@ const solicitarReagendacion = async (req, res = response) => {
         const id_emisor = req.id;
 
         //Datos del servicio y reagendación
-        const { id_cliente, id_servicio, fecha, msg } = req.body;
+        let { id_servicio, dia, hora, msg } = req.body;
+
+        const { id_paciente, fecha_cita } = await Servicio.findById(id_servicio);
+
+        const { fechaDisponible } = await Nutriologo.findById(req.id);
+
+        const fecha = fechaDisponible[dia].date[hora];
+
+        if(isAfter(new Date(), fecha)) { //Por si ocurre un bug
+            res.status(400).json({
+                success: false,
+                msg: 'Fecha inválida'
+            });
+            return;
+        }
 
         const reagendacion = new Reagendacion({
             emisor: id_emisor,
-            remitente: id_cliente,
+            remitente: id_paciente,
             id_servicio,
             fecha_nueva: fecha,
+            hora,
             msg
         });
 
@@ -1173,6 +1214,7 @@ const solicitarReagendacion = async (req, res = response) => {
 
         res.status(201).json(reagendacion);
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'No se ha podido realizar la solicitud'
@@ -1286,32 +1328,126 @@ const rechazarSolicitud = async (req, res = response) => {
 const aceptarSolicitud = async (req, res = response) => {
     try {
         //Datos de solicitud
-        const { id_solicitud, fecha } = req.body;
+        const { id_solicitud } = req.body;
 
-        const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: true});
+        const reagendacion = await Reagendacion.findById(id_solicitud);
 
         const servicio = await Servicio.findById(reagendacion.id_servicio);
-        const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+        let nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
 
-        let nueva_fecha = new Date();
-        nueva_fecha.setDate(nueva_fecha.getDate() + 2);
+        let cliente = await Cliente.findById(servicio.id_paciente);
+
+        //Si es un extra
+        if(!cliente) {
+            const clientes = await Cliente.find();
+
+            for await (const user of clientes) {
+                //Revisar extras
+                if(user.extra1) {
+                    if(String(user.extra1) == String(servicio.id_paciente)){
+                        cliente = user;
+                        break;
+                    }
+                }
+                if(user.extra2) {
+                    if(String(user.extra2) == String(servicio.id_paciente)){
+                        cliente = user;
+                        break;
+                    }
+                }
+            }
+        }
 
         //Modificar fecha de evento
-        cambiarFecha(servicio, nueva_fecha);
+        await cambiarFecha(servicio, reagendacion.fecha_nueva);
 
-        const fechaArr = format(nueva_fecha, 'dd-MMMM-yyyy', {locale: es}).split('-');
+        const fechaArr = format(reagendacion.fecha_nueva, 'dd-MMMM-yyyy', {locale: es}).split('-');
         const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
         //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
         const notificacion = new Notificacion('Tu solicitud de reagendación ha sido aceptada para el día ' + fechaString);
         let notificaciones = [];
 
-        if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+        if(cliente.notificaciones) notificaciones = cliente.notificaciones;
 
         notificaciones.push(notificacion);
-        nutriologo.notificaciones = notificaciones;
+        cliente.notificaciones = notificaciones;
 
+        //Modificar la disponibilidad en las fechas del nutriólogo
+        for (let i = 0; i < 30; i++) {
+            if(isSameDay(nutriologo.fechaDisponible[i].date[reagendacion.hora], reagendacion.fecha_nueva)){
+                nutriologo.fechaDisponible[i].hora[reagendacion.hora] = true;
+                break;
+            }
+        }
+
+        //Actualizar calendario del nutriólogo
+
+        const fecha_cita = reagendacion.fecha_nueva;
+
+        let calendario_nutriologo = [];
+        if(nutriologo.calendario) calendario_nutriologo = nutriologo.calendario;
+
+        let { nombre } = await Cliente.findById(servicio.id_paciente);
+
+        if(!nombre) nombre = await Extra.findById(servicio.id_paciente);
+
+        let encontrado = false;
+
+        function comparar(a, b) {
+            if (a.hora < b.hora) return -1;
+            if (b.hora < a.hora) return 1;
+        }
+
+        for (let i = 0; i < calendario_nutriologo.length; i++) {
+            for (let j = 0; j < calendario_nutriologo[i].pacientes.length; j++){
+                if(String(calendario_nutriologo[i].pacientes[j].servicio) == String(reagendacion.id_servicio)){
+                    calendario_nutriologo[i].pacientes.slice(j);
+                }
+            }
+        }
+
+        for (let i = 0; i < calendario_nutriologo.length; i++) {
+            if(calendario_nutriologo[i].dia == fechaString){
+                const hora = format(fecha_cita, 'hh:mm');
+                encontrado = true;
+                calendario_nutriologo[i].pacientes.push({
+                    hora,
+                    servicio: servicio._id,
+                    llamada: servicio.linkMeet,
+                    paciente: nombre
+                });
+                calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
+                break;
+            }
+        }
+
+        if(encontrado === false) {
+            const hora = format(fecha_cita, 'hh:mm');
+            calendario_nutriologo.push({
+                dia: fechaString,
+                date: fecha_cita,
+                pacientes:[{
+                    hora,
+                    servicio: servicio._id,
+                    llamada: servicio.linkMeet,
+                    paciente: nombre
+                }]
+            });
+        }
+
+        calendario_nutriologo = calendario_nutriologo.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        nutriologo.calendario = calendario_nutriologo;
+
+        //Actualizar nutriólogo
         await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+
+        //Actualizar notificaciones del cliente
+        await Cliente.findByIdAndUpdate(cliente._id, cliente);
+
+        //Actualizar servicio
+        await Servicio.findByIdAndUpdate(servicio._id, {fecha_cita: reagendacion.fecha_nueva});
 
         //Eliminar solicitud
         await Reagendacion.findByIdAndDelete(id_solicitud);
@@ -1319,6 +1455,7 @@ const aceptarSolicitud = async (req, res = response) => {
         res.status(201).json(reagendacion);
 
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'No se ha podido aceptar la solicitud'
@@ -1381,5 +1518,6 @@ module.exports = {
     getMotivosNutriologo,
     fechasUpdate,
     getFechas,
-    getReagendaciones
+    getReagendaciones,
+    aceptarSolicitud
 };

@@ -24,7 +24,8 @@ const {
     getFechas,
     getReagendaciones,
     solicitarReagendacion,
-    rechazarSolicitud
+    rechazarSolicitud,
+    aceptarSolicitud
 } = require('../controllers/nutriologo');
 
 const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
@@ -43,7 +44,7 @@ router.use(verificarNutriologo);
 router.put('/', [validarBanNutriologo], nutriologoUpdate);
 
 //Actualizar información de servicio
-router.put('/servicio', [validarBanNutriologo], nutriologoUpdateServicio);
+router.put('/servicio', nutriologoUpdateServicio);
 
 //Eliminar al nutriólogo
 router.delete('/', [validarBanNutriologo], nutriologoDelete);
@@ -108,7 +109,7 @@ router.post('/reagendar', solicitarReagendacion);
 //Denegar reagendación
 router.put('/denegar', rechazarSolicitud);
 
-// //Aceptar reagendación
-// router.put('/aceptar', aceptarSolicitud);
+//Aceptar reagendación
+router.put('/aceptar', aceptarSolicitud);
 
 module.exports = router;
