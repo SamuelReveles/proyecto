@@ -346,7 +346,7 @@ const actualizarFechasNutriologo = async(req, res = response) => {
 
         
         for await (const nutriologo of nutriologos) {
-            let nuevasFechasDisponibles;
+            let fechasDisponibles;
             let config = nutriologo.configuracion_fechas;
             
             let newConfig = [];
@@ -483,8 +483,12 @@ const actualizarFechasNutriologo = async(req, res = response) => {
                 }
 
                 //Eliminar el día anterior
-                nuevasFechasDisponibles.shift();
+                fechasDisponibles.shift();
+                
+                if(String(nutriologo._id) == '628f1cb5fbd9924206752c38')
+                    console.log(fechasDisponibles[0]);
             }
+            // await Nutriologo.findByIdAndUpdate(nutriologo._id, {fechaDisponible: nuevasFechasDisponibles});
         }
 
         res.status(200).json({
@@ -492,6 +496,7 @@ const actualizarFechasNutriologo = async(req, res = response) => {
             msg: 'Fechas actualizadas'
         })
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'Error: ' + error

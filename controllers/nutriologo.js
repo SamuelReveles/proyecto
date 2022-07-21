@@ -899,6 +899,7 @@ const getPacientes = async (req, res  = response) => {
                     const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
                     const servicioPaciente = {
+                        id: paciente._id,
                         nombre: paciente.nombre,
                         apellidos: paciente.apellidos,
                         imagen: paciente.imagen,
@@ -925,6 +926,7 @@ const getPacientes = async (req, res  = response) => {
 
                     if(!paciente) {
                         paciente = {
+                            _id: 'No id',
                             nombre: ' Usuario eliminado',
                             apellidos: ' ',
                             sexo: 'Ninguno'
@@ -933,6 +935,7 @@ const getPacientes = async (req, res  = response) => {
                     }
 
                     const servicioPaciente = {
+                        id: paciente._id,
                         nombre: paciente.nombre,
                         apellidos: paciente.apellidos,
                         imagen: linkImagen,
