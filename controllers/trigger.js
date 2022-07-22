@@ -337,20 +337,23 @@ const actualizarFechasNutriologo = async(req, res = response) => {
 
         
         for await (const nutriologo of nutriologos) {
-            let fechasDisponibles;
-            let config = nutriologo.configuracion_fechas;
-            
-            let newConfig = [];
-            for (let dia of config) {
-                const valores = Object.values(dia);
-                const newDia = [];
-                for (const hora of valores) {
-                    if(hora === false) newDia.push(null);
-                    else newDia.push(hora);
-                }
-                newConfig.push(newDia);
-            }
+
             if(nutriologo.fechaDisponible) {
+
+                let fechasDisponibles;
+                let config = nutriologo.configuracion_fechas;
+                
+                let newConfig = [];
+                for (let dia of config) {
+                    const valores = Object.values(dia);
+                    const newDia = [];
+                    for (const hora of valores) {
+                        if(hora === false) newDia.push(null);
+                        else newDia.push(hora);
+                    }
+                    newConfig.push(newDia);
+                }
+
                 if(nutriologo.fechaDisponible.length !== 0) {
                     fechasDisponibles = nutriologo.fechaDisponible;
                     let fechas = [];
@@ -480,7 +483,6 @@ const actualizarFechasNutriologo = async(req, res = response) => {
 
                     //Eliminar el día anterior
                     fechasDisponibles.shift();
-                    fechasDisponibles.push(fechas);
                 }
                 await Nutriologo.findByIdAndUpdate(nutriologo._id, {fechaDisponible: fechasDisponibles});
             }

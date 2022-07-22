@@ -58,6 +58,10 @@ const ServicioSchema = Schema({
     vigente: {
         type: Boolean,
         default: true
+    },
+    calificacion: {
+        type: Number,
+        default: -1
     }
 });
 

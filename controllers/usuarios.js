@@ -600,6 +600,7 @@ const calificar = async (req, res = response) => {
         });
 
         servicio.calificado = true;
+        servicio.calificacion = calificacion;
         await Servicio.findByIdAndUpdate(id_servicio, servicio);
     }
     )
@@ -745,6 +746,7 @@ const getServicios = async (req, res = response) => {
                     nutriologo: nutriologo.nombre,
                     imagen: nutriologo.imagen,
                     activo: servicio.vigente,
+                    calificacion: servicio.calificacion,
                     reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                 });
             }
@@ -772,6 +774,7 @@ const getServicios = async (req, res = response) => {
                         nutriologo: nutriologo.nombre,
                         imagen: nutriologo.imagen,
                         activo: servicio.vigente,
+                        calificacion: servicio.calificacion,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
