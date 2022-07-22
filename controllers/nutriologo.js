@@ -895,10 +895,6 @@ const getPacientes = async (req, res  = response) => {
                 let paciente = await Cliente.findById(servicio.id_paciente);
                 if(paciente) {
 
-                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
-                    const fechaArr = fecha.split('-');
-                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-
                     const servicioPaciente = {
                         id: paciente._id,
                         nombre: paciente.nombre,
@@ -908,7 +904,7 @@ const getPacientes = async (req, res  = response) => {
                         id_servicio: servicio._id,
                         servicio: servicio.vigente,
                         verDatos: servicio.verDatos,
-                        cita: fechaString,
+                        cita: servicio.fecha_cita,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     }
 
@@ -919,9 +915,6 @@ const getPacientes = async (req, res  = response) => {
 
                 //Si el paciente es extra
                 else {
-                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
-                    const fechaArr = fecha.split('-');
-                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
                     paciente = await Extra.findById(servicio.id_paciente);
 
                     let linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1655342366/jopaka_extra_qhsinv.png';
@@ -945,7 +938,7 @@ const getPacientes = async (req, res  = response) => {
                         id_servicio: servicio._id,
                         servicio: servicio.vigente,
                         verDatos: servicio.verDatos,
-                        cita: fechaString,
+                        cita: servicio.fecha_cita,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     }
                     if(servicio.vigente === true) activos.push(servicioPaciente);
