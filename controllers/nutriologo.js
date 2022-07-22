@@ -536,10 +536,9 @@ const llenarCalendario = async (req, res = response) => {
 // Crear un nuevo alimento predeterminado
 const postPredeterminado = async (req, res = response) => {
 
-    //id del nutriólogo
-    const id = req.id;
-
-    try {
+    try {    
+        //id del nutriólogo
+        const id = req.id;
 
         const predeterminado = new Predeterminado(req.body.nombre, req.body.texto);
 
@@ -1110,10 +1109,9 @@ const getInfo = async (req, res = response) => {
 }
 
 const nutriologoDelete = async (req, res = response) => {
-    //Id del nutriologo
-    const id = req.id;
-
     try {
+        //Id del nutriologo
+        const id = req.id;
         await Nutriologo.findByIdAndDelete(id);
 
         res.status(201).json({
@@ -1136,40 +1134,6 @@ const getFechas = async(req, res = response) =>{
         const { configuracion_fechas } = await Nutriologo.findById(id);
 
         res.status(200).json(configuracion_fechas);
-
-    } catch (error) {
-
-    }
-}
-
-const updateFechas = async (req, res = response) => {
-    //id del nutriologo
-    const id = req.id;
-
-    try {
-        const nutriologo = await Nutriologo.findById(id);
-
-        /*
-        Representaciones de las fechas (significado en horas)
-        ['7:00','7:30', '8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30'...]
-        Índices del arreglo: 0-Lunes, 1-Martes, 2-Miércoles, 3-Jueves, 4-Viernes, 5-Sábado, 6-Domingo
-        [
-            [true, false, true, false...], 0
-            [false, true, false, true], 1
-            [true, false, true, false...], 2
-            [false, true, false, true], 3
-            [true, false, true, false...], 4
-            [false, true, false, true], 5
-            [true, false, true, false...], 6
-            [false, true, false, true], 7
-            [true, false, true, false...], 8
-        ]
-        */
-
-        nutriologo.configuracion_fechas = req.body.fechas;
-        await Nutriologo.findById(id);
-
-        await fechasUpdate(id);
 
     } catch (error) {
 

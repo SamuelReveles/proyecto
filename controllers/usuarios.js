@@ -722,6 +722,7 @@ const getServicios = async (req, res = response) => {
         const servicios = await Servicio.find();
 
         for await (let servicio of servicios) {
+
             if(servicio.id_paciente == id){
                 
                 //Fecha de la cita
@@ -729,7 +730,7 @@ const getServicios = async (req, res = response) => {
                 const fechaArr = fecha.split('-');
                 const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
-                const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+                let nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
 
                 if(!nutriologo) {
                     nutriologo = {
@@ -750,13 +751,14 @@ const getServicios = async (req, res = response) => {
                     reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                 });
             }
+
             if(extra1) {
                 if (String(extra1) == String(servicio.id_paciente)){
                     const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
                     const fechaArr = fecha.split('-');
                     const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
     
-                    const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+                    let nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
                     const paciente = await Extra.findById(extra1);
 
                     if(!nutriologo) {
@@ -785,7 +787,7 @@ const getServicios = async (req, res = response) => {
                     const fechaArr = fecha.split('-');
                     const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
     
-                    const nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
+                    let nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
                     const paciente = await Extra.findById(extra2);
 
                     if(!nutriologo) {
