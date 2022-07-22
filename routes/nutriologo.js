@@ -26,7 +26,8 @@ const {
     solicitarReagendacion,
     rechazarSolicitud,
     aceptarSolicitud,
-    getCalendarioPDF
+    getCalendarioPDF,
+    verServicio
 } = require('../controllers/nutriologo');
 
 const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
@@ -114,6 +115,9 @@ router.put('/denegar', rechazarSolicitud);
 router.put('/aceptar', aceptarSolicitud);
 
 //Ver calendario
-router.get('/calendario', getCalendarioPDF)
+router.get('/calendario', getCalendarioPDF);
+
+//Ver datos del servicio para el chat
+router.get('/servicioChat', verServicio);
 
 module.exports = router;

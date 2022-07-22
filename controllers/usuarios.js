@@ -1464,15 +1464,22 @@ const verServicio = async (req, res = response) => {
         }
         else cliente = paciente;
 
-        const nombre = paciente.nombre;
-        const apellidos = paciente.apellidos;
+        const { nombre, apellidos } = await Nutriologo.findById(servicio.id_nutriologo);
+
         const cliente_id = cliente._id;
         let mensajes = [];
-        if(servicio.mensajes) mensajes = servicio.mensajes;
+        if(servicio.mensajes) {
+            mensajes = servicio.mensajes;
+            for (let i = 0; i < mensajes.length; i++) {
+                mensajes[i].visto = true;
+            }
+            servicio.mensajes = mensajes;
+            await Servicio.findByIdAndUpdate(servicio._id, servicio);
+        }
 
         res.status(200).json({
-            nombre, //Nombre del paciente (con quien está chateando)
-            apellidos, //Apellidos del paciente (con quien está chateando)
+            nombre, //Nombre de con quien está chateando
+            apellidos, //Apellidos de con quien está chateando
             cliente_id, //ID del cliente dueño de la cuenta (enviar en el payload del socket)
             mensajes, //Mensajes contiene los mensajes que hay en el servicio
             servicio: servicio._id //ID del servicio (enviar en el payload del socket)
