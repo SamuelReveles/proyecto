@@ -26,7 +26,8 @@ const {
     getServicios,
     getMotivosUsuario,
     getDietas,
-    getReagendaciones
+    getReagendaciones,
+    verServicio
 } = require('../controllers/usuarios');
 
 //Paypal
@@ -107,5 +108,8 @@ router.get('/servicio', getServicios);
 
 //Marcar vistas las notificaciones
 router.put('/notificaciones', verNotificaciones);
+
+//Ver datos del servicio para el chat
+router.get('/servicioChat', verServicio);
 
 module.exports = router;

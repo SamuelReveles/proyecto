@@ -1,13 +1,11 @@
 class Mensaje {
-    constructor(texto = '', emisor) {
+    
+    constructor(texto = '', nutriologo = false, paciente = false) {
         this.texto = texto,
-        this.emisor = emisor, 
+        this.nutriologo = nutriologo,
+        this.paciente = paciente,
         this.visto = false,
         this.hora = new Date()
-    }
-
-    visto() {
-        this.visto = true;
     }
 
 }

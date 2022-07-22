@@ -4,6 +4,7 @@ const Mensaje = require('../models/mensaje');
 const Cliente = require('../models/cliente');
 const Nutriologo = require('../models/nutriologo');
 const Servicio = require('../models/servicio');
+const jwt = require('jsonwebtoken');
 
 //Helpers
 const { Usuarios } = require('../helpers/usuarios');
@@ -14,43 +15,70 @@ const usuarios = new Usuarios();
 const socketController = (socket) => {
 
     //Conexión, agregar un usuario a la lista de usuarios conectados
-    socket.on('conexion', (id_usuario) => {
-        usuarios.agregarUsuario(socket.id, id_usuario);
+    socket.on('conexion', (payload) => {
+        //Extract jwt from payload
+        const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
+
+        usuarios.agregarUsuario(socket.id, id);
     });
 
     //Eliminar de la lista y cambiar la última conexión
     socket.on('disconnect', async (payload) => {
-        usuarios.borrarUsuario(payload.id_usuario);
+        //Extract jwt from payload
+        const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
 
-        //Agregar la última conexion del usuario
-        let user = await Cliente.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
-
-        if(!user) user = await Nutriologo.findByIdAndUpdate(payload.id_usuario, {ultima_conexion: new Date()});
+        usuarios.borrarUsuario(payload.jwt);
     });
 
 
     //Recibir mensaje
     socket.on('mensaje', async ( payload ) => {
-        const { emisor, receptor, contenido = ' ', id_servicio } = payload;
+        const { contenido = ' ', id_servicio, tipo, cliente = undefined} = payload;
+        const servicio = await Servicio.findById(id_servicio);
 
-        //Identificador de tipo de usuario que recibe el mensaje
-        let type = 'Nutriologo';
+        //Tipo:
+        /*
+            'Nutriologo' o 'Cliente'
+        */
 
-        //Encontrar a quien emite el mensaje
-        let usuarioReceptor = await Nutriologo.findById(receptor);
-        let usuarioEmisor = await Cliente.findById(emisor);
+        /*
+            Si receptor no es undefined - Es enviado desde el nutriólogo y este contiene el ID del cliente
+            Si emisor no es undefined - Es enviado desde el paciente y este contiene el ID del cliente
+        */
+        
+       
+        let usuarioReceptor, usuarioEmisor;
 
-        if(!usuarioReceptor) {
-            usuarioReceptor = await Cliente.findById(receptor);
-            usuarioEmisor = await Nutriologo.findById(emisor);
-            type = 'Cliente';
+        // Si hay receptor, el mensaje viene del nutriólogo y hay que usarlo para actualizar la db
+        if(tipo == 'Nutriólogo') {
+            usuarioReceptor = await Cliente.findById(cliente);
+            usuarioEmisor = await Nutriologo.findById(servicio.id_nutriologo);
+        }
+        else {
+            usuarioEmisor = await Cliente.findById(cliente);
+            usuarioReceptor = await Nutriologo.findById(servicio.id_nutriologo);
         }
 
-        //Crear objeto notificación y mensaje
-        const notificacion = new Notificacion('Nuevo mensaje de ' + usuarioEmisor.nombre + ': ' + contenido);
-        const mensaje = new Mensaje(contenido, emisor);
+        let mensaje;
 
-        const servicio = await Servicio.findById(id_servicio);
+        //Actualizar notificaciones de cliente
+        const notificacion = new Notificacion('Nuevo mensaje de ' + usuarioEmisor.nombre + ': ' + contenido);
+        let { notificaciones } = usuarioReceptor;
+
+        if(!notificaciones) notificaciones = [];
+
+        notificaciones.push(notificacion);
+
+        usuarioReceptor.notificaciones = notificaciones;
+
+        if(tipo == 'Nutriólogo') {
+            mensaje = new Mensaje(contenido, true, false);
+            await Nutriologo.findByIdAndUpdate(usuarioReceptor._id, usuarioReceptor);
+        }
+        else {
+            mensaje = new Mensaje(contenido, false, true);
+            await Nutriologo.findByIdAndUpdate(usuarioReceptor._id, usuarioReceptor);
+        }
 
         let mensajes = [];
         if(servicio.mensajes) mensajes = servicio.mensajes;
@@ -60,17 +88,7 @@ const socketController = (socket) => {
 
         await Servicio.findByIdAndUpdate(servicio._id. servicio);
 
-        //Actualizar las notificaciones del receptor
-        if(usuarioReceptor.notifiaciones) usuarioReceptor.notificaciones.push(notificacion);
-        else {
-            let notificaciones = [notificacion];
-            usuarioReceptor.notificaciones = notificaciones;
-        }
-
-        if(type === 'Nutriologo') await Nutriologo.findByIdAndUpdate(receptor, usuarioReceptor);
-        else await Cliente.findByIdAndUpdate(receptor, usuarioReceptor);
-
-        //Enviar notificación SOLO SE EMITE SI EL USUARIO ESTÁ CONECTADO
+        //Enviar mensaje SOLO SE EMITE SI EL USUARIO ESTÁ CONECTADO
         if(usuarios.getUsuario(receptor)) {
             const socket_user = usuarios.getUsuario(receptor);
             socket.broadcast.to(socket_user.id_socket).emit('mensaje', mensaje);

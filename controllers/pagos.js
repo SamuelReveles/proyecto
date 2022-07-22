@@ -57,7 +57,19 @@ const crearOrden = async(req, res = response) => {
 
         const enlace = response.data.links[1];
 
-        res.status(200).json(enlace);
+        let paciente;
+
+        if(id_extra !== '') paciente = await Extra.findById(id_extra);
+        else paciente = await Cliente.findById(req.id);
+
+        res.status(200).json({
+            enlace,
+            nombre: paciente.nombre,
+            apellidos: paciente.apellidos,
+            sexo: paciente.sexo,
+            fecha_nacimiento: paciente.fecha_nacimiento,
+            precio
+        });
 
     } catch (error) {
         console.log(error);
@@ -82,14 +94,8 @@ const capturarOrden = async(req, res = response) => {
         });
         
         if(response.data.status === 'COMPLETED') {
-            const { 
-                status,
-                success,
-                historial,
-                servicio } = await ordenPagada(id, id_extra ,id_nutriologo, dia, hora);
-
-                res.redirect('http://localhost:8080/#/Jopaka/cliente/dashboard/inicio');
-
+            await ordenPagada(id, id_extra ,id_nutriologo, dia, hora);
+            res.redirect('http://localhost:8080/#/Jopaka/cliente/dashboard/inicio');
         }
         else throw new Error('Fallo al hacer el pago');
 
@@ -100,11 +106,6 @@ const capturarOrden = async(req, res = response) => {
             msg: 'Hubo un error al ejecutar el pago'
         });
     }
-}
-
-const cancelarOrden = async(req, res = response) => {
-
-
 }
 
 const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
@@ -288,6 +289,5 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
 module.exports = {
     crearOrden,
     capturarOrden,
-    cancelarOrden,
     ordenPagada
 }

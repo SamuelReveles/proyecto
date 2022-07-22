@@ -642,7 +642,7 @@ const getExtras = async (req, res = response)  => {
     
         //Id del cliente
         const id = req.id;
-        
+
         //Objeto del cliente
         const cliente = await Cliente.findById(id);
 
@@ -1429,6 +1429,64 @@ const getMotivosUsuario = async(req, res = response) => {
     }
 }
 
+const verServicio = async (req, res = response) => {
+    try {
+
+        const id_servicio = req.body.id_servicio
+
+        const servicio = await Servicio.findById(id_servicio);
+
+        let paciente = await Cliente.findById(servicio.id_paciente);
+
+        let cliente;
+
+        if(!paciente) {
+            const clientes = await Cliente.find();
+
+            //Extraer el cliente dueño de la cuenta
+            for await (const user of clientes) {
+                if(user.extra1) {
+                    if(String(user.extra1) == String(servicio.id_paciente)){
+                        cliente = user;
+                        break;
+                    }
+                }
+                if(user.extra2) {
+                    if(String(user.extra2) == String(servicio.id_paciente)){
+                        cliente = user;
+                        break;
+                    }
+                }
+            }
+
+            //Guardar el paciente como extra
+            paciente = await Extra.findById(servicio.id_paciente);
+        }
+        else cliente = paciente;
+
+        const nombre = paciente.nombre;
+        const apellidos = paciente.apellidos;
+        const cliente_id = cliente._id;
+        let mensajes = [];
+        if(servicio.mensajes) mensajes = servicio.mensajes;
+
+        res.status(200).json({
+            nombre, //Nombre del paciente (con quien está chateando)
+            apellidos, //Apellidos del paciente (con quien está chateando)
+            cliente_id, //ID del cliente dueño de la cuenta (enviar en el payload del socket)
+            mensajes, //Mensajes contiene los mensajes que hay en el servicio
+            servicio: servicio._id //ID del servicio (enviar en el payload del socket)
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'something wrong'
+        })
+    }
+}
+
 module.exports = {
     usuariosPost,
     usuariosUpdate,
@@ -1451,5 +1509,6 @@ module.exports = {
     getMotivosUsuario,
     getServicios,
     getDietas,
-    getReagendaciones
+    getReagendaciones,
+    verServicio
 }
