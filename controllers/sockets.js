@@ -27,7 +27,7 @@ const socketController = (socket) => {
         //Extract jwt from payload
         const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
 
-        usuarios.borrarUsuario(payload.jwt);
+        usuarios.borrarUsuario(id);
     });
 
 
