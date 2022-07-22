@@ -1432,7 +1432,7 @@ const getMotivosUsuario = async(req, res = response) => {
 const verServicio = async (req, res = response) => {
     try {
 
-        const id_servicio = req.body.id_servicio
+        const id_servicio = req.query.id_servicio
 
         const servicio = await Servicio.findById(id_servicio);
 
