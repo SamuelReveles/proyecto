@@ -44,7 +44,7 @@ const crearOrden = async(req, res = response) => {
                 user_action: "PAY_NOW",
                 return_url: "http://localhost:8080/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra +
                 "&dia=" + dia + '&hora=' + hora,
-                cancel_url: "http://localhost:8080"
+                cancel_url: "http://localhost:8080/#/Jopaka/cliente/dashboard/inicio"
             }
         };
 
@@ -213,12 +213,12 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
             await Servicio.findByIdAndUpdate(servicio._id, servicio);
         }
 
-        let nombreExtra = cliente.nombre;
+        let nombreExtra = cliente.nombre + ' ' + cliente.apellidos;
 
         //Crear el evento de calendar
         if(id_extra !== ''){
-            const { nombre } = await Extra.findById(id_extra);
-            nombreExtra = nombre;
+            const { nombre, apellidos } = await Extra.findById(id_extra);
+            nombreExtra = nombre + ' ' + apellidos;
             await crearEvento(fecha_cita, id, id_nutriologo, servicio._id, nombre);
         }
         else 
@@ -227,9 +227,10 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
         //Fecha en string
         const fechaArr = format(fecha_cita, 'dd-MMMM-yyyy', {locale: es}).split('-');
         const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-
+        
         let encontrado = false;
-
+        
+        ///Guardar en el calendario del nutriólogo
         function comparar(a, b) {
             if (a.hora < b.hora) return -1;
             if (b.hora < a.hora) return 1;

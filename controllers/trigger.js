@@ -11,6 +11,8 @@ const isFriday = require('date-fns/isFriday');
 const isSaturday = require('date-fns/isSaturday');
 const isSunday = require('date-fns/isSunday');
 const addDays = require('date-fns/addDays');
+const setHours = require('date-fns/setHours');
+const setMinutes = require('date-fns/setMinutes');
 
 //Helpers
 const { diferenciaMeses, diferenciaDias } = require('../helpers/triggers');
@@ -22,8 +24,6 @@ const Reagendacion = require('../models/reagendacion');
 const Notificacion = require('../models/notificacion');
 const Administrador = require('../models/administrador');
 const Servicio = require('../models/servicio')
-
-const { crearEvento } = require('../helpers/google-verify');
 
 
 
@@ -310,39 +310,30 @@ const deleteNotificaciones = async(req, res = response) => {
 }
 
 const vigenciaServicios = async(req, res = response) => {
+
     try {
-        // const servicios = await Servicio.find();
-
-        // for await (const servicio of servicios){
-        //     if(servicio.fecha_finalizacion < new Date() && servicio.vigente === true) {
-        //         servicio.vigente = false;
-        //         await Servicio.findByIdAndUpdate(servicio._id, servicio);
-        //     }
-        // }
-
-        const nutriologos = await Nutriologo.find();
-
-        for await (const nutriologo of nutriologos) {
-            await Nutriologo.findByIdAndUpdate(nutriologo._id, {fechaDisponible : []});
-        }
         
-        res.status(200).json({
-            success: true,
-            msg: 'Servicios acutalizados'
-        });
+        const servicios = await Servicio.find();
+
+        for await (const servicio of servicios){
+            if(servicio.fecha_finalizacion < new Date() && servicio.vigente === true) {
+                servicio.vigente = false;
+                await Servicio.findByIdAndUpdate(servicio._id, servicio);
+            }
+        }
+
     } catch (error) {
         res.status(400).json({
             success: false,
             msg: 'Error: ' + error
         });
     }
+
 }
 
 const actualizarFechasNutriologo = async(req, res = response) => {
     try {
-        let auxDia;
         const nutriologos = await Nutriologo.find();
-        const today = addDays(new Date(), 1);
 
         
         for await (const nutriologo of nutriologos) {
@@ -359,136 +350,140 @@ const actualizarFechasNutriologo = async(req, res = response) => {
                 }
                 newConfig.push(newDia);
             }
-            
-            if(nutriologo.fechasDisponibles) {
-                fechasDisponibles = nutriologo.fechasDisponibles;
-                if(isMonday(today)) {
+            if(nutriologo.fechaDisponible) {
+                if(nutriologo.fechaDisponible.length !== 0) {
+                    fechasDisponibles = nutriologo.fechaDisponible;
+                    let fechas = [];
 
-                    for (let j = 7; j < 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
+                    let today = new Date();
+                    today = addDays(today, 31); //Avanzar de dia
+                    let auxDia = new Date(today);
+                    if(isMonday(today)) {
 
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
+                        for (let j = 7; j < 21; j++) {
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 0);
+                            fechas.push(auxDia);
+
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 30);
+                            fechas.push(auxDia);
+                        }
+
+                        fechasDisponibles.push({
+                            hora: newConfig[0],
+                            date: fechas
+                        });
+                    }
+                    else if(isTuesday(today)) {
+
+                        for (let j = 7; j < 21; j++) {
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 0);
+                            fechas.push(auxDia);
+
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 30);
+                            fechas.push(auxDia);
+                        }
+
+                        fechasDisponibles.push({
+                            hora: newConfig[1],
+                            date: fechas
+                        });
+                    }
+                    else if(isWednesday(today)) {
+
+                        for (let j = 7; j < 21; j++) {
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 0);
+                            fechas.push(auxDia);
+
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 30);
+                            fechas.push(auxDia);
+                        }
+
+                        fechasDisponibles.push({
+                            hora: newConfig[2],
+                            date: fechas
+                        });
+                    }
+                    else if(isThursday(today)) {
+
+                        for (let j = 7; j < 21; j++) {
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 0);
+                            fechas.push(auxDia);
+
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 30);
+                            fechas.push(auxDia);
+                        }
+
+                        fechasDisponibles.push({
+                            hora: newConfig[3],
+                            date: fechas
+                        });
+                    }
+                    else if(isFriday(today)) {
+
+                        for (let j = 7; j < 21; j++) {
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 0);
+                            fechas.push(auxDia);
+
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 30);
+                            fechas.push(auxDia);
+                        }
+
+                        fechasDisponibles.push({
+                            hora: newConfig[4],
+                            date: fechas
+                        });
+                    }
+                    else if(isSaturday(today)) {
+
+                        for (let j = 7; j < 21; j++) {
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 0);
+                            fechas.push(auxDia);
+
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 30);
+                            fechas.push(auxDia);
+                        }
+
+                        fechasDisponibles.push({
+                            hora: newConfig[5],
+                            date: fechas
+                        });
+                    }
+                    else if(isSunday(today)) {
+
+                        for (let j = 7; j < 21; j++) {
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 0);
+                            fechas.push(auxDia);
+
+                            auxDia = setHours(today, j);
+                            auxDia = setMinutes(auxDia, 30);
+                            fechas.push(auxDia);
+                        }
+
+                        fechasDisponibles.push({
+                            hora: newConfig[6],
+                            date: fechas
+                        });
                     }
 
-                    fechasDisponibles.push({
-                        hora: newConfig[0],
-                        date: fechas
-                    });
+                    //Eliminar el día anterior
+                    fechasDisponibles.shift();
+                    fechasDisponibles.push(fechas);
                 }
-                else if(isTuesday(today)) {
-
-                    for (let j = 7; j < 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
-                    fechasDisponibles.push({
-                        hora: newConfig[1],
-                        date: fechas
-                    });
-                }
-                else if(isWednesday(today)) {
-
-                    for (let j = 7; j < 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
-                    fechasDisponibles.push({
-                        hora: newConfig[2],
-                        date: fechas
-                    });
-                }
-                else if(isThursday(today)) {
-
-                    for (let j = 7; j < 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
-                    fechasDisponibles.push({
-                        hora: newConfig[3],
-                        date: fechas
-                    });
-                }
-                else if(isFriday(today)) {
-
-                    for (let j = 7; j < 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
-                    fechasDisponibles.push({
-                        hora: newConfig[4],
-                        date: fechas
-                    });
-                }
-                else if(isSaturday(today)) {
-
-                    for (let j = 7; j < 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
-                    fechasDisponibles.push({
-                        hora: newConfig[5],
-                        date: fechas
-                    });
-                }
-                else if(isSunday(today)) {
-
-                    for (let j = 7; j < 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
-                    fechasDisponibles.push({
-                        hora: newConfig[6],
-                        date: fechas
-                    });
-                }
-
-                //Eliminar el día anterior
-                fechasDisponibles.shift();
-                
-                if(String(nutriologo._id) == '628f1cb5fbd9924206752c38')
-                    console.log(fechasDisponibles[0]);
+                await Nutriologo.findByIdAndUpdate(nutriologo._id, {fechaDisponible: fechasDisponibles});
             }
-            // await Nutriologo.findByIdAndUpdate(nutriologo._id, {fechaDisponible: nuevasFechasDisponibles});
         }
 
         res.status(200).json({

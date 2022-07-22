@@ -637,11 +637,12 @@ const getNutriologo = async (req, res = response) => {
 
 //Ver extras del cliente
 const getExtras = async (req, res = response)  => {
-
-    //Id del cliente
-    const id = req.id;
-
+    
     try {    
+    
+        //Id del cliente
+        const id = req.id;
+        
         //Objeto del cliente
         const cliente = await Cliente.findById(id);
 
@@ -1296,15 +1297,18 @@ const aceptarSolicitud = async (req, res = response) => {
         }
 
         //Actualizar calendario del nutriólogo
-
         const fecha_cita = reagendacion.fecha_nueva;
 
         let calendario_nutriologo = [];
         if(nutriologo.calendario) calendario_nutriologo = nutriologo.calendario;
 
-        let { nombre } = await Cliente.findById(servicio.id_paciente);
+        let { nombre, apellidos } = await Cliente.findById(servicio.id_paciente);
 
-        if(!nombre) nombre = await Extra.findById(servicio.id_paciente);
+        if(!nombre) { 
+            let extra = await Extra.findById(servicio.id_paciente);
+            nombre = extra.nombre;
+            apellidos = extra.apellidos;
+        }
 
         let encontrado = false;
 
@@ -1321,7 +1325,7 @@ const aceptarSolicitud = async (req, res = response) => {
                     hora,
                     servicio: servicio._id,
                     llamada: servicio.linkMeet,
-                    paciente: nombre
+                    paciente: nombre + ' ' + apellidos
                 });
                 calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
                 break;

@@ -1,5 +1,6 @@
 //Librerías externas
 const { response } = require('express');
+const PDF = require('pdfkit-construct');
 
 const cloudinary = require('cloudinary').v2;
 cloudinary.config(process.env.CLOUDINARY_URL);
@@ -147,8 +148,8 @@ const nutriologoUpdateServicio = async (req, res = response) => {
 
     try {
 
-        const { precio, descripcion, activo, indicaciones, especialidades } = req.body;
         const id = req.id;
+        const { precio, descripcion, activo, indicaciones, especialidades } = req.body;
 
         const nutriologo = await Nutriologo.findById(id);
 
@@ -386,7 +387,7 @@ const fechasUpdate = async (req, res = response) => {
                     }
                 }
                 else if(isSaturday(today)) {
-                    diaConfig = newConfig[5]; //Configurando como sábado
+                    diaConfig = newConfig[6]; //Configurando como sábado
                     for (let j = 0; j < fechasDisponibles[5].hora.length ; j++) {
                         // Fecha ocupada
                         if(fechasDisponibles[5].hora[j] === false) hora.push(false);
@@ -394,7 +395,7 @@ const fechasUpdate = async (req, res = response) => {
                     }
                 }
                 else if(isSunday(today)) {
-                    diaConfig = newConfig[6]; //Configurando como domingo
+                    diaConfig = newConfig[5]; //Configurando como domingo
                     for (let j = 0; j < fechasDisponibles[6].hora.length ; j++) {
                         // Fecha ocupada
                         if(fechasDisponibles[6].hora[j] === false) hora.push(false);
@@ -565,9 +566,9 @@ const postPredeterminado = async (req, res = response) => {
 //Mostrar todos alimento predeterminado
 const getPredeterminados = async (req, res = response) => {
 
-    const id = req.id;
-
     try {
+        const id = req.id;
+        
         //Buscar al nutriologo
         const { predeterminados } = await Nutriologo.findById(id);
 
@@ -906,6 +907,7 @@ const getPacientes = async (req, res  = response) => {
                         sexo: paciente.sexo,
                         id_servicio: servicio._id,
                         servicio: servicio.vigente,
+                        verDatos: servicio.verDatos,
                         cita: fechaString,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     }
@@ -942,6 +944,7 @@ const getPacientes = async (req, res  = response) => {
                         sexo: paciente.sexo,
                         id_servicio: servicio._id,
                         servicio: servicio.vigente,
+                        verDatos: servicio.verDatos,
                         cita: fechaString,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     }
@@ -1342,6 +1345,7 @@ const aceptarSolicitud = async (req, res = response) => {
 
         //Si es un extra
         if(!cliente) {
+
             const clientes = await Cliente.find();
 
             for await (const user of clientes) {
@@ -1391,9 +1395,14 @@ const aceptarSolicitud = async (req, res = response) => {
         let calendario_nutriologo = [];
         if(nutriologo.calendario) calendario_nutriologo = nutriologo.calendario;
 
-        let { nombre } = await Cliente.findById(servicio.id_paciente);
+        let { nombre, apellidos } = await Cliente.findById(servicio.id_paciente);
 
-        if(!nombre) nombre = await Extra.findById(servicio.id_paciente);
+        if(!nombre) {
+            let extra = await Extra.findById(servicio.id_paciente);
+
+            nombre = extra.nombre;
+            apellidos = extra.apellidos;
+        }
 
         let encontrado = false;
 
@@ -1418,7 +1427,7 @@ const aceptarSolicitud = async (req, res = response) => {
                     hora,
                     servicio: servicio._id,
                     llamada: servicio.linkMeet,
-                    paciente: nombre
+                    paciente: nombre + apellidos
                 });
                 calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
                 break;
@@ -1500,6 +1509,71 @@ const getMotivosNutriologo = async(req, res = response) => {
     }
 }
 
+//Ver el calendario en PDF
+const getCalendarioPDF = async (req, res = response) => {
+
+    try {
+
+        const id = req.id;
+
+        const { calendario, nombre } = await Nutriologo.findById(id);
+
+        //Crear el documento permitiendo que se pueda crear el archivo de salida
+        const doc = new PDF({bufferPage: true});
+
+        //Asignar nombre al archivo
+        const filename = 'Calendario_' + nombre + '_' + Date.now() + '.pdf';
+
+        const stream = res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-disposition': 'attachment; filename=' + filename
+        });
+
+        // Logo jopaka
+        doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 480, 730, {scale: 0.04})
+        doc.fontSize(24);
+
+        
+        doc.fillColor('green')
+        doc.text('Próximas citas de ' + nombre, {
+            align: 'center'
+        });
+
+        doc.fillColor('black');
+
+        for await (const dia of calendario) {
+            doc.fontSize(18);
+            doc.text(dia.dia);
+
+            for (const paciente of dia.pacientes) {
+                doc.fontSize(14)
+                doc.text(paciente.paciente + '  ' + paciente.hora);
+            }
+            doc.text('\n\n');
+        }
+
+        doc.render();
+
+        doc.on('data', (data) => {
+            stream.write(data);
+        });
+
+        doc.on('end', () => {
+            stream.end();
+        });
+
+        doc.end();
+
+    } catch ( error ) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Error al obtener el calendario'
+        })
+    }
+
+}
+
 module.exports = {
     nutriologoPost,
     nutriologoUpdate,
@@ -1522,5 +1596,6 @@ module.exports = {
     fechasUpdate,
     getFechas,
     getReagendaciones,
-    aceptarSolicitud
+    aceptarSolicitud,
+    getCalendarioPDF
 };

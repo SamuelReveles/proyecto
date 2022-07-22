@@ -51,7 +51,7 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
     const event = {
         summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
         description: 'Evento de llamada para la atención del servicio de nutrición de ' + nombre + 
-        '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
+        '\nRecuerde las indicaciones del nutriólogo: \n' + nutriologo.indicaciones,
         start: {
           dateTime: hora_inicio,
           timeZone: 'America/Mexico_City',
@@ -66,7 +66,8 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
         ],
         conferenceData: {
           createRequest: { 'requestId': (Math.random() + 1).toString(36).substring(7) }
-        }
+        },
+        colorId: 2
       };
   
     oauth2Client.setCredentials({refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN});
@@ -140,7 +141,7 @@ async function cambiarFecha (idServicio, hora_nueva) {
     const event = {
         summary: 'Cita con el(la) nutricionista ' + nutriologo.nombre,
         description: 'Evento de llamada para la atención del servicio de nutrición de ' + nombre + 
-        '\nRecuerde las indicaciones del nutriólogo: ' + nutriologo.indicaciones,
+        '\nRecuerde las indicaciones del nutriólogo: \n' + nutriologo.indicaciones,
         start: {
           dateTime: hora_nueva,
           timeZone: "America/Mexico_City"
@@ -155,7 +156,8 @@ async function cambiarFecha (idServicio, hora_nueva) {
         ],
         conferenceData: {
           createRequest: { 'requestId': (Math.random() + 1).toString(36).substring(7) }
-        }
+        },
+        colorId: 2
       };
   
       oauth2Client.setCredentials({refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN});
