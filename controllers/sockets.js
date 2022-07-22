@@ -33,7 +33,7 @@ const socketController = (socket) => {
 
     //Recibir mensaje
     socket.on('mensaje', async ( payload ) => {
-        const { contenido = ' ', id_servicio, tipo, cliente = undefined} = payload;
+        const { contenido = ' ', id_servicio, tipo, cliente } = payload;
         const servicio = await Servicio.findById(id_servicio);
 
         //Tipo:
