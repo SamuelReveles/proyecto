@@ -387,7 +387,7 @@ const fechasUpdate = async (req, res = response) => {
                     }
                 }
                 else if(isSaturday(today)) {
-                    diaConfig = newConfig[6]; //Configurando como sábado
+                    diaConfig = newConfig[5]; //Configurando como sábado
                     for (let j = 0; j < fechasDisponibles[5].hora.length ; j++) {
                         // Fecha ocupada
                         if(fechasDisponibles[5].hora[j] === false) hora.push(false);
@@ -395,7 +395,7 @@ const fechasUpdate = async (req, res = response) => {
                     }
                 }
                 else if(isSunday(today)) {
-                    diaConfig = newConfig[5]; //Configurando como domingo
+                    diaConfig = newConfig[6]; //Configurando como domingo
                     for (let j = 0; j < fechasDisponibles[6].hora.length ; j++) {
                         // Fecha ocupada
                         if(fechasDisponibles[6].hora[j] === false) hora.push(false);

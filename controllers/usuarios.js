@@ -717,18 +717,13 @@ const getServicios = async (req, res = response) => {
     try {
         const id = req.id;
         let serviciosUsuario = [];
-        const { extra1, extra2, nombre } = await Cliente.findById(id);
+        const { extra1, extra2, nombre, apellidos } = await Cliente.findById(id);
 
         const servicios = await Servicio.find();
 
         for await (let servicio of servicios) {
 
             if(servicio.id_paciente == id){
-                
-                //Fecha de la cita
-                const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
-                const fechaArr = fecha.split('-');
-                const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
                 let nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
 
@@ -741,10 +736,11 @@ const getServicios = async (req, res = response) => {
 
                 serviciosUsuario.push({
                     servicio: servicio._id,
-                    cita: fechaString,
-                    paciente: nombre,
+                    cita: servicio.fecha_cita,
+                    paciente: nombre + ' ' + apellidos,
                     id_nutriologo: servicio.id_nutriologo,
                     nutriologo: nutriologo.nombre,
+                    apellidos: nutriologo.apellidos,
                     imagen: nutriologo.imagen,
                     activo: servicio.vigente,
                     calificacion: servicio.calificacion,
@@ -754,10 +750,7 @@ const getServicios = async (req, res = response) => {
 
             if(extra1) {
                 if (String(extra1) == String(servicio.id_paciente)){
-                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
-                    const fechaArr = fecha.split('-');
-                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-    
+
                     let nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
                     const paciente = await Extra.findById(extra1);
 
@@ -771,9 +764,10 @@ const getServicios = async (req, res = response) => {
                     serviciosUsuario.push({
                         servicio: servicio._id,
                         cita: fechaString,
-                        paciente: paciente.nombre,
+                        paciente: paciente.nombre + ' ' + paciente.apellidos,
                         id_nutriologo: servicio.id_nutriologo,
                         nutriologo: nutriologo.nombre,
+                        apellidos: nutriologo.apellidos,
                         imagen: nutriologo.imagen,
                         activo: servicio.vigente,
                         calificacion: servicio.calificacion,
@@ -782,11 +776,7 @@ const getServicios = async (req, res = response) => {
                 }
             }
             if(extra2) {
-                if (String(extra2) == String(servicio.id_paciente)){
-                    const fecha = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es});
-                    const fechaArr = fecha.split('-');
-                    const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-    
+                if (String(extra2) == String(servicio.id_paciente)){    
                     let nutriologo = await Nutriologo.findById(servicio.id_nutriologo);
                     const paciente = await Extra.findById(extra2);
 
@@ -800,11 +790,13 @@ const getServicios = async (req, res = response) => {
                     serviciosUsuario.push({
                         servicio: servicio._id,
                         cita: fechaString,
-                        paciente: paciente.nombre,
+                        paciente: paciente.nombre + ' ' + paciente.apellidos,
                         id_nutriologo: servicio.id_nutriologo,
                         nutriologo: nutriologo.nombre,
+                        apellidos: nutriologo.apellidos,
                         imagen: nutriologo.imagen,
                         activo: servicio.vigente,
+                        calificacion: servicio.calificacion,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
