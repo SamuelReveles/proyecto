@@ -1487,6 +1487,30 @@ const verServicio = async (req, res = response) => {
     }
 }
 
+//Eliminar al nutriólogo de la lista
+const servicioDelete = async (req, res = response) => {
+
+    try {
+
+        const id_servicio = req.body.id_servicio;
+
+        await Servicio.findByIdAndDelete(id_servicio);
+
+        res.status(200).json({
+            success: true,
+            msg: 'Eliminado correctamente'
+        })
+
+    } catch ( error ) {
+        console.log(error);
+        rse.status(400).json({
+            success: false,
+            msg: 'No se ha podidio remover al nutriólogo'
+        })
+    }
+
+}
+
 module.exports = {
     usuariosPost,
     usuariosUpdate,
@@ -1510,5 +1534,6 @@ module.exports = {
     getServicios,
     getDietas,
     getReagendaciones,
-    verServicio
+    verServicio,
+    servicioDelete
 }
