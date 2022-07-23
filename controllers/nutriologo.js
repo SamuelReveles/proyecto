@@ -209,7 +209,7 @@ const fechasUpdate = async (req, res = response) => {
 
                 if(isMonday(today)) {
 
-                    for (let j = 7; j < 21; j++) {
+                    for (let j = 7; j <= 21; j++) {
                         auxDia = setHours(today, j);
                         auxDia = setMinutes(auxDia, 0);
                         fechas.push(auxDia);
@@ -226,7 +226,7 @@ const fechasUpdate = async (req, res = response) => {
                 }
                 else if(isTuesday(today)) {
 
-                    for (let j = 7; j < 21; j++) {
+                    for (let j = 7; j <= 21; j++) {
                         auxDia = setHours(today, j);
                         auxDia = setMinutes(auxDia, 0);
                         fechas.push(auxDia);
@@ -243,7 +243,7 @@ const fechasUpdate = async (req, res = response) => {
                 }
                 else if(isWednesday(today)) {
 
-                    for (let j = 7; j < 21; j++) {
+                    for (let j = 7; j <= 21; j++) {
                         auxDia = setHours(today, j);
                         auxDia = setMinutes(auxDia, 0);
                         fechas.push(auxDia);
@@ -260,7 +260,7 @@ const fechasUpdate = async (req, res = response) => {
                 }
                 else if(isThursday(today)) {
 
-                    for (let j = 7; j < 21; j++) {
+                    for (let j = 7; j <= 21; j++) {
                         auxDia = setHours(today, j);
                         auxDia = setMinutes(auxDia, 0);
                         fechas.push(auxDia);
@@ -277,7 +277,7 @@ const fechasUpdate = async (req, res = response) => {
                 }
                 else if(isFriday(today)) {
 
-                    for (let j = 7; j < 21; j++) {
+                    for (let j = 7; j <= 21; j++) {
                         auxDia = setHours(today, j);
                         auxDia = setMinutes(auxDia, 0);
                         fechas.push(auxDia);
@@ -294,7 +294,7 @@ const fechasUpdate = async (req, res = response) => {
                 }
                 else if(isSaturday(today)) {
 
-                    for (let j = 7; j < 21; j++) {
+                    for (let j = 7; j <= 21; j++) {
                         auxDia = setHours(today, j);
                         auxDia = setMinutes(auxDia, 0);
                         fechas.push(auxDia);
@@ -311,7 +311,7 @@ const fechasUpdate = async (req, res = response) => {
                 }
                 else if(isSunday(today)) {
 
-                    for (let j = 7; j < 21; j++) {
+                    for (let j = 7; j <= 21; j++) {
                         auxDia = setHours(today, j);
                         auxDia = setMinutes(auxDia, 0);
                         fechas.push(auxDia);
@@ -1436,25 +1436,13 @@ const getMotivosNutriologo = async(req, res = response) => {
     try {
         let motivosNutriologo = [];
 
-        let temporal = await Motivo.findById('624536db33d1ed94d196ec61');
+        let temporal = await Motivo.findById('6245375133d1ed94d196ec6f');
         motivosNutriologo.push(temporal);
 
-        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
+        temporal = await Motivo.findById('62db3bc7098287bf0f227709');
         motivosNutriologo.push(temporal);
 
-        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
-        motivosNutriologo.push(temporal);
-
-        temporal = await Motivo.findById('6245371633d1ed94d196ec67');
-        motivosNutriologo.push(temporal);
-
-        temporal = await Motivo.findById('6245372033d1ed94d196ec69');
-        motivosNutriologo.push(temporal);
-
-        temporal = await Motivo.findById('6245372833d1ed94d196ec6b');
-        motivosNutriologo.push(temporal);
-
-        temporal = await Motivo.findById('6245373e33d1ed94d196ec6d');
+        temporal = await Motivo.findById('6245377033d1ed94d196ec73');
         motivosNutriologo.push(temporal);
 
         res.status(200).json(motivosNutriologo);
@@ -1495,7 +1483,7 @@ const getCalendarioPDF = async (req, res = response) => {
         doc.text('Próximas citas de ' + nombre, {
             align: 'center'
         });
-
+        doc.text('\n\n\n');
         doc.fillColor('black');
 
         for await (const dia of calendario) {

@@ -1038,11 +1038,7 @@ const mostrarHistorial = async (req, res = response) => {
             'Content-Type': 'application/pdf',
             'Content-disposition': 'attachment; filename=' + filename
         });
-
-        //Fuente usada
-        //doc.font('../public/');
         
-
         //Dieta semanal
         // Logo jopaka
         doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 480, 730, {scale: 0.04})
@@ -1407,10 +1403,10 @@ const getMotivosUsuario = async(req, res = response) => {
         let temporal = await Motivo.findById('624536db33d1ed94d196ec61');
         motivosUsuario.push(temporal);
         
-        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
+        temporal = await Motivo.findById('62db3b15098287bf0f227703');
         motivosUsuario.push(temporal);
         
-        temporal = await Motivo.findById('624536e733d1ed94d196ec63');
+        temporal = await Motivo.findById('62db3b36098287bf0f227706');
         motivosUsuario.push(temporal);
         
         temporal = await Motivo.findById('6245371633d1ed94d196ec67');
