@@ -15,12 +15,8 @@ const usuarios = new Usuarios();
 const socketController = (socket) => {
 
     //Conexión, agregar un usuario a la lista de usuarios conectados
-    socket.on('conexion', (payload) => {
-        //Extract jwt from payload
-        const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
-
-        usuarios.agregarUsuario(socket.id, id);
-    });
+    const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
+    usuarios.agregarUsuario(socket.id, id);
 
     //Eliminar de la lista y cambiar la última conexión
     socket.on('disconnect', async (payload) => {

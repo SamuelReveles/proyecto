@@ -744,6 +744,7 @@ const getServicios = async (req, res = response) => {
                     imagen: nutriologo.imagen,
                     activo: servicio.vigente,
                     calificacion: servicio.calificacion,
+                    nutriologo_activo: (nutriologo.activo && !nutriologo.baneado),
                     reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                 });
             }
@@ -771,6 +772,7 @@ const getServicios = async (req, res = response) => {
                         imagen: nutriologo.imagen,
                         activo: servicio.vigente,
                         calificacion: servicio.calificacion,
+                        nutriologo_activo: (nutriologo.activo && !nutriologo.baneado),
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
@@ -797,6 +799,7 @@ const getServicios = async (req, res = response) => {
                         imagen: nutriologo.imagen,
                         activo: servicio.vigente,
                         calificacion: servicio.calificacion,
+                        nutriologo_activo: (nutriologo.activo && !nutriologo.baneado),
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
