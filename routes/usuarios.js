@@ -54,7 +54,7 @@ router.get('/progreso', getProgreso);
 router.get('/data', getInfo);
 
 //Calificar a un nutriólogo
-router.put('/calificar', [validarBanCliente], calificar);
+router.put('/calificar', calificar);
 
 //Dar de alta un nuevo extra
 router.post('/extra/alta', altaExtras);
@@ -66,7 +66,7 @@ router.get('/extra', getExtras);
 router.put('/', [validarBanCliente], usuariosUpdate);
 
 //Reportar
-router.put('/reportar', [validarBanCliente], reportar);
+router.put('/reportar', reportar);
 
 //Eliminar cuenta
 router.delete('/', [validarBanCliente], usuariosDelete);

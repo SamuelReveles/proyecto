@@ -516,9 +516,7 @@ const adminUpdate = async(req, res = response) => {
                 const nombreArr = admin.imagen.split('/');
                 const nombre = nombreArr[nombreArr.length - 1];
                 const [ public_id, extension ] = nombre.split('.');
-                if(extension != 'png' && extension != 'jpg'){
-                    throw new Error('Error en el formato de imagen');
-                }
+
                 //Borrar la imagen
                 await cloudinary.uploader.destroy(public_id);
             }

@@ -79,7 +79,7 @@ router.delete('/predeterminado', deletePredeterminado);
 router.get('/data', getInfo);
 
 //Reportar a un usuario
-router.put('/reportar', [validarBanNutriologo], reportar);
+router.put('/reportar', reportar);
 
 //Lista de dietas del cliente
 router.get('/dietas', getDietas);

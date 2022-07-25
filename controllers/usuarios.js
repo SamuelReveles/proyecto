@@ -745,6 +745,7 @@ const getServicios = async (req, res = response) => {
                     activo: servicio.vigente,
                     calificacion: servicio.calificacion,
                     nutriologo_activo: (nutriologo.activo && !nutriologo.baneado),
+                    ver_datos: servicio.verDatos,
                     reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                 });
             }
@@ -773,6 +774,7 @@ const getServicios = async (req, res = response) => {
                         activo: servicio.vigente,
                         calificacion: servicio.calificacion,
                         nutriologo_activo: (nutriologo.activo && !nutriologo.baneado),
+                        ver_datos: servicio.verDatos,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
@@ -800,6 +802,7 @@ const getServicios = async (req, res = response) => {
                         activo: servicio.vigente,
                         calificacion: servicio.calificacion,
                         nutriologo_activo: (nutriologo.activo && !nutriologo.baneado),
+                        ver_datos: servicio.verDatos,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     });
                 }
@@ -924,9 +927,6 @@ const usuariosUpdate = async (req, res = response) => {
                 const nombreArr = user.imagen.split('/');
                 const nombre = nombreArr[nombreArr.length - 1];
                 const [ public_id, extension ] = nombre.split('.');
-                if(extension != 'png' && extension != 'jpg'){
-                    throw new Error('Error en el formato de imagen');
-                }
 
                 //Borrar la imagen
                 await cloudinary.uploader.destroy(public_id);

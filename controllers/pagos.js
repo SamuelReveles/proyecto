@@ -1,6 +1,7 @@
 const { response } = require('express');
 const format = require('date-fns/format');
 const es = require('date-fns/locale/es');
+const isAfter = require('date-fns/isAfter');
 const axios = require('axios');
 
 //Crear eventos de calendar
@@ -58,9 +59,19 @@ const crearOrden = async(req, res = response) => {
         const enlace = response.data.links[1];
 
         let paciente;
+        let cita = true;
+
+        const servicios = Servicio.find();
 
         if(id_extra !== '') paciente = await Extra.findById(id_extra);
         else paciente = await Cliente.findById(req.id);
+
+        for await (const servicio of servicios) {
+            if((String(servicio.id_paciente) == String(paciente._id)) && isAfter(servicio.fecha_cita, new Date())){
+                cita = false
+                break;
+            }
+        }
 
         res.status(200).json({
             enlace,
@@ -68,7 +79,8 @@ const crearOrden = async(req, res = response) => {
             apellidos: paciente.apellidos,
             sexo: paciente.sexo,
             fecha_nacimiento: paciente.fecha_nacimiento,
-            precio
+            precio,
+            cita
         });
 
     } catch (error) {

@@ -108,9 +108,6 @@ const nutriologoUpdate = async (req, res = response) => {
                 const nombreArr = nutriologo.imagen.split('/');
                 const nombre = nombreArr[nombreArr.length - 1];
                 const [ public_id, extension ] = nombre.split('.');
-                if(extension != 'png' && extension != 'jpg'){
-                    throw new Error('Error en el formato de imagen');
-                }
 
                 //Borrar la imagen
                 await cloudinary.uploader.destroy(public_id);
@@ -206,121 +203,54 @@ const fechasUpdate = async (req, res = response) => {
             //For con 30 días de posible anticipo
             for (let i = 0; i < 30; i++) {
                 fechas = [];
+                
+                for (let j = 7; j <= 21; j++) {
+                    auxDia = setHours(today, j);
+                    auxDia = setMinutes(auxDia, 0);
+                    fechas.push(auxDia);
+
+                    auxDia = setHours(today, j);
+                    auxDia = setMinutes(auxDia, 30);
+                    fechas.push(auxDia);
+                }
 
                 if(isMonday(today)) {
-
-                    for (let j = 7; j <= 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
                     fechasDisponibles.push({
                         hora: newConfig[0],
                         date: fechas
                     });
                 }
                 else if(isTuesday(today)) {
-
-                    for (let j = 7; j <= 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
                     fechasDisponibles.push({
                         hora: newConfig[1],
                         date: fechas
                     });
                 }
                 else if(isWednesday(today)) {
-
-                    for (let j = 7; j <= 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
                     fechasDisponibles.push({
                         hora: newConfig[2],
                         date: fechas
                     });
                 }
                 else if(isThursday(today)) {
-
-                    for (let j = 7; j <= 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
                     fechasDisponibles.push({
                         hora: newConfig[3],
                         date: fechas
                     });
                 }
                 else if(isFriday(today)) {
-
-                    for (let j = 7; j <= 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
                     fechasDisponibles.push({
                         hora: newConfig[4],
                         date: fechas
                     });
                 }
                 else if(isSaturday(today)) {
-
-                    for (let j = 7; j <= 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
                     fechasDisponibles.push({
                         hora: newConfig[5],
                         date: fechas
                     });
                 }
                 else if(isSunday(today)) {
-
-                    for (let j = 7; j <= 21; j++) {
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 0);
-                        fechas.push(auxDia);
-
-                        auxDia = setHours(today, j);
-                        auxDia = setMinutes(auxDia, 30);
-                        fechas.push(auxDia);
-                    }
-
                     fechasDisponibles.push({
                         hora: newConfig[6],
                         date: fechas
@@ -842,15 +772,12 @@ const updateClientData = async (req, res = response) => {
 
         // Si es cliente
         if(cliente){
-            if(!cliente.datoInicial){
-                await Cliente.findByIdAndUpdate(id_paciente, {datoInicial : datos})
-                .then(await datos.save());
-            }
+            if(!cliente.datoInicial) await Cliente.findByIdAndUpdate(id_paciente, {datoInicial : datos});
             else {
                 cliente.datoConstante.push(datos);
                 await Cliente.findByIdAndUpdate(id_paciente, cliente)
-                .then(await datos.save());
             }
+            await datos.save();
             await Servicio.findByIdAndUpdate(id_servicio, {llenado_datos: true});
             res.status(201).json(datos);
         }
@@ -869,6 +796,7 @@ const updateClientData = async (req, res = response) => {
             res.status(201).json(datos);
 
         }
+        
     } catch (error) {
         console.log(error);
         res.status(400).json({
@@ -879,6 +807,7 @@ const updateClientData = async (req, res = response) => {
 
 }
 
+//Ver pacientes del nutriólogo
 const getPacientes = async (req, res  = response) => {
 
     try {
@@ -1523,9 +1452,7 @@ const verServicio = async (req, res = response) => {
     try {
 
         const id_servicio = req.query.id_servicio;
-
         const servicio = await Servicio.findById(id_servicio);
-
         let paciente = await Cliente.findById(servicio.id_paciente);
 
         let cliente;
@@ -1558,6 +1485,7 @@ const verServicio = async (req, res = response) => {
         const apellidos = paciente.apellidos;
         const cliente_id = cliente._id;
         let mensajes = [];
+        
         if(servicio.mensajes) {
             mensajes = servicio.mensajes;
             for (let i = 0; i < mensajes.length; i++) {

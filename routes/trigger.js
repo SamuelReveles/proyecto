@@ -7,7 +7,8 @@ const {
     vigenciaServicios,
     actualizarFechasNutriologo,
     avisoBaneo,
-    desbanear
+    desbanear,
+    actualizarCalendarios
 } = require('../controllers/trigger');
 
 //Pruebas de paypal
@@ -34,5 +35,8 @@ router.put('/servicios', vigenciaServicios);
 
 //Actualizar horarios de nutriólogos
 router.put('/fechas', actualizarFechasNutriologo);
+
+//Actualizar los horarios de los nutriólogos
+router.all('/calendario', actualizarCalendarios);
 
 module.exports = router;

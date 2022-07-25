@@ -2,7 +2,7 @@ const { Schema, model } = require('mongoose');
 
 const historialSchema = Schema({
     dieta: [{
-        type: String,
+        type: Object,
         required: true
     }],
     datos: {
