@@ -23,9 +23,9 @@ const ExtraSchema = mongoose.Schema({
     historial: [{
         type: mongoose.Schema.ObjectId, ref:'historial'
     }],
-    calendario: {
-        type: Array
-    },
+    calendario: [{
+        type: Object
+    }],
     fecha_nacimiento: {
         type: Object,
         required: [true, 'La fecha de nacimiento es obligatoria']
