@@ -80,7 +80,7 @@ const crearOrden = async(req, res = response) => {
             sexo: paciente.sexo,
             fecha_nacimiento: paciente.fecha_nacimiento,
             precio,
-            cita: !cita
+            cita
         });
 
     } catch (error) {
