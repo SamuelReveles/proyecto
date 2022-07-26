@@ -1135,7 +1135,7 @@ const getReagendaciones = async (req, res = response) => {
 
             solicitudesUsuario.push({
                 solicitud: solicitud._id,
-                emisor: paciente.nombre,
+                emisor: paciente.nombre + ' ' + paciente.apellidos,
                 remitente: nombre,
                 fecha_nueva: solicitud.fecha_nueva,
                 fecha_antigua: fecha_cita,
