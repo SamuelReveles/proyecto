@@ -1,10 +1,10 @@
 const { Schema, model } = require('mongoose');
 
 const historialSchema = Schema({
-    dieta: [{
+    dieta: {
         type: Object,
         required: true
-    }],
+    },
     datos: {
         type: Schema.ObjectId,
         ref: 'dato',

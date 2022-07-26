@@ -80,7 +80,7 @@ const ClienteSchema = Schema({
         type: Object
     }],
     calendario: {
-        type: Array
+        type: Object
     },
     notificaciones: [{
         type: Object

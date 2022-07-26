@@ -28,7 +28,8 @@ const {
     getDietas,
     getReagendaciones,
     verServicio,
-    servicioDelete
+    servicioDelete,
+    getCalendario
 } = require('../controllers/usuarios');
 
 //Paypal
@@ -116,5 +117,7 @@ router.put('/notificaciones', verNotificaciones);
 //Ver datos del servicio para el chat
 router.get('/servicioChat', verServicio);
 
+//Ver calendario
+router.get('/calendario', getCalendario);
 
 module.exports = router;

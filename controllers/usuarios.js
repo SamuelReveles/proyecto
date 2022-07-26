@@ -918,7 +918,7 @@ const getServicios = async (req, res = response) => {
     
                     serviciosUsuario.push({
                         servicio: servicio._id,
-                        cita: fechaString,
+                        cita: servicio.fecha_cita,
                         paciente: paciente.nombre + ' ' + paciente.apellidos,
                         id_nutriologo: servicio.id_nutriologo,
                         nutriologo: nutriologo.nombre,
@@ -946,7 +946,7 @@ const getServicios = async (req, res = response) => {
     
                     serviciosUsuario.push({
                         servicio: servicio._id,
-                        cita: fechaString,
+                        cita: servicio.fecha_cita,
                         paciente: paciente.nombre + ' ' + paciente.apellidos,
                         id_nutriologo: servicio.id_nutriologo,
                         nutriologo: nutriologo.nombre,
@@ -1650,6 +1650,31 @@ const servicioDelete = async (req, res = response) => {
 
 }
 
+
+//Ver calendario de un paciente
+const getCalendario = async (req, res = response) => {
+    try {
+
+        const id = req.query.id;
+
+        let paciente = await Cliente.findById(id); 
+        
+        if(!paciente) {
+            paciente = await Extra.findById(id);
+        }
+        
+        calendario = paciente.calendario;
+        
+        res.status(200).json(calendario);
+    } catch ( error ) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error al enviar el calendario'
+        });
+    }
+}
+ 
 module.exports = {
     usuariosPost,
     usuariosUpdate,
@@ -1674,5 +1699,6 @@ module.exports = {
     getDietas,
     getReagendaciones,
     verServicio,
-    servicioDelete
+    servicioDelete,
+    getCalendario
 }

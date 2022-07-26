@@ -365,7 +365,7 @@ const actualizarFechasNutriologo = async(req, res = response) => {
                     let fechas = [];
 
                     let today = new Date();
-                    today = addDays(today, 31); //Avanzar de dia
+                    today = addDays(today, 30); //Avanzar de dia
                     let auxDia = new Date(today);
 
                     for (let j = 7; j <= 21; j++) {

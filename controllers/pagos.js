@@ -156,10 +156,6 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
 
         notificaciones.push(notificacion);
         cliente.notificaciones = notificaciones;
-
-        //Actualizar calendario del nutriólogo
-        let calendario_nutriologo = [];
-        if(calendario) calendario_nutriologo = calendario;
         
         await Nutriologo.findByIdAndUpdate(id_nutriologo, {ingresos: ingresos, fechaDisponible: fechaDisponible})
         await Cliente.findByIdAndUpdate(id, cliente);

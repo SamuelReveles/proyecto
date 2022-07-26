@@ -135,6 +135,17 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
       calendario_nutriologo = calendario_nutriologo.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
       await Nutriologo.findByIdAndUpdate(idNutriologo, {calendario: calendario_nutriologo});
+
+      //Guardar en el calendario del cliente
+      const calendario = {
+        linkMeet: event.data.hangoutLink,
+        fecha_cita: hora_inicio,
+        nombre
+      }
+
+      const servicio = await Servicio.findById(idServicio);
+      if(extra != '') await Extra.findByIdAndUpdate(servicio.id_paciente, {calendario: calendario});
+      else await Cliente.findByIdAndUpdate(servicio.id_paciente, {calendario: calendario});
     });
 
   } catch (error) {
@@ -282,6 +293,25 @@ async function cambiarFecha (idServicio, hora_nueva) {
         }
 
         await Nutriologo.findByIdAndUpdate(nutriologo._id, {calendario: calendario_nutriologo});
+
+        //Actualizar calendario del cliente
+        if(cliente) {
+          cliente.calendario.linkMeet = event.data.hangoutLink;
+          cliente.calendario.fecha_cita = hora_nueva;
+
+          console.log(cliente.calendario);
+          await Cliente.findByIdAndUpdate(servicio.id_paciente, cliente);
+        }
+        else {
+          const extra = await Extra.findById(servicio.id_paciente);
+
+          extra.calendario.linkMeet = event.data.hangoutLink;
+          extra.calendario.fecha_cita = hora_nueva;
+
+          console.log(extra.calendario);
+          await Extra.findByIdAndUpdate(servicio.id_paciente, extra);
+        }
+
       });
   
     return true;
