@@ -992,8 +992,8 @@ const getReagendaciones = async (req, res = response) => {
 
                 solicitudesUsuario.push({
                     solicitud: solicitud._id,
-                    emisor: nutriologo.nombre,
-                    remitente: nombre,
+                    emisor: nutriologo.nombreCompleto,
+                    remitente: nombre + ' ' + paciente.apellido,
                     fecha_nueva: solicitud.fecha_nueva,
                     fecha_antigua: servicio.fecha_cita,
                     mensaje: solicitud.mensaje
@@ -1008,8 +1008,8 @@ const getReagendaciones = async (req, res = response) => {
     
                     solicitudesUsuario.push({
                         solicitud: solicitud._id,
-                        emisor: nutriologo.nombre,
-                        remitente: paciente.nombre,
+                        emisor: nutriologo.nombreCompleto,
+                        remitente: paciente.nombre + ' ' + paciente.apellido,
                         fecha_nueva: solicitud.fecha_nueva,
                         fecha_antigua: servicio.fecha_cita,
                         mensaje: solicitud.mensaje
@@ -1025,8 +1025,8 @@ const getReagendaciones = async (req, res = response) => {
     
                     solicitudesUsuario.push({
                         solicitud: solicitud._id,
-                        emisor: nutriologo.nombre,
-                        remitente: paciente.nombre,
+                        emisor: nutriologo.nombreCompleto,
+                        remitente: paciente.nombre + ' ' + paciente.apellido,
                         fecha_nueva: solicitud.fecha_nueva,
                         fecha_antigua: servicio.fecha_cita,
                         mensaje: solicitud.mensaje
