@@ -1079,7 +1079,7 @@ const solicitarReagendacion = async (req, res = response) => {
         //Datos del servicio y reagendación
         let { id_servicio, dia, hora, msg } = req.body;
 
-        const { id_paciente, fecha_cita } = await Servicio.findById(id_servicio);
+        const { id_paciente } = await Servicio.findById(id_servicio);
 
         const { fechaDisponible } = await Nutriologo.findById(req.id);
 
@@ -1128,11 +1128,7 @@ const getReagendaciones = async (req, res = response) => {
 
         for await (const solicitud of solicitudes) {
 
-            const fecha = format(solicitud.fecha_nueva, 'dd-MMMM-yyyy', {locale: es});
-            const fechaArr = fecha.split('-');
-            const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-
-            const { id_paciente } = await Servicio.findById(solicitud.id_servicio);
+            const { id_paciente, fecha_cita } = await Servicio.findById(solicitud.id_servicio);
 
             let paciente = await Cliente.findById(id_paciente);
             if( !paciente ) paciente = await Extra.findById(id_paciente);
@@ -1141,7 +1137,8 @@ const getReagendaciones = async (req, res = response) => {
                 solicitud: solicitud._id,
                 emisor: paciente.nombre,
                 remitente: nombre,
-                fecha_nueva: fechaString,
+                fecha_nueva: solicitud.fecha_nueva,
+                fecha_antigua: fecha_cita,
                 mensaje: solicitud.mensaje
             });
 
@@ -1162,49 +1159,46 @@ const getReagendaciones = async (req, res = response) => {
 const rechazarSolicitud = async (req, res = response) => {
     try {
         const id_solicitud = req.query.id;
-        const id = req.id;
 
-        const reagendacion = await Reagendacion.findByIdAndUpdate(id_solicitud, {aceptada: false});
+        const reagendacion = await Reagendacion.findById(id_solicitud);
 
         const servicio = await Servicio.findById(reagendacion.id_servicios);
 
         //Encontrar datos del cliente o extra
-        let user = await Cliente.findById(reagendacion.emisor);
-
-        let dueno;
+        let cliente = await Cliente.findById(reagendacion.emisor);
 
         if(!user){
-            user = await Extra.findById(reagendacion.emisor);
-            dueno = await Cliente.findOne({
-                    $match: {$or: [{'extra1':reagendacion.emisor}, {'extra2':reagendacion.emisor}]}
+            const clientes = await Cliente.find();
+
+            for await (const user of clientes) {
+                //Revisar extras
+                if(user.extra1) {
+                    if(String(user.extra1) == String(servicio.id_paciente)){
+                        cliente = user;
+                        break;
+                    }
                 }
-            )
+                if(user.extra2) {
+                    if(String(user.extra2) == String(servicio.id_paciente)){
+                        cliente = user;
+                        break;
+                    }
+                }
+            }
         }
 
-        //Modificar fecha de evento
-        cambiarFecha(servicio, nueva_fecha);
-
-        const fechaArr = format(nueva_fecha, 'dd-MMMM-yyyy', {locale: es}).split('-');
-        const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-
         //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
-        const notificacion = new Notificacion('Tu solicitud de reagendación ha sido aceptada para el día ' + fechaString);
+        const notificacion = new Notificacion('Tu solicitud de reagendación ha sido rechazada');
 
         let notificaciones = [];
 
-        //Si es un extra, la notifiación se le asigna al dueño de la cuenta
-        if(dueno) {
-            notificaciones = dueno.notificaciones;
-            notificaciones.push(notificacion);
-            dueno.notificaciones = notificaciones;
-            await Cliente.findByIdAndUpdate(dueno._id);
-        }
-        else {
-            notificaciones = user.notificaciones;
-            notificaciones.push(notificacion);
-            user.notificaciones = notificaciones;
-            await Cliente.findByIdAndUpdate(user._id);
-        }
+        //Agregar la notifiación al dueño de la cuenta
+        if(user.notificaciones) notificaciones = user.notificaciones;
+        notificaciones.push(notificacion);
+        user.notificaciones = notificaciones;
+
+        await Cliente.findByIdAndUpdate(user._id);
+        await Reagendacion.findByIdAndDelete(id_solicitud);
 
         res.status(201).json(reagendacion);
 
@@ -1251,11 +1245,8 @@ const aceptarSolicitud = async (req, res = response) => {
             }
         }
 
-        //Modificar fecha de evento
-        await cambiarFecha(servicio, reagendacion.fecha_nueva);
-
-        const fechaArr = format(reagendacion.fecha_nueva, 'dd-MMMM-yyyy', {locale: es}).split('-');
-        const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+        let fechaArr = format(reagendacion.fecha_nueva, 'dd-MMMM-yyyy', {locale: es}).split('-');
+        let fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
         //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
         const notificacion = new Notificacion('Tu solicitud de reagendación ha sido aceptada para el día ' + fechaString);
@@ -1274,72 +1265,47 @@ const aceptarSolicitud = async (req, res = response) => {
             }
         }
 
-        //Actualizar calendario del nutriólogo
-
-        const fecha_cita = reagendacion.fecha_nueva;
-
         let calendario_nutriologo = [];
         if(nutriologo.calendario) calendario_nutriologo = nutriologo.calendario;
 
-        let { nombre, apellidos } = await Cliente.findById(servicio.id_paciente);
-
-        if(!nombre) {
-            let extra = await Extra.findById(servicio.id_paciente);
-
-            nombre = extra.nombre;
-            apellidos = extra.apellidos;
-        }
-
-        let encontrado = false;
-
-        function comparar(a, b) {
-            if (a.hora < b.hora) return -1;
-            if (b.hora < a.hora) return 1;
-        }
+        //Eliminar la cita anterior del calendario
+        fechaArr = format(servicio.fecha_cita, 'dd-MMMM-yyyy', {locale: es}).split('-');
+        fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
         for (let i = 0; i < calendario_nutriologo.length; i++) {
-            for (let j = 0; j < calendario_nutriologo[i].pacientes.length; j++){
-                if(String(calendario_nutriologo[i].pacientes[j].servicio) == String(reagendacion.id_servicio)){
-                    calendario_nutriologo[i].pacientes.slice(j);
-                }
-            }
-        }
 
-        for (let i = 0; i < calendario_nutriologo.length; i++) {
+            //Encontrar el día
             if(calendario_nutriologo[i].dia == fechaString){
-                const hora = format(fecha_cita, 'hh:mm');
-                encontrado = true;
-                calendario_nutriologo[i].pacientes.push({
-                    hora,
-                    servicio: servicio._id,
-                    llamada: servicio.linkMeet,
-                    paciente: nombre + apellidos
-                });
-                calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
+
+                const hora = format(servicio.fecha_cita, 'hh:mm');
+
+                //Encontrar al paciente
+                for (let j = 0; j < calendario_nutriologo[i].pacientes.length; j++) {
+                    //Eliminar al paciente
+                    if(calendario_nutriologo[i].pacientes[j].hora == hora){
+
+                        calendario_nutriologo[i].pacientes.splice(j, 1);
+                        //Eliminar el objeto si ya no hay pacientes
+                        if(calendario_nutriologo[i].pacientes.length == 0){
+                            calendario_nutriologo.splice(i, 1);
+                        }
+                        break;
+                    }
+                }
                 break;
             }
-        }
 
-        if(encontrado === false) {
-            const hora = format(fecha_cita, 'hh:mm');
-            calendario_nutriologo.push({
-                dia: fechaString,
-                date: fecha_cita,
-                pacientes:[{
-                    hora,
-                    servicio: servicio._id,
-                    llamada: servicio.linkMeet,
-                    paciente: nombre
-                }]
-            });
         }
 
         calendario_nutriologo = calendario_nutriologo.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
-        nutriologo.calendario = calendario_nutriologo;
+        await Nutriologo.findByIdAndUpdate(nutriologo._id, {calendario: calendario_nutriologo});
 
         //Actualizar nutriólogo
         await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+
+        //Modificar fecha de evento
+        await cambiarFecha(servicio, reagendacion.fecha_nueva);
 
         //Actualizar notificaciones del cliente
         await Cliente.findByIdAndUpdate(cliente._id, cliente);

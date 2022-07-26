@@ -1,5 +1,7 @@
 const { OAuth2Client } = require('google-auth-library');
 const { google } = require('googleapis');
+const format = require('date-fns/format');
+const es = require('date-fns/locale/es');
 
 const calendar = google.calendar('v3');
 
@@ -40,7 +42,9 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
     const nutriologo = await Nutriologo.findById(idNutriologo);
     const cliente = await Cliente.findById(idCliente);
 
-    let nombre = cliente.nombre;
+    let calendario_nutriologo = nutriologo.calendario;
+
+    let nombre = cliente.nombre + ' ' + cliente.apellid;
 
     if(extra != '') nombre = extra;
   
@@ -86,7 +90,53 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
       }
       //Guardar en el servicio el link de meet
       await Servicio.findByIdAndUpdate(idServicio, {linkMeet: event.data.hangoutLink, eventId: event.data.id});
+
+      //Fecha en string
+      const fechaArr = format(hora_inicio, 'dd-MMMM-yyyy', {locale: es}).split('-');
+      const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+      
+      let encontrado = false;
+
+      ///Guardar en el calendario del nutriólogo
+      function comparar(a, b) {
+          if (a.hora < b.hora) return -1;
+          if (b.hora < a.hora) return 1;
+      }
+
+      for (let i = 0; i < calendario_nutriologo.length; i++) {
+          if(calendario_nutriologo[i].dia == fechaString){
+              const hora = format(hora_inicio, 'hh:mm');
+              encontrado = true;
+              calendario_nutriologo[i].pacientes.push({
+                  hora,
+                  servicio: idServicio,
+                  llamada: event.data.hangoutLink,
+                  paciente: nombre
+              });
+              calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
+              break;
+          }
+      }
+
+      if(encontrado === false) {
+          const hora = format(hora_inicio, 'hh:mm');
+          calendario_nutriologo.push({
+              dia: fechaString,
+              date: hora_inicio,
+              pacientes:[{
+                  hora,
+                  servicio: idServicio,
+                  llamada: event.data.hangoutLink,
+                  paciente: nombre
+              }]
+          });
+      }
+
+      calendario_nutriologo = calendario_nutriologo.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      await Nutriologo.findByIdAndUpdate(idNutriologo, {calendario: calendario_nutriologo});
     });
+
   } catch (error) {
     console.log(error);
   }
@@ -177,6 +227,61 @@ async function cambiarFecha (idServicio, hora_nueva) {
         }
         //Guardar en el servicio el link de meet
         await Servicio.findByIdAndUpdate(idServicio, {linkMeet: event.data.hangoutLink, eventId: event.data.id});
+
+        //Actualizar calendario del nutriólogo
+        const fecha_cita = hora_nueva;
+
+        let calendario_nutriologo = [];
+        if(nutriologo.calendario) calendario_nutriologo = nutriologo.calendario;
+
+        let fechaArr = format(fecha_cita, 'dd-MMMM-yyyy', {locale: es}).split('-');
+        let fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
+
+        let { nombre, apellidos } = await Cliente.findById(servicio.id_paciente);
+
+        if(!nombre) { 
+            let extra = await Extra.findById(servicio.id_paciente);
+            nombre = extra.nombre;
+            apellidos = extra.apellidos;
+        }
+
+        let encontrado = false;
+
+        function comparar(a, b) {
+            if (a.hora < b.hora) return -1;
+            if (b.hora < a.hora) return 1;
+        }
+
+        for (let i = 0; i < calendario_nutriologo.length; i++) {
+            if(calendario_nutriologo[i].dia == fechaString){
+                const hora = format(fecha_cita, 'hh:mm');
+                encontrado = true;
+                calendario_nutriologo[i].pacientes.push({
+                    hora,
+                    servicio: servicio._id,
+                    llamada: event.data.hangoutLink,
+                    paciente: nombre + ' ' + apellidos
+                });
+                calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
+                break;
+            }
+        }
+
+        if(encontrado === false) {
+            const hora = format(fecha_cita, 'hh:mm');
+            calendario_nutriologo.push({
+                dia: fechaString,
+                date: fecha_cita,
+                pacientes:[{
+                    hora,
+                    servicio: servicio._id,
+                    llamada: event.data.hangoutLink,
+                    paciente: nombre + ' ' + apellidos
+                }]
+            });
+        }
+
+        await Nutriologo.findByIdAndUpdate(nutriologo._id, {calendario: calendario_nutriologo});
       });
   
     return true;

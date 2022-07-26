@@ -80,7 +80,7 @@ const crearOrden = async(req, res = response) => {
             sexo: paciente.sexo,
             fecha_nacimiento: paciente.fecha_nacimiento,
             precio,
-            cita
+            cita: !cita
         });
 
     } catch (error) {
@@ -236,52 +236,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
         }
         else 
             await crearEvento(fecha_cita, id, id_nutriologo, servicio._id);
-
-        //Fecha en string
-        const fechaArr = format(fecha_cita, 'dd-MMMM-yyyy', {locale: es}).split('-');
-        const fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
-        
-        let encontrado = false;
-        
-        ///Guardar en el calendario del nutriólogo
-        function comparar(a, b) {
-            if (a.hora < b.hora) return -1;
-            if (b.hora < a.hora) return 1;
-        }
-
-        for (let i = 0; i < calendario_nutriologo.length; i++) {
-            if(calendario_nutriologo[i].dia == fechaString){
-                const hora = format(fecha_cita, 'hh:mm');
-                encontrado = true;
-                calendario_nutriologo[i].pacientes.push({
-                    hora,
-                    servicio: servicio._id,
-                    llamada: servicio.linkMeet,
-                    paciente: nombreExtra
-                });
-                calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
-                break;
-            }
-        }
-
-        if(encontrado === false) {
-            const hora = format(fecha_cita, 'hh:mm');
-            calendario_nutriologo.push({
-                dia: fechaString,
-                date: fecha_cita,
-                pacientes:[{
-                    hora,
-                    servicio: servicio._id,
-                    llamada: servicio.linkMeet,
-                    paciente: nombreExtra
-                }]
-            });
-        }
-
-        calendario_nutriologo = calendario_nutriologo.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        await Nutriologo.findByIdAndUpdate(id_nutriologo, {calendario: calendario_nutriologo});
-        
+       
         return{
             status: 200,
             historial: cliente.historial_pagos, 
