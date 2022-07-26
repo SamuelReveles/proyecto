@@ -1451,6 +1451,45 @@ const verServicio = async (req, res = response) => {
 }
 
 
+//Ver datos para editar calendario
+const getLlenarCalendario = async (req, res = response) => {
+
+    try {
+        
+        const id_servicio = req.query.id_servicio;
+        const editar = req.query.editar;
+
+        let calendario;
+
+        if(editar == true) {
+            const dia = {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            }
+
+            calendario = [dia, dia, dia, dia, dia, dia, dia];
+        }
+        else { 
+            const servicio = await Servicio.findById(id_servicio);
+            let paciente = await Cliente.findById(servicio.id_paciente);
+
+            if(!paciente) paciente = await Extra.findById(servicio.id_paciente);
+            calendario = paciente.calendario.dieta;
+        }
+        res.status(200).json(calendario)
+
+    } catch ( error ) {
+        res.status(400).json({
+            success: false,
+            msg: 'Ocurrió un error'
+        });
+    }
+
+}
+
 module.exports = {
     nutriologoPost,
     nutriologoUpdate,
@@ -1475,5 +1514,6 @@ module.exports = {
     getReagendaciones,
     aceptarSolicitud,
     getCalendarioPDF,
-    verServicio    
+    verServicio,
+    getLlenarCalendario
 };

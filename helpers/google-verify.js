@@ -16,7 +16,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_SECRET_ID,
-  'http://localhost:8080'
+  'https://jopaka-app.herokuapp.com'
 );
 
 async function googleVerify(token = '') {

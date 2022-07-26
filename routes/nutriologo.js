@@ -27,7 +27,8 @@ const {
     rechazarSolicitud,
     aceptarSolicitud,
     getCalendarioPDF,
-    verServicio
+    verServicio,
+    getLlenarCalendario
 } = require('../controllers/nutriologo');
 
 const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
@@ -89,6 +90,9 @@ router.get('/historial', mostrarHistorial);
 
 //Llenar calendario del cliente
 router.put('/llenarCalendario', llenarCalendario);
+
+//Ver datos para llenar calendario
+router.get('/llenarCalendario', getLlenarCalendario);
 
 //Ver motivos de reporte
 router.get('/motivos', getMotivosNutriologo);
