@@ -39,7 +39,10 @@ const {
 } = require('../controllers/pagos');
 
 //Helpers
-const { verNotificaciones } = require('../helpers/verificacion');
+const { 
+    borrarNotificacion,
+    getNotificaciones,
+    verNotificaciones } = require('../helpers/verificacion');
 
 //Router instance
 const router = Router();
@@ -111,13 +114,19 @@ router.get('/servicio', getServicios);
 //Remover al nutriólogo de la lista
 router.delete('/servicio', servicioDelete);
 
-//Marcar vistas las notificaciones
-router.put('/notificaciones', verNotificaciones);
-
 //Ver datos del servicio para el chat
 router.get('/servicioChat', verServicio);
 
 //Ver calendario
 router.get('/calendario', getCalendario);
+
+//Borrar una notificación
+router.delete('/notificaciones', borrarNotificacion);
+
+//Ver las notificaciones
+router.put('/notificaciones', verNotificaciones);
+
+//Get las notificaciones
+router.get('/notificaciones', getNotificaciones);
 
 module.exports = router;

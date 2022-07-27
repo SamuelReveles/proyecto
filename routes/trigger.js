@@ -37,6 +37,6 @@ router.put('/servicios', vigenciaServicios);
 router.put('/fechas', actualizarFechasNutriologo);
 
 //Actualizar los horarios de los nutriólogos
-router.all('/calendario', actualizarCalendarios);
+router.put('/calendario', actualizarCalendarios);
 
 module.exports = router;

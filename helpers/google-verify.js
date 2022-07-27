@@ -16,7 +16,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_SECRET_ID,
-  'https://jopaka-app.herokuapp.com'
+  'http://localhost:8080.com'
 );
 
 async function googleVerify(token = '') {
@@ -136,16 +136,24 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
 
       await Nutriologo.findByIdAndUpdate(idNutriologo, {calendario: calendario_nutriologo});
 
-      //Guardar en el calendario del cliente
-      const calendario = {
-        linkMeet: event.data.hangoutLink,
-        fecha_cita: hora_inicio,
-        nombre
-      }
 
       const servicio = await Servicio.findById(idServicio);
-      if(extra != '') await Extra.findByIdAndUpdate(servicio.id_paciente, {calendario: calendario});
-      else await Cliente.findByIdAndUpdate(servicio.id_paciente, {calendario: calendario});
+      if(extra != '') {
+        const pacienteExtra = await Extra.findById(servicio.id_paciente);
+
+        pacienteExtra.calendario.linkMeet = event.data.hangoutLink;
+        pacienteExtra.calendario.fecha_cita = hora_inicio;
+
+        await Extra.findByIdAndUpdate(pacienteExtra._id, pacienteExtra);
+      }
+      else {
+        const pacienteCliente = await Cliente.findByIdAndUpdate(servicio.id_paciente);
+
+        pacienteCliente.calendario.linkMeet = event.data.hangoutLink;
+        pacienteCliente.calendario.fecha_cita = hora_inicio;
+        
+        await Cliente.findByIdAndUpdate(pacienteCliente._id, pacienteCliente);
+      }
     });
 
   } catch (error) {
@@ -248,12 +256,18 @@ async function cambiarFecha (idServicio, hora_nueva) {
         let fechaArr = format(fecha_cita, 'dd-MMMM-yyyy', {locale: es}).split('-');
         let fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
-        let { nombre, apellidos } = await Cliente.findById(servicio.id_paciente);
+        let nombre, apellidos;
 
-        if(!nombre) { 
+        let cliente = await Cliente.findById(servicio.id_paciente);
+
+        if(!cliente) { 
             let extra = await Extra.findById(servicio.id_paciente);
             nombre = extra.nombre;
             apellidos = extra.apellidos;
+        }
+        else {
+          nombre = cliente.nombre;
+          apellidos = cliente.apellidos;
         }
 
         let encontrado = false;
@@ -299,7 +313,6 @@ async function cambiarFecha (idServicio, hora_nueva) {
           cliente.calendario.linkMeet = event.data.hangoutLink;
           cliente.calendario.fecha_cita = hora_nueva;
 
-          console.log(cliente.calendario);
           await Cliente.findByIdAndUpdate(servicio.id_paciente, cliente);
         }
         else {
@@ -308,7 +321,6 @@ async function cambiarFecha (idServicio, hora_nueva) {
           extra.calendario.linkMeet = event.data.hangoutLink;
           extra.calendario.fecha_cita = hora_nueva;
 
-          console.log(extra.calendario);
           await Extra.findByIdAndUpdate(servicio.id_paciente, extra);
         }
 

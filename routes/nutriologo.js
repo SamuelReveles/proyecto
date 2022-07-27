@@ -35,7 +35,11 @@ const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
 
 const { validarToken, verificarNutriologo } = require('../middlewares/validar-jwt');
 
-const { verNotificaciones } = require('../helpers/verificacion');
+//Helpers
+const { 
+    borrarNotificacion,
+    getNotificaciones,
+    verNotificaciones } = require('../helpers/verificacion');
 
 const router = Router();
 
@@ -103,9 +107,6 @@ router.put('/fechas', fechasUpdate);
 //Ver la configuración de fechas
 router.get('/fechas', getFechas);
 
-//Marcar vistas las notificaciones
-router.put('/notificaciones', verNotificaciones);
-
 //Ver solicitudes de reagendación
 router.get('/reagendar', getReagendaciones);
 
@@ -123,5 +124,14 @@ router.get('/calendario', getCalendarioPDF);
 
 //Ver datos del servicio para el chat
 router.get('/servicioChat', verServicio);
+
+//Borrar una notificación
+router.delete('/notificaciones', borrarNotificacion);
+
+//Ver las notificaciones
+router.put('/notificaciones', verNotificaciones);
+
+//Get las notificaciones
+router.get('/notificaciones', getNotificaciones);
 
 module.exports = router;

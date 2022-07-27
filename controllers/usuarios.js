@@ -37,6 +37,65 @@ const usuariosPost = async (req, res = response) => {
         //Foto de perfil default
         const linkImagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1650667218/defaultpfp_hbpjmi.png';
 
+        const dieta = [
+            {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            },
+            {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            },
+            {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            },
+            {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            },
+            {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            },
+            {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            },
+            {
+                desayuno: '',
+                merienda1: '',
+                comida: '',
+                merienda2: '',
+                cena: ''
+            }
+        ];
+
+        const calendario = {
+            linkMeet: '',
+            fecha_cita: '',
+            nombre: req.body.nombre + ' ' + req.body.apellidos,
+            dieta
+        }
+
         //Creando objeto
         const user = new Cliente({
             nombre: req.body.nombre,
@@ -46,7 +105,8 @@ const usuariosPost = async (req, res = response) => {
             correo: req.body.correo,
             sexo: req.body.sexo,
             fecha_registro: new Date(),
-            fecha_nacimiento: req.body.fecha_nacimiento
+            fecha_nacimiento: req.body.fecha_nacimiento,
+            calendario
         });
 
         await user.save();
@@ -461,6 +521,65 @@ const altaExtras = async (req, res = response) => {
     //Extraer id del body
     const id = req.id;
 
+    const dieta = [
+        {
+            desayuno: '',
+            merienda1: '',
+            comida: '',
+            merienda2: '',
+            cena: ''
+        },
+        {
+            desayuno: '',
+            merienda1: '',
+            comida: '',
+            merienda2: '',
+            cena: ''
+        },
+        {
+            desayuno: '',
+            merienda1: '',
+            comida: '',
+            merienda2: '',
+            cena: ''
+        },
+        {
+            desayuno: '',
+            merienda1: '',
+            comida: '',
+            merienda2: '',
+            cena: ''
+        },
+        {
+            desayuno: '',
+            merienda1: '',
+            comida: '',
+            merienda2: '',
+            cena: ''
+        },
+        {
+            desayuno: '',
+            merienda1: '',
+            comida: '',
+            merienda2: '',
+            cena: ''
+        },
+        {
+            desayuno: '',
+            merienda1: '',
+            comida: '',
+            merienda2: '',
+            cena: ''
+        }
+    ];
+
+    const calendario = {
+        linkMeet: '',
+        fecha_cita: '',
+        nombre: req.body.nombre + ' ' + req.body.apellidos,
+        dieta
+    }
+
     //Extraer en objeto del cliente con el ID
     const cliente = await Cliente.findById(id)
         .catch(() => {
@@ -482,7 +601,8 @@ const altaExtras = async (req, res = response) => {
                 nombre: req.body.nombre,
                 apellidos: req.body.apellidos,
                 sexo: req.body.sexo,
-                fecha_nacimiento: new Date(req.body.fecha_nacimiento)
+                fecha_nacimiento: new Date(req.body.fecha_nacimiento),
+                calendario
             });
 
             //Guardar en extra1

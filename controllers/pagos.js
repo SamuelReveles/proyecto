@@ -43,9 +43,9 @@ const crearOrden = async(req, res = response) => {
                 brand_name: "Jopaka",
                 landing_page: "LOGIN",
                 user_action: "PAY_NOW",
-                return_url: "https://jopaka-app.herokuapp.com/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra +
+                return_url: "http://localhost:8080/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra +
                 "&dia=" + dia + '&hora=' + hora,
-                cancel_url: "https://jopaka-app.herokuapp.com/#/Jopaka/cliente/dashboard/inicio"
+                cancel_url: "http://localhost:8080/#/Jopaka/cliente/dashboard/inicio"
             }
         };
 
@@ -107,7 +107,7 @@ const capturarOrden = async(req, res = response) => {
         
         if(response.data.status === 'COMPLETED') {
             await ordenPagada(id, id_extra ,id_nutriologo, dia, hora);
-            res.redirect('https://jopaka-app.herokuapp.com/#/Jopaka/cliente/dashboard/inicio');
+            res.redirect('http://localhost:8080/#/Jopaka/cliente/dashboard/inicio');
         }
         else throw new Error('Fallo al hacer el pago');
 
@@ -127,7 +127,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
         //Si es para un extra, se cambia id y se cambia el objeto
         const cliente = await Cliente.findById(id);
 
-        let { precio, nombreCompleto, ingresos, fechaDisponible, calendario } = await Nutriologo.findById(id_nutriologo);
+        let { precio, nombreCompleto, ingresos, fechaDisponible, notificaciones } = await Nutriologo.findById(id_nutriologo);
 
         //Crear objeto a añadir en el registro de pagos
         const historial = new Historial_pago(
@@ -149,15 +149,21 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
         cliente.historial_pagos = historial_cliente;
 
         //Enviar notificación (guardar en el arreglo notificaciones del cliente)
-        const notificacion = new Notificacion('Gracias por tu confianza. Recuerda que debes seguir las instrucciones previas que ha dejado el nutriólogo antes de acudir a la cita');
-        let notificaciones = [];
+        let notificacion = new Notificacion('Gracias por tu confianza. Recuerda que debes seguir las instrucciones previas que ha dejado el nutriólogo antes de acudir a la cita');
+        let notificacionesArr = [];
 
-        if(cliente.notificaciones) notificaciones = cliente.notificaciones;
+        if(cliente.notificaciones) notificacionesArr = cliente.notificaciones;
 
-        notificaciones.push(notificacion);
-        cliente.notificaciones = notificaciones;
+        notificacionesArr.push(notificacion);
+        cliente.notificaciones = notificacionesArr;
+
+        notificacion = new Notificacion('Tienes un nuevo paciente en tu página principal');
         
-        await Nutriologo.findByIdAndUpdate(id_nutriologo, {ingresos: ingresos, fechaDisponible: fechaDisponible})
+        notificacionesArr = [];
+        if(notificaciones) notificacionesArr = notificaciones;
+        notificacionesArr.push(notificacion);
+
+        await Nutriologo.findByIdAndUpdate(id_nutriologo, {ingresos: ingresos, fechaDisponible: fechaDisponible, notificaciones: notificacionesArr});
         await Cliente.findByIdAndUpdate(id, cliente);
 
         //Crear servicio
