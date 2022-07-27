@@ -1116,7 +1116,7 @@ const getReagendaciones = async (req, res = response) => {
                     remitente: nombre + ' ' + apellidos,
                     fecha_nueva: solicitud.fecha_nueva,
                     fecha_antigua: servicio.fecha_cita,
-                    mensaje: solicitud.mensaje
+                    mensaje: solicitud.msg
                 });
             }
             if(extra1) {
@@ -1132,7 +1132,7 @@ const getReagendaciones = async (req, res = response) => {
                         remitente: paciente.nombre + ' ' + paciente.apellidos,
                         fecha_nueva: solicitud.fecha_nueva,
                         fecha_antigua: servicio.fecha_cita,
-                        mensaje: solicitud.mensaje
+                        mensaje: solicitud.msg
                     });
                 }
             }
@@ -1149,7 +1149,7 @@ const getReagendaciones = async (req, res = response) => {
                         remitente: paciente.nombre + ' ' + paciente.apellidos,
                         fecha_nueva: solicitud.fecha_nueva,
                         fecha_antigua: servicio.fecha_cita,
-                        mensaje: solicitud.mensaje
+                        mensaje: solicitud.msg
                     });
                 }
             }
@@ -1451,15 +1451,15 @@ const solicitarReagendacion = async (req, res = response) => {
         const id_emisor = req.id;
 
         //Datos del servicio y reagendación
-        let { id_servicio, dia, hora, msg } = req.body;
+        let { id_servicio, dia, horaNueva, msg } = req.body;
 
-        const { id_nutriologo } = await Servicio.findById(id_servicio);
+        const { id_nutriologo, hora } = await Servicio.findById(id_servicio);
         
         const nutriologo = await Nutriologo.findById(id_nutriologo);
 
         let { fechaDisponible } = nutriologo;
 
-        const fecha = fechaDisponible[dia].date[hora];
+        const fecha = fechaDisponible[dia].date[horaNueva];
 
         if(isAfter(new Date(), fecha)) { //Por si ocurre un bug
             res.status(400).json({
@@ -1475,7 +1475,8 @@ const solicitarReagendacion = async (req, res = response) => {
             id_servicio,
             fecha_nueva: fecha,
             msg,
-            hora,
+            horaNueva,
+            horaAntes: hora,
             aceptada: null
         });
 
@@ -1548,8 +1549,25 @@ const aceptarSolicitud = async (req, res = response) => {
 
         //Modificar la disponibilidad en las fechas del nutriólogo
         for (let i = 0; i < 30; i++) {
-            if(isSameDay(nutriologo.fechaDisponible[i].date[reagendacion.hora], reagendacion.fecha_nueva)){
-                nutriologo.fechaDisponible[i].hora[reagendacion.hora] = null;
+            if(isSameDay(nutriologo.fechaDisponible[i].date[reagendacion.horaNueva], reagendacion.fecha_nueva)){
+                if(nutriologo.fechaDisponible[i].hora[reagendacion.horaNueva] === false) {
+                    //Si la nueva fecha ya está ocupada
+                    res.status(401).json({
+                        success: false,
+                        msg: 'La hora ya está ocupada'
+                    });
+                    //Eliminar solicitud
+                    await Reagendacion.findByIdAndDelete(id_solicitud);
+                    return;
+                }
+                nutriologo.fechaDisponible[i].hora[reagendacion.horaNueva] = false;
+                break;
+            }
+        }
+
+        for (let i = 0; i < 30; i++) {
+            if(isSameDay(nutriologo.fechaDisponible[i].date[reagendacion.horaAntes], servicio.fecha_cita)){
+                nutriologo.fechaDisponible[i].hora[reagendacion.horaAntes] = null;
                 break;
             }
         }
@@ -1598,7 +1616,7 @@ const aceptarSolicitud = async (req, res = response) => {
         await cambiarFecha(servicio, reagendacion.fecha_nueva);
 
         //Actualizar servicio
-        await Servicio.findByIdAndUpdate(servicio._id, {fecha_cita: reagendacion.fecha_nueva});
+        await Servicio.findByIdAndUpdate(servicio._id, {fecha_cita: reagendacion.fecha_nueva, hora: reagendacion.horaNueva});
 
         //Eliminar solicitud
         await Reagendacion.findByIdAndDelete(id_solicitud);

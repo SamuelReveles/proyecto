@@ -62,6 +62,9 @@ const ServicioSchema = Schema({
     calificacion: {
         type: Number,
         default: -1
+    },
+    hora: {
+        type: Number
     }
 });
 

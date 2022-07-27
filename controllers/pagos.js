@@ -201,6 +201,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
                     id_paciente: id_extra,
                     id_nutriologo,
                     fecha_cita,
+                    hora,
                     fecha_finalizacion: fecha_finalizacion,
                 });
             } 
@@ -209,6 +210,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
                     id_paciente: id,
                     id_nutriologo,
                     fecha_cita,
+                    hora,
                     fecha_finalizacion: fecha_finalizacion,
                 });
             }
@@ -224,6 +226,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
             servicio.reportesCliente = 2;
             servicio.reportesNutriologo = 2;
             servicio.vigente = true;
+            servicio.hora = hora;
 
             await Servicio.findByIdAndUpdate(servicio._id, servicio);
         }

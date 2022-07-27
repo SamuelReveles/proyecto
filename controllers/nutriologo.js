@@ -1049,13 +1049,13 @@ const solicitarReagendacion = async (req, res = response) => {
         const id_emisor = req.id;
 
         //Datos del servicio y reagendación
-        let { id_servicio, dia, hora, msg } = req.body;
+        let { id_servicio, dia, horaNueva, msg } = req.body;
 
         const { id_paciente } = await Servicio.findById(id_servicio);
 
-        const { fechaDisponible } = await Nutriologo.findById(req.id);
+        const { fechaDisponible, hora } = await Nutriologo.findById(req.id);
 
-        const fecha = fechaDisponible[dia].date[hora];
+        const fecha = fechaDisponible[dia].date[horaNueva];
 
         if(isAfter(new Date(), fecha)) { //Por si ocurre un bug
             res.status(400).json({
@@ -1070,8 +1070,10 @@ const solicitarReagendacion = async (req, res = response) => {
             remitente: id_paciente,
             id_servicio,
             fecha_nueva: fecha,
-            hora,
-            msg
+            horaNueva,
+            horaAntes: hora,
+            msg,
+            aceptada: null
         });
 
         await reagendacion.save();
@@ -1111,7 +1113,7 @@ const getReagendaciones = async (req, res = response) => {
                 remitente: nombre,
                 fecha_nueva: solicitud.fecha_nueva,
                 fecha_antigua: fecha_cita,
-                mensaje: solicitud.mensaje
+                mensaje: solicitud.msg
             });
 
         }
@@ -1231,8 +1233,26 @@ const aceptarSolicitud = async (req, res = response) => {
 
         //Modificar la disponibilidad en las fechas del nutriólogo
         for (let i = 0; i < 30; i++) {
-            if(isSameDay(nutriologo.fechaDisponible[i].date[reagendacion.hora], reagendacion.fecha_nueva)){
-                nutriologo.fechaDisponible[i].hora[reagendacion.hora] = true;
+            if(isSameDay(nutriologo.fechaDisponible[i].date[reagendacion.horaNueva], reagendacion.fecha_nueva)){
+                if(nutriologo.fechaDisponible[i].hora[reagendacion.horaNueva] === false) {
+                    //Si la nueva fecha ya está ocupada
+                    res.status(401).json({
+                        success: false,
+                        msg: 'La hora ya está ocupada'
+                    });
+                    //Eliminar solicitud
+                    await Reagendacion.findByIdAndDelete(id_solicitud);
+                    return;
+                }
+                nutriologo.fechaDisponible[i].hora[reagendacion.horaNueva] = false;
+                break;
+            }
+        }
+
+        for (let i = 0; i < 30; i++) {
+            if(isSameDay(nutriologo.fechaDisponible[i].date[reagendacion.horaAntes], servicio.fecha_cita)){
+                nutriologo.fechaDisponible[i].hora[reagendacion.horaAntes] = true;
+                console.log(nutriologo.fechaDisponible[i].hora[reagendacion.horaAntes]);
                 break;
             }
         }
@@ -1283,7 +1303,7 @@ const aceptarSolicitud = async (req, res = response) => {
         await Cliente.findByIdAndUpdate(cliente._id, cliente);
 
         //Actualizar servicio
-        await Servicio.findByIdAndUpdate(servicio._id, {fecha_cita: reagendacion.fecha_nueva});
+        await Servicio.findByIdAndUpdate(servicio._id, {fecha_cita: reagendacion.fecha_nueva, hora: reagendacion.horaNueva});
 
         //Eliminar solicitud
         await Reagendacion.findByIdAndDelete(id_solicitud);

@@ -21,7 +21,10 @@ const ReagendacionSchema = Schema({
         type: String,
         required: [true, 'El texto es obligatorio']
     },
-    hora: {
+    horaNueva: {
+        type: Number
+    },
+    horaAntes: {
         type: Number
     },
     aceptada: {
