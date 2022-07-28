@@ -29,8 +29,8 @@ const socketController = (socket) => {
     socket.on('disconnect', async (payload) => {
         try {
             //Extract jwt from payload
-            const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
-            usuarios.borrarUsuario(id); 
+            usuarios.borrarUsuario(socket.id); 
+            console.log('desconectado: ' + id);
         } catch(error) {
             console.log(error); 
         }

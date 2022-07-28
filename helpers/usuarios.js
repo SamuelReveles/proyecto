@@ -22,8 +22,8 @@ class Usuarios {
     }
 
     //Eliminar del arreglo cuando se desconecta un usuario
-    borrarUsuario(id_usuario) {
-        this.conectados = this.conectados.filter( usuario => usuario.id_usuario != id_usuario);
+    borrarUsuario(id_socket) {
+        this.conectados = this.conectados.filter( usuario => usuario.id_socket != id_socket);
     }
 
 }
