@@ -85,8 +85,8 @@ const socketController = (socket) => {
             await Servicio.findByIdAndUpdate(id_servicio, servicio);
     
             //Enviar mensaje SOLO SE EMITE SI EL USUARIO ESTÁ CONECTADO
-            if(usuarios.getUsuario(usuarioReceptor)) {
-                const socket_user = usuarios.getUsuario(usuarioReceptor);
+            if(usuarios.getUsuario(usuarioReceptor._id)) {
+                const socket_user = usuarios.getUsuario(usuarioReceptor._id);
                 socket.broadcast.to(socket_user.id_socket).emit('mensaje', mensajes);
                 console.log('Enviado a ' + socket_user.id_socket);
                 console.log('Enviado a ' + socket_user.id_usuario);
