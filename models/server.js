@@ -17,7 +17,7 @@ class Server{
         //Server para los sockets
         this.server = require('http').createServer(this.app);
         //Socket
-        this.io = require('socket.io')(this.server);
+        this.io = require('socket.io')(this.server, {cors: { origin: "http://localhost:4200", credentials: true }});
         //Dirección de pruebas
         this.usuariosPath = '/api/usuarios';
         this.adminPath = '/api/administrador';
@@ -65,6 +65,7 @@ class Server{
 
     sockets() {
         this.io.on('connection', socketController);
+        // this.io.on('connection', (payload) => { console.log ('conectado')});
     }
 
     listen(){
