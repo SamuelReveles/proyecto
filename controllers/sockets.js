@@ -41,7 +41,6 @@ const socketController = (socket) => {
     socket.on('mensaje', async ( payload ) => {
         try{
             const { contenido = ' ', id_servicio, tipo, cliente } = payload;
-            console.log(payload);
             const servicio = await Servicio.findById(id_servicio);
     
             //Tipo:
@@ -83,13 +82,14 @@ const socketController = (socket) => {
             });
     
             servicio.mensajes = mensajes;
-            console.log(servicio.mensajes);
             await Servicio.findByIdAndUpdate(id_servicio, servicio);
     
             //Enviar mensaje SOLO SE EMITE SI EL USUARIO ESTÁ CONECTADO
             if(usuarios.getUsuario(usuarioReceptor)) {
                 const socket_user = usuarios.getUsuario(usuarioReceptor);
                 socket.broadcast.to(socket_user.id_socket).emit('mensaje', mensajes);
+                console.log('Enviado a ' + socket_user.id_socket);
+                console.log('Enviado a ' + socket_user.id_usuario);
             }
             else {
                 //Actualizar notificaciones de cliente
