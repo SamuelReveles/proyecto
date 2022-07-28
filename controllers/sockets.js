@@ -57,24 +57,8 @@ const socketController = (socket) => {
 
         let mensaje;
 
-        //Actualizar notificaciones de cliente
-        const notificacion = new Notificacion('Nuevo mensaje de ' + usuarioEmisor.nombre + ': ' + contenido);
-        let { notificaciones } = usuarioReceptor;
-
-        if(!notificaciones) notificaciones = [];
-
-        notificaciones.push(notificacion);
-
-        usuarioReceptor.notificaciones = notificaciones;
-
-        if(tipo == 'Nutriólogo') {
-            mensaje = new Mensaje(contenido, true, false);
-            await Nutriologo.findByIdAndUpdate(usuarioReceptor._id, usuarioReceptor);
-        }
-        else {
-            mensaje = new Mensaje(contenido, false, true);
-            await Nutriologo.findByIdAndUpdate(usuarioReceptor._id, usuarioReceptor);
-        }
+        if(tipo == 'Nutriólogo') mensaje = new Mensaje(contenido, true, false);
+        else mensaje = new Mensaje(contenido, false, true);
 
         let mensajes = [];
         if(servicio.mensajes) mensajes = servicio.mensajes;
@@ -88,6 +72,21 @@ const socketController = (socket) => {
         if(usuarios.getUsuario(receptor)) {
             const socket_user = usuarios.getUsuario(receptor);
             socket.broadcast.to(socket_user.id_socket).emit('mensaje', mensaje);
+        }
+        else {
+            //Actualizar notificaciones de cliente
+            const notificacion = new Notificacion('Nuevo mensaje de ' + usuarioEmisor.nombre + ': ' + contenido);
+            let { notificaciones } = usuarioReceptor;
+
+            if(!notificaciones) notificaciones = [];
+
+            notificaciones.push(notificacion);
+
+            usuarioReceptor.notificaciones = notificaciones;
+
+            if(tipo == 'Nutriólogo') await Cliente.findByIdAndUpdate(usuarioReceptor._id, usuarioReceptor);
+            
+            else await Nutriologo.findByIdAndUpdate(usuarioReceptor._id, usuarioReceptor);
         }
 
     });
