@@ -41,6 +41,7 @@ const socketController = (socket) => {
     socket.on('mensaje', async ( payload ) => {
         try{
             const { contenido = ' ', id_servicio, tipo, cliente } = payload;
+            console.log(payload);
             const servicio = await Servicio.findById(id_servicio);
     
             //Tipo:
