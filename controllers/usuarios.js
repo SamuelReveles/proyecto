@@ -639,7 +639,6 @@ const getProgreso = async (req, res = response) => {
     try {
         //Extraer id
         let id = req.id;
-
         if(req.query.id) id = req.query.id; 
 
         //Buscar entre usuarios y extras
@@ -1846,6 +1845,49 @@ const getCalendario = async (req, res = response) => {
         });
     }
 }
+
+//Ver personas de la cuenta
+const getPersonas = async (req, res = response) => {
+
+    try {
+
+        const id = req.id;
+
+        let { nombre, apellidos, extra1, extra2 } = await Cliente.findById(id);
+
+        let personas = [
+            {
+                nombre: nombre + ' ' + apellidos,
+                id
+            }
+        ]
+
+        if(extra1) {
+            extra1 = await Extra.findById(extra1);
+            personas.push({
+                nombre: extra1.nombre + ' ' + extra1.apellidos,
+                id: extra1._id
+            })
+        }
+        if(extra2) {
+            extra2 = await Extra.findById(extra2);
+            personas.push({
+                nombre: extra2.nombre + ' ' + extra2.apellidos,
+                id: extra2._id
+            })
+        }
+
+        res.status(200).json(personas);
+
+    } catch ( error ) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Error al obtener a la persona'
+        })
+    }
+
+}
  
 module.exports = {
     usuariosPost,
@@ -1872,5 +1914,6 @@ module.exports = {
     getReagendaciones,
     verServicio,
     servicioDelete,
-    getCalendario
+    getCalendario,
+    getPersonas
 }

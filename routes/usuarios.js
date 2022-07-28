@@ -29,7 +29,8 @@ const {
     getReagendaciones,
     verServicio,
     servicioDelete,
-    getCalendario
+    getCalendario,
+    getPersonas
 } = require('../controllers/usuarios');
 
 //Paypal
@@ -128,5 +129,8 @@ router.put('/notificaciones', verNotificaciones);
 
 //Get las notificaciones
 router.get('/notificaciones', getNotificaciones);
+
+//Ver personas de la cuenta
+router.get('/personas', getPersonas);
 
 module.exports = router;
