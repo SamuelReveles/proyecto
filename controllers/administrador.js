@@ -444,11 +444,13 @@ const solicitudDenied = async (req, res = response) => {
             <mj-section>
                 <mj-column>
         
-                <mj-text font-size="30px" color="lightgreen" font-family="helvetica" align="center">Solicitud de alta denegada</mj-text>
+                <mj-text font-size="30px" color="red" font-family="helvetica" align="center">Solicitud de alta denegada</mj-text>
         
                 <mj-text font-size="20px" color="black" font-family="helvetica">Hola ${solicitud.nombre} tu solicitud de alta ha sido denegada. 
-                Por favor en caso de alguna duda ponte en contacto con un administrador</mj-text>
-        
+                \nPor favor en caso de alguna duda ponte en contacto con un administrador o responde este correo</mj-text>
+
+                <mj-text font-size="15px" color="black" font-family="helvetica">Correos de administradores: a18300384@ceti.mx o a18300167@ceti.mx</mj-text>
+
                 <mj-divider border-color="lightgreen"></mj-divider>
         
                 <mj-image width="200px" src="https://res.cloudinary.com/jopaka-com/image/upload/v1652058046/JOPAKA_LOGO_lunx6k.png"></mj-image>
