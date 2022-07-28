@@ -26,7 +26,7 @@ const socketController = (socket) => {
     });
 
     //Eliminar de la lista y cambiar la última conexión
-    socket.on('disconnect', async (payload) => {
+    socket.on('disconnect', async () => {
         try {
             //Extract jwt from payload
             usuarios.borrarUsuario(socket.id); 
@@ -43,17 +43,6 @@ const socketController = (socket) => {
             const { contenido = ' ', id_servicio, tipo, cliente } = payload;
             const servicio = await Servicio.findById(id_servicio);
     
-            //Tipo:
-            /*
-                'Nutriologo' o 'Cliente'
-            */
-    
-            /*
-                Si receptor no es undefined - Es enviado desde el nutriólogo y este contiene el ID del cliente
-                Si emisor no es undefined - Es enviado desde el paciente y este contiene el ID del cliente
-            */
-            
-           
             let usuarioReceptor, usuarioEmisor;
     
             // Si hay receptor, el mensaje viene del nutriólogo y hay que usarlo para actualizar la db
@@ -88,8 +77,6 @@ const socketController = (socket) => {
             if(usuarios.getUsuario(usuarioReceptor._id)) {
                 const socket_user = usuarios.getUsuario(usuarioReceptor._id);
                 socket.broadcast.to(socket_user.id_socket).emit('mensaje', mensajes);
-                console.log('Enviado a ' + socket_user.id_socket);
-                console.log('Enviado a ' + socket_user.id_usuario);
             }
             else {
                 //Actualizar notificaciones de cliente
