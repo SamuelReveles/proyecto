@@ -106,8 +106,7 @@ const socketController = (socket) => {
                 
                 else await Nutriologo.findByIdAndUpdate(usuarioReceptor._id, usuarioReceptor);
             }
-            const socket_envia = usuarios.getUsuario(usuarioEmisor);
-            socket.broadcast.to(socket_envia.id_socket).emit('mensaje', mensajes);
+            socket.emit('mensaje', mensajes);
         } catch(error) {
             console.log(error);
         }
