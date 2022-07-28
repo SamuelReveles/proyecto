@@ -570,7 +570,7 @@ const deletePredeterminado = async (req, res = response) => {
     const id = req.id;
 
     //Nombre del alimento predeterminado
-    const nombre = req.query.nombre;
+    const index = req.query.index;
 
     //Objeto del nutriologo
     const nutriologo = await Nutriologo.findById(id)
@@ -585,26 +585,6 @@ const deletePredeterminado = async (req, res = response) => {
 
     //Extraer el arreglo del nutriólogo
     let predeterminados = nutriologo.predeterminados;
-
-    let index = 0;
-    let encontrado = false;
-
-    //Indice del arreglo que se quiere eliminar
-    for await (const alimento of predeterminados) {
-        if (alimento.nombre == nombre) {
-            encontrado = true;
-            break;
-        }
-        index++;
-    }
-
-    if(!encontrado) {
-        res.status(400).json({
-            success: false,
-            msg: 'No se ha encontrado el alimento predeterminado'
-        });
-        return;
-    }
 
     //Eliminar del objeto del nutriólogo
     predeterminados.splice(index, 1);
