@@ -75,7 +75,7 @@ const socketController = (socket) => {
             let mensajes = [];
             if(servicio.mensajes) mensajes = servicio.mensajes;
             mensajes.push({
-                conenido: mensaje.contenido,
+                texto: mensaje.texto,
                 nutriologo: mensaje.nutriologo,
                 paciente: mensaje.paciente,
                 visto: mensaje.visto,
@@ -84,7 +84,7 @@ const socketController = (socket) => {
     
             servicio.mensajes = mensajes;
             console.log(servicio.mensajes);
-            await Servicio.findByIdAndUpdate(id_servicio. servicio);
+            await Servicio.findByIdAndUpdate(id_servicio, servicio);
     
             //Enviar mensaje SOLO SE EMITE SI EL USUARIO ESTÁ CONECTADO
             if(usuarios.getUsuario(usuarioReceptor)) {
