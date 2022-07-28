@@ -18,6 +18,7 @@ const socketController = (socket) => {
     socket.on('conectar', (payload) => {
         const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
         usuarios.agregarUsuario(socket.id, id);
+        console.log('Conectado: ' + id);
     });
 
     //Eliminar de la lista y cambiar la última conexión
