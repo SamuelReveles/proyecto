@@ -19,7 +19,7 @@ const socketController = (socket) => {
         try {
             const { id } = jwt.verify(payload.jwt, process.env.SIGNJWT);
             usuarios.agregarUsuario(socket.id, id);
-            console.log('Conectado: ' + id);
+            console.log('Conectado: ' + socket.id);
         } catch(error) {
             console.log(error);
         }
@@ -30,7 +30,7 @@ const socketController = (socket) => {
         try {
             //Extract jwt from payload
             usuarios.borrarUsuario(socket.id); 
-            console.log('desconectado: ' + id);
+            console.log('desconectado: ' + socket.id)
         } catch(error) {
             console.log(error); 
         }
