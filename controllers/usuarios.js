@@ -656,10 +656,12 @@ const getProgreso = async (req, res = response) => {
         let masa = [];
         let estatura = [];
         let IMC = [];
+        let fechas = [];
 
         if(inicio) {
             masa.push(inicio.peso);
             estatura.push(inicio.altura);
+            fechas.push(inicio.fecha);
             let imcInicio = inicio.peso / ((inicio.altura / 100) * (inicio.altura / 100));
             IMC.push(imcInicio);
         }
@@ -669,6 +671,7 @@ const getProgreso = async (req, res = response) => {
             const dato = await Dato.findById(_id)
             masa.push(dato.peso);
             estatura.push(dato.altura);
+            fechas.push(inicio.fecha);
             let imc = dato.peso / ((dato.altura / 100) * (dato.altura / 100));
             IMC.push(imc);
         }
@@ -685,7 +688,8 @@ const getProgreso = async (req, res = response) => {
             success: true,
             peso: masa,
             altura: estatura,
-            IMC
+            IMC,
+            fechas
         });
     } catch (error) {
         res.status(400).json({
@@ -1172,7 +1176,7 @@ const usuariosUpdate = async (req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { nombre, apellidos, celular } = req.body;
+        const { nombre, apellidos, celular, sexo } = req.body;
 
         //id de usuario
         const id = req.id;
@@ -1207,6 +1211,7 @@ const usuariosUpdate = async (req, res = response) => {
         if(nombre) user.nombre = nombre;
         if(apellidos) user.apellidos = apellidos;
         if(celular) user.celular = celular;
+        if(sexo) user.sexo = sexo;
 
         await Cliente.findByIdAndUpdate(id, user);
 
@@ -1453,7 +1458,7 @@ const solicitarReagendacion = async (req, res = response) => {
         //Datos del servicio y reagendación
         let { id_servicio, dia, horaNueva, msg } = req.body;
 
-        const { id_nutriologo, hora } = await Servicio.findById(id_servicio);
+        const { id_nutriologo, hora, reagendar } = await Servicio.findById(id_servicio);
         
         const nutriologo = await Nutriologo.findById(id_nutriologo);
 
@@ -1461,10 +1466,10 @@ const solicitarReagendacion = async (req, res = response) => {
 
         const fecha = fechaDisponible[dia].date[horaNueva];
 
-        if(isAfter(new Date(), fecha)) { //Por si ocurre un bug
+        if(reagendar === true) { //Por si ocurre un bug
             res.status(400).json({
                 success: false,
-                msg: 'Fecha inválida'
+                msg: 'Ya hay una solicitud de reagendación pendiente'
             });
             return;
         }
@@ -1481,6 +1486,7 @@ const solicitarReagendacion = async (req, res = response) => {
         });
 
         await reagendacion.save();
+        await Servicio.findByIdAndUpdate(id_servicio, {reagendar: true});
 
         res.status(201).json(reagendacion);
 
@@ -1616,7 +1622,7 @@ const aceptarSolicitud = async (req, res = response) => {
         await cambiarFecha(servicio, reagendacion.fecha_nueva);
 
         //Actualizar servicio
-        await Servicio.findByIdAndUpdate(servicio._id, {fecha_cita: reagendacion.fecha_nueva, hora: reagendacion.horaNueva});
+        await Servicio.findByIdAndUpdate(servicio._id, {fecha_cita: reagendacion.fecha_nueva, hora: reagendacion.horaNueva, reagendar: false});
 
         //Eliminar solicitud
         await Reagendacion.findByIdAndDelete(id_solicitud);
@@ -1793,7 +1799,8 @@ const servicioDelete = async (req, res = response) => {
 const getCalendario = async (req, res = response) => {
     try {
 
-        const id = req.query.id;
+        let id = req.id;
+        if(req.query.id) id = req.query.id;
 
         let paciente = await Cliente.findById(id); 
         
@@ -1801,7 +1808,34 @@ const getCalendario = async (req, res = response) => {
             paciente = await Extra.findById(id);
         }
         
+        const servicios = await Servicio.find();
+
+        let servicioReciente;
+
+        for await (const servicio of servicios) {
+
+            if(String(servicio.id_paciente) == id) {
+                if(servicioReciente !== undefined) {
+                    if(isAfter(servicio.fecha_cita, servicioReciente.fecha_cita)) {
+                        servicioReciente = servicio;
+                    }
+                }
+                else servicioReciente = servicio;
+            }
+
+        }
+
+        let reagendar = false;
+        let id_servicio = '';
+ 
+        if(servicioReciente !== undefined) {
+            reagendar = (isAfter(servicioReciente.fecha_cita, new Date()) && !servicioReciente.reagendar);
+            id_servicio = servicioReciente._id;   
+        }     
+
         calendario = paciente.calendario;
+        calendario.reagendacion = reagendar;
+        calendario.servicio = id_servicio;
         
         res.status(200).json(calendario);
     } catch ( error ) {

@@ -65,6 +65,10 @@ const ServicioSchema = Schema({
     },
     hora: {
         type: Number
+    },
+    reagendar: {
+        type: Boolean,
+        default: false
     }
 });
 

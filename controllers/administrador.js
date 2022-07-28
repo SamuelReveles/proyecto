@@ -494,7 +494,7 @@ const adminUpdate = async(req, res = response) => {
     try{
 
         //Recibir parmetros del body
-        const { nombre, apellidos, celular } = req.body;
+        const { nombre, apellidos, celular, sexo } = req.body;
 
         const id = req.id;
 
@@ -528,6 +528,7 @@ const adminUpdate = async(req, res = response) => {
         if(nombre) admin.nombre = nombre;
         if(apellidos) admin.apellidos = apellidos;
         if(celular) admin.celular = celular;
+        if(sexo) admin.sexo = sexo;
 
         await Administrador.findByIdAndUpdate(id, admin);
 

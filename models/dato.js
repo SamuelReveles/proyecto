@@ -29,6 +29,10 @@ const DatoSchema = Schema({
     },
     notas: {
         type: String
+    },
+    fecha: {
+        type: Date,
+        deafult: new Date()
     }
 });
 

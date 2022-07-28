@@ -447,89 +447,17 @@ const actualizarCalendarios = async (req, res = response) => {
 
     try {
 
-        // const nutriologos = await Nutriologo.find();
+        const nutriologos = await Nutriologo.find();
 
-        // for await (let nutriologo of nutriologos) {
-        //     if(nutriologo.calendario) {
-        //         for await (const dia of nutriologo.calendario){
-        //             if(diferenciaDias(dia.date, new Date()) > 0 && isAfter(new Date(), dia.date)) {
-        //                 nutriologo.calendario.shift();
-        //                 await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
-        //             }
-        //         }
-        //     }
-        // }
-
-        const dieta = [
-            {
-                desayuno: '',
-                merienda1: '',
-                comida: '',
-                merienda2: '',
-                cena: ''
-            },
-            {
-                desayuno: '',
-                merienda1: '',
-                comida: '',
-                merienda2: '',
-                cena: ''
-            },
-            {
-                desayuno: '',
-                merienda1: '',
-                comida: '',
-                merienda2: '',
-                cena: ''
-            },
-            {
-                desayuno: '',
-                merienda1: '',
-                comida: '',
-                merienda2: '',
-                cena: ''
-            },
-            {
-                desayuno: '',
-                merienda1: '',
-                comida: '',
-                merienda2: '',
-                cena: ''
-            },
-            {
-                desayuno: '',
-                merienda1: '',
-                comida: '',
-                merienda2: '',
-                cena: ''
-            },
-            {
-                desayuno: '',
-                merienda1: '',
-                comida: '',
-                merienda2: '',
-                cena: ''
+        for await (let nutriologo of nutriologos) {
+            if(nutriologo.calendario) {
+                for await (const dia of nutriologo.calendario){
+                    if(diferenciaDias(dia.date, new Date()) > 0 && isAfter(new Date(), dia.date)) {
+                        nutriologo.calendario.shift();
+                        await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
+                    }
+                }
             }
-        ];
-
-        let calendario = {
-            linkMeet: '',
-            fecha_cita: '',
-            dieta
-        }
-
-        const clientes = await Cliente.find();
-
-        for await (let cliente of clientes) {
-            calendario.nombre = cliente.nombre + ' ' + cliente.apellidos;
-            await Cliente.findByIdAndUpdate(cliente._id, {calendario});
-        }
-
-        const extras = await Extra.find();
-
-        for await (let extra of extras) {
-            calendario.nombre = extra.nombre + ' ' + extra.apellidos;
-            await Extra.findByIdAndUpdate(extra._id, {calendario});
         }
 
         res.status(200).json({
