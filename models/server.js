@@ -17,7 +17,7 @@ class Server{
         //Server para los sockets
         this.server = require('http').createServer(this.app);
         //Socket
-        this.io = require('socket.io')(this.server, {cors: { origin: ['http://localhost:4200', 'http://localhost:8080', 'https://jopaka-app.com'], credentials: true }});
+        this.io = require('socket.io')(this.server, {cors: { origin: ['http://localhost:4200', 'http://localhost:8080', process.env.JOPAKA_URL], credentials: true }});
         //Dirección de pruebas
         this.usuariosPath = '/api/usuarios';
         this.adminPath = '/api/administrador';

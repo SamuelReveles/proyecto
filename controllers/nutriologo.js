@@ -279,57 +279,57 @@ const fechasUpdate = async (req, res = response) => {
                 //Configurar la fecha según el día
                 if(isMonday(today)) {
                     diaConfig = newConfig[0]; //Configurando como lunes
-                    for (let j = 0; j < fechasDisponibles[0].hora.length ; j++) {
+                    for (let j = 0; j < fechasDisponibles[i].hora.length ; j++) {
                         // Fecha ocupada
-                        if(fechasDisponibles[0].hora[j] === false) hora.push(false);
+                        if(fechasDisponibles[i].hora[j] === false) hora.push(false);
                         else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isTuesday(today)) {
                     diaConfig = newConfig[1]; //Configurando como martes
-                    for (let j = 0; j < fechasDisponibles[1].hora.length ; j++) {
+                    for (let j = 0; j < fechasDisponibles[i].hora.length ; j++) {
                         // Fecha ocupada
-                        if(fechasDisponibles[1].hora[j] === false) hora.push(false);
+                        if(fechasDisponibles[i].hora[j] === false) hora.push(false);
                         else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isWednesday(today)) {
                     diaConfig = newConfig[2]; //Configurando como miércoles
-                    for (let j = 0; j < fechasDisponibles[2].hora.length ; j++) {
+                    for (let j = 0; j < fechasDisponibles[i].hora.length ; j++) {
                         // Fecha ocupada
-                        if(fechasDisponibles[2].hora[j] === false) hora.push(false);
+                        if(fechasDisponibles[i].hora[j] === false) hora.push(false);
                         else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isThursday(today)) {
                     diaConfig = newConfig[3]; //Configurando como jueves
-                    for (let j = 0; j < fechasDisponibles[3].hora.length ; j++) {
+                    for (let j = 0; j < fechasDisponibles[i].hora.length ; j++) {
                         // Fecha ocupada
-                        if(fechasDisponibles[3].hora[j] === false) hora.push(false);
+                        if(fechasDisponibles[i].hora[j] === false) hora.push(false);
                         else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isFriday(today)) {
                     diaConfig = newConfig[4]; //Configurando como viernes
-                    for (let j = 0; j < fechasDisponibles[4].hora.length ; j++) {
+                    for (let j = 0; j < fechasDisponibles[i].hora.length ; j++) {
                         // Fecha ocupada
-                        if(fechasDisponibles[4].hora[j] === false) hora.push(false);
+                        if(fechasDisponibles[i].hora[j] === false) hora.push(false);
                         else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isSaturday(today)) {
                     diaConfig = newConfig[5]; //Configurando como sábado
-                    for (let j = 0; j < fechasDisponibles[5].hora.length ; j++) {
+                    for (let j = 0; j < fechasDisponibles[i].hora.length ; j++) {
                         // Fecha ocupada
-                        if(fechasDisponibles[5].hora[j] === false) hora.push(false);
+                        if(fechasDisponibles[i].hora[j] === false) hora.push(false);
                         else hora.push(diaConfig[j]);
                     }
                 }
                 else if(isSunday(today)) {
                     diaConfig = newConfig[6]; //Configurando como domingo
-                    for (let j = 0; j < fechasDisponibles[6].hora.length ; j++) {
+                    for (let j = 0; j < fechasDisponibles[i].hora.length ; j++) {
                         // Fecha ocupada
-                        if(fechasDisponibles[6].hora[j] === false) hora.push(false);
+                        if(fechasDisponibles[i].hora[j] === false) hora.push(false);
                         else hora.push(diaConfig[j]);
                     }
                 }
@@ -857,7 +857,7 @@ const reportar = async (req, res = response) => {
         const idCliente = servicio.id_paciente;
 
         //Extraer tipo de reporte para saber el puntaje
-        const { puntos } = await Motivo.findById(idReporte);
+        const { puntos, descripcion } = await Motivo.findById(idReporte);
 
         const cliente = await Cliente.findById(idCliente);
         if(!cliente) { // Si reporta a un extra
@@ -903,7 +903,7 @@ const reportar = async (req, res = response) => {
         //Aviso de baneo
         if(cliente.puntajeBaneo >= 5) {
             //Enviar notificación (guardar en el arreglo notificaciones del cliente)
-            const notificacion = new Notificacion('Tu cuenta ha sido suspendida por reportes. Revisa tu comportamiento o ponte en contacto con algún administrador');
+            const notificacion = new Notificacion('Tu cuenta ha sido suspendida por ' + descripcion + ' durante dos meses. Revisa tu comportamiento o ponte en contacto con algún administrador');
             let notificaciones = [];
 
             if(cliente.notificaciones) notificaciones = cliente.notificaciones;

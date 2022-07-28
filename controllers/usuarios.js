@@ -728,7 +728,7 @@ const reportar = async (req, res = response) => {
         });
 
         //Extraer tipo de reporte para saber el puntaje
-        const { puntos } = await Motivo.findById(idReporte);
+        const { puntos, descripcion } = await Motivo.findById(idReporte);
         const nutriologo = await Nutriologo.findById(idNutriologo);
 
         //Agregar los puntos y push a arreglo de reportes
@@ -757,7 +757,7 @@ const reportar = async (req, res = response) => {
         //Aviso de baneo
         if(nutriologo.puntajeBaneo >= 15) {
             //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
-            const notificacion = new Notificacion('Tu cuenta ha sido suspendida por reportes. Revisa tu comportamiento o ponte en contacto con algún administrador');
+            const notificacion = new Notificacion('Tu cuenta ha sido suspendida por ' + descripcion + ' durante dos meses. Revisa tu comportamiento o ponte en contacto con algún administrador');
             let notificaciones = [];
 
             nutriologo.baneado = true;

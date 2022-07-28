@@ -43,9 +43,9 @@ const crearOrden = async(req, res = response) => {
                 brand_name: "Jopaka",
                 landing_page: "LOGIN",
                 user_action: "PAY_NOW",
-                return_url: "http://localhost:8080/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra +
+                return_url: process.env.JOPAKA_URL + "/api/invitado/capturarOrden?id_nutriologo="+ id + "&id=" + req.id + "&id_extra=" + id_extra +
                 "&dia=" + dia + '&hora=' + hora,
-                cancel_url: "http://localhost:8080/#/Jopaka/cliente/dashboard/inicio"
+                cancel_url: process.env.JOPAKA_URL + "/#/Jopaka/cliente/dashboard/inicio"
             }
         };
 
@@ -107,7 +107,7 @@ const capturarOrden = async(req, res = response) => {
         
         if(response.data.status === 'COMPLETED') {
             await ordenPagada(id, id_extra ,id_nutriologo, dia, hora);
-            res.redirect('http://localhost:8080/#/Jopaka/cliente/dashboard/inicio');
+            res.redirect(process.env.JOPAKA_URL + '/#/Jopaka/cliente/dashboard/inicio');
         }
         else throw new Error('Fallo al hacer el pago');
 
