@@ -1731,14 +1731,15 @@ const verServicio = async (req, res = response) => {
         }
         else cliente = paciente;
 
-        const { nombre, apellidos } = await Nutriologo.findById(servicio.id_nutriologo);
+        const { nombre, apellidos, imagen } = await Nutriologo.findById(servicio.id_nutriologo);
 
         const cliente_id = cliente._id;
         let mensajes = [];
         if(servicio.mensajes) {
             mensajes = servicio.mensajes;
             for (let i = 0; i < mensajes.length; i++) {
-                mensajes[i].visto = true;
+                if(mensajes[i].paciente === true)
+                    mensajes[i].visto = true;
             }
             servicio.mensajes = mensajes;
             await Servicio.findByIdAndUpdate(servicio._id, servicio);
@@ -1749,7 +1750,8 @@ const verServicio = async (req, res = response) => {
             apellidos, //Apellidos de con quien está chateando
             cliente_id, //ID del cliente dueño de la cuenta (enviar en el payload del socket)
             mensajes, //Mensajes contiene los mensajes que hay en el servicio
-            servicio: servicio._id //ID del servicio (enviar en el payload del socket)
+            servicio: servicio._id, //ID del servicio (enviar en el payload del socket)
+            imagen
         });
 
     } catch (error) {

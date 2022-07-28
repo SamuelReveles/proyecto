@@ -82,7 +82,7 @@ const socketController = (socket) => {
             //Enviar mensaje SOLO SE EMITE SI EL USUARIO ESTÁ CONECTADO
             if(usuarios.getUsuario(receptor)) {
                 const socket_user = usuarios.getUsuario(receptor);
-                socket.broadcast.to(socket_user.id_socket).emit('mensaje', mensaje);
+                socket.broadcast.to(socket_user.id_socket).emit('mensaje', mensajes);
             }
             else {
                 //Actualizar notificaciones de cliente
