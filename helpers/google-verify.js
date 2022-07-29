@@ -306,6 +306,7 @@ async function cambiarFecha (idServicio, hora_nueva) {
             });
         }
 
+        calendario_nutriologo = calendario_nutriologo.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         await Nutriologo.findByIdAndUpdate(nutriologo._id, {calendario: calendario_nutriologo});
 
         //Actualizar calendario del cliente

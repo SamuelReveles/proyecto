@@ -28,7 +28,8 @@ const {
     aceptarSolicitud,
     getCalendarioPDF,
     verServicio,
-    getLlenarCalendario
+    getLlenarCalendario,
+    verCalendario
 } = require('../controllers/nutriologo');
 
 const { mostrarHistorial, getDietas } = require('../controllers/usuarios');
@@ -120,7 +121,10 @@ router.put('/denegar', rechazarSolicitud);
 router.put('/aceptar', aceptarSolicitud);
 
 //Ver calendario
-router.get('/calendario', getCalendarioPDF);
+router.get('/calendario', verCalendario);
+
+//Ver calendario en PDF
+router.get('/calendario/PDF', getCalendarioPDF);
 
 //Ver datos del servicio para el chat
 router.get('/servicioChat', verServicio);

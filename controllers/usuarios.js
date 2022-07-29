@@ -1562,6 +1562,7 @@ const aceptarSolicitud = async (req, res = response) => {
                         msg: 'La hora ya está ocupada'
                     });
                     //Eliminar solicitud
+                    await Servicio.findByIdAndUpdate(servicio._id, {reagendar: false});
                     await Reagendacion.findByIdAndDelete(id_solicitud);
                     return;
                 }
@@ -1837,6 +1838,7 @@ const getCalendario = async (req, res = response) => {
         calendario = paciente.calendario;
         calendario.reagendacion = reagendar;
         calendario.servicio = id_servicio;
+        calendario.nutriologo = servicioReciente.id_nutriologo;
         
         res.status(200).json(calendario);
     } catch ( error ) {

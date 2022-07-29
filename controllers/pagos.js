@@ -231,8 +231,6 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
             await Servicio.findByIdAndUpdate(servicio._id, servicio);
         }
 
-        let nombreExtra = cliente.nombre + ' ' + cliente.apellidos;
-
         //Crear el evento de calendar
         if(id_extra !== ''){
             const { nombre, apellidos } = await Extra.findById(id_extra);

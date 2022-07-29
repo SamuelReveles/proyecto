@@ -1219,6 +1219,7 @@ const aceptarSolicitud = async (req, res = response) => {
                         msg: 'La hora ya está ocupada'
                     });
                     //Eliminar solicitud
+                    await Servicio.findByIdAndUpdate(servicio._id, {reagendar: false});
                     await Reagendacion.findByIdAndDelete(id_solicitud);
                     return;
                 }
@@ -1480,12 +1481,36 @@ const getLlenarCalendario = async (req, res = response) => {
             if(!paciente) paciente = await Extra.findById(servicio.id_paciente);
             calendario = paciente.calendario.dieta;
         }
-        res.status(200).json(calendario)
+        res.status(200).json(calendario);
 
     } catch ( error ) {
         res.status(400).json({
             success: false,
             msg: 'Ocurrió un error'
+        });
+    }
+
+}
+
+//Ver calendario del nutriólogo
+const verCalendario = async (req, res = response) => {
+
+    try {
+
+        const id = req.id;
+        const { calendario } = await Nutriologo.findById(id);
+        let reagendar = true;
+
+        if(calendario[0]) {
+            reagendar = !isSameDay(new Date(), calendario[0].date)
+        }
+        res.status(200).json({calendario, reagendar});
+
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            success: false,
+            msg: 'Hubo un error al consultar el calendario'
         });
     }
 
@@ -1516,5 +1541,6 @@ module.exports = {
     aceptarSolicitud,
     getCalendarioPDF,
     verServicio,
-    getLlenarCalendario
+    getLlenarCalendario,
+    verCalendario
 };

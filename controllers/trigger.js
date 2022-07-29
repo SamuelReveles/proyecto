@@ -14,6 +14,7 @@ const isAfter = require('date-fns/isAfter');
 const addDays = require('date-fns/addDays');
 const setHours = require('date-fns/setHours');
 const setMinutes = require('date-fns/setMinutes');
+const differenceInCalendarDays = require('date-fns/differenceInCalendarDays');
 
 //Helpers
 const { diferenciaMeses, diferenciaDias } = require('../helpers/triggers');
@@ -452,7 +453,7 @@ const actualizarCalendarios = async (req, res = response) => {
         for await (let nutriologo of nutriologos) {
             if(nutriologo.calendario) {
                 for await (const dia of nutriologo.calendario){
-                    if(diferenciaDias(dia.date, new Date()) > 0 && isAfter(new Date(), dia.date)) {
+                    if(differenceInCalendarDays(dia.date, new Date()) < 0) {
                         nutriologo.calendario.shift();
                         await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
                     }
