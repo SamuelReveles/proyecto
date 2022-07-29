@@ -681,6 +681,7 @@ const borrarReporte = async (req, res = response) => {
     
         //Reducir los puntos
         to.puntajeBaneo -= puntos;
+        if(to.puntajeBaneo < 0) to.puntajeBaneo = 0; 
         notificacion = new Notificacion('Se ha borrado un reporte por ' + descripcion);
         to.notificaciones.push(notificacion);
 

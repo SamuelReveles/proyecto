@@ -27,9 +27,6 @@ const DatoSchema = Schema({
     pectoral: {
         type: Number
     },
-    notas: {
-        type: String
-    },
     fecha: {
         type: Date,
         deafult: new Date()
@@ -79,11 +76,6 @@ DatoSchema.methods.toArray = function(){
         tipo: 'Pectoral',
         valor: this.pectoral + ' cm'
     });
-
-    if(this.notas) arreglo.push({
-        tipo: 'Notas',
-        valor: this.notas
-    })
 
     return arreglo;
 }

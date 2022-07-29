@@ -689,7 +689,6 @@ const getClientData = async (req, res = response) => {
 //Update datos del clientes
 const updateClientData = async (req, res = response) => {
 
-
     try {
         //Extraer datos del query
         const id_servicio = req.body.id;
@@ -714,8 +713,7 @@ const updateClientData = async (req, res = response) => {
             abdomen: req.body.abdomen,
             cadera: req.body.cadera,
             muslos: req.body.muslos,
-            pectoral: req.body.pectoral,
-            notas: req.body.notas
+            pectoral: req.body.pectoral
         });
 
         const cliente = await Cliente.findById(id_paciente);
