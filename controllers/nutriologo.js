@@ -398,6 +398,7 @@ const llenarCalendario = async (req, res = response) => {
         const dieta = req.body.calendario;
 
         cliente.calendario.dieta = dieta;
+        cliente.calendario.notas = req.body.notas;
 
         //Crear el historial del cliente
         let ultimodato;
@@ -413,6 +414,7 @@ const llenarCalendario = async (req, res = response) => {
         
         else {
             paciente.calendario.dieta = dieta;
+            paciente.calendario.notas = req.body.notas;
             paciente.historial.push(historial);
             await Extra.findByIdAndUpdate(paciente._id, paciente);
         }
