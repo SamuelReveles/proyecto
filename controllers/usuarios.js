@@ -1,6 +1,6 @@
 //Librerías externas
 const { response } = require('express');
-const PDF = require('pdfkit-construct');
+const PdfkitConstruct = require('pdfkit-construct');
 const format = require('date-fns/format');
 const differenceInDays = require('date-fns/differenceInDays');
 const isSameDay = require('date-fns/isSameDay');
@@ -1296,10 +1296,26 @@ const mostrarHistorial = async (req, res = response) => {
         datos = await Dato.findById(datos);
 
         //Crear el documento permitiendo que se pueda crear el archivo de salida
-        const doc = new PDF({bufferPage: true});
+        const doc = new PdfkitConstruct({
+            size: 'A3',
+            margins: {top: 20, left: 10, right: 10, bottom: 20},
+            bufferPages: true,
+        });
 
         //Asignar nombre al archivo
         const filename = 'Historial_' + nombre + '_' + Date.now() + '.pdf';
+              
+        // set the header to render in every page
+        doc.setDocumentFooter({ height: "10%" }, () => {
+            doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 700, 1130, {scale: 0.04})
+        });
+
+        doc.setDocumentHeader({ height: "10%" }, () => {
+            doc.fontSize(18);
+            doc.text('Dieta de ' + nombre, {
+                align: 'center'
+            });
+        })
 
         const stream = res.writeHead(200, {
             'Content-Type': 'application/pdf',
@@ -1307,49 +1323,12 @@ const mostrarHistorial = async (req, res = response) => {
         });
         
         //Dieta semanal
-        // Logo jopaka
-        doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 480, 730, {scale: 0.04})
-        doc.fontSize(20);
-        doc.text('Dieta de la semana ' + nombre, {
-            align: 'center'
-        });
-
-        //Datos del cliente
-        doc.addPage();
-        //Logo jopaka
-        doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 480, 730, {scale: 0.04})
-        doc.fontSize(20);
-        doc.text('Datos de la semana ' + nombre, {
-            align: 'center'
-        });
-
-        doc.text('\n\n');
-        doc.fontSize(15);
-
-        datos = datos.toArray();
-
-        // set the header to render in every page
-        doc.setDocumentHeader({ height : "20%" }, () => {
-
-        });
-
-
-        doc.addTable([
-            {key: 'tipo', label: 'Dato', align: 'center'},
-            {key: 'valor', label: 'Valor', align: 'center'}
-        ], datos, {
-            border: {size: 0.06, color: '#000000'},
-            width: "fill_body",
-            striped: true,
-            stripedColors: ["#E8FFBE", "#D2FF7F"],
-            cellsPadding: 10,
-            marginLeft: 45,
-            marginRight: 45,
-            headAlign: 'center',
-            headBackground : '#A9E638',
-        });
-
-        doc.render();
+        const diaSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+        
+        for (let i = 0; i < dieta.length; i++) {  
+            dieta[i].dia = diaSemana[i];
+        }
+        
 
         doc.on('data', (data) => {
             stream.write(data);
@@ -1359,7 +1338,47 @@ const mostrarHistorial = async (req, res = response) => {
             stream.end();
         });
 
+        doc.addTable([
+            {key: 'dia', label: 'Día', align: 'left'},
+            {key: 'desayuno', label: 'Desayuno', align: 'left'},
+            {key: 'merienda1', label: 'Merienda', align: 'left'},
+            {key: 'comida', label: 'Comida', align: 'left'},
+            {key: 'merienda2', label: 'Colación', align: 'left'},
+            {key: 'cena', label: 'Cena', align: 'left'}
+        ], dieta, {
+            border: {size: 0.06, color: '#000000'},
+            width: "fill_body",
+            height: "fill_body",
+            cellsPadding: 5,
+            marginLeft: 5,
+            marginRight: 5,
+            headAlign: 'center',
+            headBackground : '#A9E638',
+            cellsAlign: 'left'
+        });
+
+        doc.render();
+        
+        datos = datos.toArray();
+        doc.addTable([
+            {key: 'tipo', label: 'Dato', align: 'center'},
+            {key: 'valor', label: 'Valor', align: 'center'}
+        ], datos, {
+            border: {size: 0.06, color: '#000000'},
+            width: "fill_body",
+            cellsPadding: 10,
+            marginLeft: 45,
+            marginRight: 45,
+            headAlign: 'center',
+            headBackground : '#A9E638',
+        });
+        
+        doc.addPage();
+        doc.tables.shift();
+        doc.render();
+        
         doc.end();
+
     } catch (error) {
         console.log(error);
         res.status(400).json({
