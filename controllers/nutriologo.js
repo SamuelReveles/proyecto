@@ -775,6 +775,7 @@ const getPacientes = async (req, res  = response) => {
                         servicio: servicio.vigente,
                         verDatos: servicio.verDatos,
                         cita: servicio.fecha_cita,
+                        llenarDatos: servicio.llenado_datos,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     }
 
@@ -809,6 +810,7 @@ const getPacientes = async (req, res  = response) => {
                         servicio: servicio.vigente,
                         verDatos: servicio.verDatos,
                         cita: servicio.fecha_cita,
+                        llenarDatos: servicio.llenado_datos,
                         reagendar: (differenceInDays(servicio.fecha_cita, new Date()) >= 1)
                     }
                     if(servicio.vigente === true) activos.push(servicioPaciente);
