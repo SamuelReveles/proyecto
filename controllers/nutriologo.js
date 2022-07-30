@@ -1420,7 +1420,8 @@ const verServicio = async (req, res = response) => {
 
         const nombre = paciente.nombre;
         const apellidos = paciente.apellidos;
-        const imagen = paciente.imagen;
+        let imagen = paciente.imagen;
+        if(!imagen) imagen = 'https://res.cloudinary.com/jopaka-com/image/upload/v1655342366/jopaka_extra_qhsinv.png';
         const cliente_id = cliente._id;
         let mensajes = [];
         
