@@ -26,10 +26,6 @@ const DatoSchema = Schema({
     },
     pectoral: {
         type: Number
-    },
-    fecha: {
-        type: Date,
-        deafult: new Date()
     }
 });
 

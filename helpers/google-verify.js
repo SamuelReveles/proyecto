@@ -105,7 +105,7 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
 
       for (let i = 0; i < calendario_nutriologo.length; i++) {
           if(calendario_nutriologo[i].dia == fechaString){
-              const hora = format(hora_inicio, 'hh:mm');
+              const hora = format(hora_inicio, 'HH:mm');
               encontrado = true;
               calendario_nutriologo[i].pacientes.push({
                   hora,
@@ -119,7 +119,7 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
       }
 
       if(encontrado === false) {
-          const hora = format(hora_inicio, 'hh:mm');
+          const hora = format(hora_inicio, 'HH:mm');
           calendario_nutriologo.push({
               dia: fechaString,
               date: hora_inicio,
@@ -279,7 +279,7 @@ async function cambiarFecha (idServicio, hora_nueva) {
 
         for (let i = 0; i < calendario_nutriologo.length; i++) {
             if(calendario_nutriologo[i].dia == fechaString){
-                const hora = format(fecha_cita, 'hh:mm');
+                const hora = format(fecha_cita, 'HH:mm');
                 encontrado = true;
                 calendario_nutriologo[i].pacientes.push({
                     hora,
@@ -293,7 +293,7 @@ async function cambiarFecha (idServicio, hora_nueva) {
         }
 
         if(encontrado === false) {
-            const hora = format(fecha_cita, 'hh:mm');
+            const hora = format(fecha_cita, 'HH:mm');
             calendario_nutriologo.push({
                 dia: fechaString,
                 date: fecha_cita,

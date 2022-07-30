@@ -651,16 +651,27 @@ const getProgreso = async (req, res = response) => {
         //Extraer inicio
         const inicio = await Dato.findById(user.datoInicial);
 
+        //Extraer fechas de los datos
+        const { historial } = user;
+        
         //Guardar datos en un arreglo
         let masa = [];
         let estatura = [];
         let IMC = [];
         let fechas = [];
+        
+        //Agregar fechas al arreglo de historiales
+        if(historial.length > 0) {
+            for await (let data of historial) {
+                const { fecha } = await Historial.findById(data);
+                fechas.push(fecha);
+            }
+        }
 
+        //Agregar datos de peso, estatura e IMC
         if(inicio) {
             masa.push(inicio.peso);
             estatura.push(inicio.altura);
-            fechas.push(inicio.fecha);
             let imcInicio = inicio.peso / ((inicio.altura / 100) * (inicio.altura / 100));
             IMC.push(imcInicio);
         }
@@ -670,7 +681,7 @@ const getProgreso = async (req, res = response) => {
             const dato = await Dato.findById(_id)
             masa.push(dato.peso);
             estatura.push(dato.altura);
-            fechas.push(inicio.fecha);
+            fechas.push(dato.fecha);
             let imc = dato.peso / ((dato.altura / 100) * (dato.altura / 100));
             IMC.push(imc);
         }
