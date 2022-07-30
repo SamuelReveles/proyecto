@@ -40,7 +40,7 @@ DatoSchema.methods.toArray = function(){
 
     if(this.altura) arreglo.push({
         tipo: 'Altura',
-        valor: this.altura + ' m'
+        valor: this.altura + ' cm'
     });
 
     if(this.brazo) arreglo.push({

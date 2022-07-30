@@ -1321,8 +1321,10 @@ const mostrarHistorial = async (req, res = response) => {
             doc.image(__dirname + '/../src/JOPAKA_LOGO.png', 700, 1130, {scale: 0.04})
         });
 
-        doc.setDocumentHeader({ height: "10%" }, () => {
+        doc.setDocumentHeader({ height: "15%" }, () => {
             doc.fontSize(18);
+            doc.text('\n')
+            doc.text('\n')
             doc.text('Dieta de ' + nombre, {
                 align: 'center'
             });
@@ -1336,8 +1338,8 @@ const mostrarHistorial = async (req, res = response) => {
         //Dieta semanal
         const diaSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
         
-        for (let i = 0; i < dieta.length; i++) {  
-            dieta[i].dia = diaSemana[i];
+        for (let i = 0; i < dieta.dieta.length; i++) {  
+            dieta.dieta[i].dia = diaSemana[i];
         }
         
 
@@ -1356,7 +1358,7 @@ const mostrarHistorial = async (req, res = response) => {
             {key: 'comida', label: 'Comida', align: 'left'},
             {key: 'merienda2', label: 'Colación', align: 'left'},
             {key: 'cena', label: 'Cena', align: 'left'}
-        ], dieta, {
+        ], dieta.dieta, {
             border: {size: 0.06, color: '#000000'},
             width: "fill_body",
             height: "fill_body",
@@ -1371,6 +1373,7 @@ const mostrarHistorial = async (req, res = response) => {
         doc.render();
         
         datos = datos.toArray();
+        
         doc.addTable([
             {key: 'tipo', label: 'Dato', align: 'center'},
             {key: 'valor', label: 'Valor', align: 'center'}
@@ -1383,10 +1386,27 @@ const mostrarHistorial = async (req, res = response) => {
             headAlign: 'center',
             headBackground : '#A9E638',
         });
+        doc.moveDown();
+        doc.fontSize(18)
+        doc.text('NOTAS:' , {
+            width: 410,
+            align: 'center'
+        });
+        doc.fontSize(14)
+        doc.moveDown();
+        doc.text('' + dieta.notas, {
+            width: 410,
+            align: 'left'
+        });
         
         doc.addPage();
+        doc.text('\n')
+
         doc.tables.shift();
         doc.render();
+        doc.tables.shift();
+        
+        
         
         doc.end();
 
