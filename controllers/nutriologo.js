@@ -372,14 +372,6 @@ const llenarCalendario = async (req, res = response) => {
             return;
         }
 
-        if(servicio.llenado_datos === false) {
-            res.status(401).json({
-                success: false,
-                msg: 'Aún no se han llenado los datos'
-            });
-            return;
-        }
-
         let paciente = await Cliente.findById(servicio.id_paciente); //Paciente es a quien se le llena el calendario
         let cliente = paciente; //Cliente a quien se le envía la notificación
 
@@ -709,7 +701,6 @@ const updateClientData = async (req, res = response) => {
         const datos = new Dato({
             peso: req.body.peso,
             altura: req.body.altura,
-            fecha_nacimiento: req.body.fecha_nacimiento,
             brazo: req.body.brazo,
             cuello: req.body.cuello,
             abdomen: req.body.abdomen,
