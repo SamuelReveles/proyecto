@@ -394,11 +394,18 @@ const llenarCalendario = async (req, res = response) => {
 
         //Crear el historial del cliente
         let ultimodato;
-        if(!paciente.datoInicial) ultimodato = paciente.datoConstante[paciente.datoConstante.length - 1];
+        const calendario = { 
+            dieta, 
+            notas: req.body.notas
+        };
+        if(paciente.datoConstante) 
+            if (paciente.datoConstante.length > 0) 
+                ultimodato = paciente.datoConstante[paciente.datoConstante.length - 1];
+
         else ultimodato = paciente.datoInicial;
         
         const historial = new Historial({
-            dieta: dieta,
+            dieta: calendario,
             datos: ultimodato
         });
 
