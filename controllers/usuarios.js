@@ -1240,7 +1240,8 @@ const getDietas = async (req, res = response) => {
     try {
 
         //Id del cliente
-        const id = req.query.id;
+        let id = req.id;
+        if(req.query.id) id = req.query.id;
 
         let cliente = await Cliente.findById(id);
         if(!cliente) cliente = await Extra.findById(id);
@@ -1285,7 +1286,8 @@ const mostrarHistorial = async (req, res = response) => {
 
     try {
         //Id del cliente
-        const id = req.query.id;
+        let id = req.id;
+        if(req.query.id) id = req.query.id;
 
         //Indice del arreglo del historial de datos del cliente
         const indexHistorial = req.query.indice;
@@ -1365,6 +1367,7 @@ const mostrarHistorial = async (req, res = response) => {
             cellsPadding: 5,
             marginLeft: 5,
             marginRight: 5,
+            cellsFont : "Helvetica",
             headAlign: 'center',
             headBackground : '#A9E638',
             cellsAlign: 'left'
@@ -1382,22 +1385,12 @@ const mostrarHistorial = async (req, res = response) => {
             width: "fill_body",
             cellsPadding: 10,
             marginLeft: 45,
+            cellsFont : "Helvetica",
             marginRight: 45,
             headAlign: 'center',
             headBackground : '#A9E638',
         });
-        doc.moveDown();
         doc.fontSize(18)
-        doc.text('NOTAS:' , {
-            width: 410,
-            align: 'center'
-        });
-        doc.fontSize(14)
-        doc.moveDown();
-        doc.text('' + dieta.notas, {
-            width: 410,
-            align: 'left'
-        });
         
         doc.addPage();
         doc.text('\n')
@@ -1406,7 +1399,25 @@ const mostrarHistorial = async (req, res = response) => {
         doc.render();
         doc.tables.shift();
         
+        const notas = [{
+            notas: dieta.notas
+        }];
         
+        doc.addPage();
+        doc.addTable([
+            {key: 'notas', label: 'Notas', align: 'left'}
+        ], notas, {
+            border: {size: 0.06, color: '#000000'},
+            width: "fill_body",
+            marginLeft: 15,
+            marginRight: 15,
+            headAlign: 'center',
+            headBackground : '#A9E638',
+            cellsFontSize: 13,
+            headFontSize : 15,
+        });
+
+        doc.render();
         
         doc.end();
 
