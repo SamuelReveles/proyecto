@@ -1554,6 +1554,9 @@ const rechazarSolicitud = async (req, res = response) => {
     try {
         const { id_solicitud } = req.body;
 
+        let reagendacion = await Reagendacion.findById(id_solicitud);
+
+
         const nutriologo = await Nutriologo.findById(reagendacion.emisor);
 
         //Enviar notificación (guardar en el arreglo notificaciones del nutriólogo)
@@ -1568,10 +1571,13 @@ const rechazarSolicitud = async (req, res = response) => {
         await Nutriologo.findByIdAndUpdate(nutriologo._id, nutriologo);
 
         //Eliminar solicitud
-        const reagendacion = await Reagendacion.findByIdAndDelete(id_solicitud);
+        await Reagendacion.findByIdAndDelete(id_solicitud);
+
+        await Servicio.findByIdAndUpdate(reagendacion.id_servicio, {reagendar: false});
 
         res.status(201).json(reagendacion);
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'No se ha podido rechazar la solicitud'

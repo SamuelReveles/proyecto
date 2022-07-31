@@ -1116,12 +1116,12 @@ const rechazarSolicitud = async (req, res = response) => {
 
         const reagendacion = await Reagendacion.findById(id_solicitud);
 
-        const servicio = await Servicio.findById(reagendacion.id_servicios);
+        const servicio = await Servicio.findById(reagendacion.id_servicio);
 
         //Encontrar datos del cliente o extra
         let cliente = await Cliente.findById(reagendacion.emisor);
 
-        if(!user){
+        if(cliente){
             const clientes = await Cliente.find();
 
             for await (const user of clientes) {
@@ -1147,16 +1147,19 @@ const rechazarSolicitud = async (req, res = response) => {
         let notificaciones = [];
 
         //Agregar la notifiación al dueño de la cuenta
-        if(user.notificaciones) notificaciones = user.notificaciones;
+        if(cliente.notificaciones) notificaciones = cliente.notificaciones;
         notificaciones.push(notificacion);
-        user.notificaciones = notificaciones;
+        cliente.notificaciones = notificaciones;
 
-        await Cliente.findByIdAndUpdate(user._id);
+        await Cliente.findByIdAndUpdate(cliente._id);
         await Reagendacion.findByIdAndDelete(id_solicitud);
+
+        await Servicio.findByIdAndUpdate(reagendacion.id_servicio, {reagendar: false});
 
         res.status(201).json(reagendacion);
 
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             success: false,
             msg: 'No se ha podido rechazar la solicitud'
