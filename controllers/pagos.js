@@ -66,12 +66,18 @@ const crearOrden = async(req, res = response) => {
         if(id_extra !== '') paciente = await Extra.findById(id_extra);
         else paciente = await Cliente.findById(req.id);
 
-        for await (const servicio of servicios) {
-            if((String(servicio.id_paciente) == String(paciente._id)) && isAfter(servicio.fecha_cita, new Date())){
-                cita = false
-                break;
+        const { baneado } = await Cliente.findById(req.id);
+
+        if ( baneado ) cita = false;
+        else {
+            for await (const servicio of servicios) {
+                if((String(servicio.id_paciente) == String(paciente._id)) && isAfter(servicio.fecha_cita, new Date())){
+                    cita = false
+                    break;
+                }
             }
         }
+
 
         res.status(200).json({
             enlace,
