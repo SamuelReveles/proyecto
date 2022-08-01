@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+process.env.TZ = 'America/Mexico_City'
 //Server
 const Server = require('./models/server');
 
