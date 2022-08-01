@@ -1909,16 +1909,18 @@ const getCalendario = async (req, res = response) => {
 
         let reagendar = false;
         let id_servicio = '';
+        let nutriologo  = '';
  
         if(servicioReciente !== undefined) {
             reagendar = (isAfter(servicioReciente.fecha_cita, new Date()) && !servicioReciente.reagendar);
             id_servicio = servicioReciente._id;   
-        }     
+            nutriologo = servicioReciente.id_nutriologo;
+        }
 
         calendario = paciente.calendario;
         calendario.reagendacion = reagendar;
         calendario.servicio = id_servicio;
-        calendario.nutriologo = servicioReciente.id_nutriologo;
+        calendario.nutriologo = nutriologo;
         
         res.status(200).json(calendario);
     } catch ( error ) {
