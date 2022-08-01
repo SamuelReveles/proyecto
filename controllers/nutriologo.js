@@ -863,7 +863,7 @@ const reportar = async (req, res = response) => {
         if(!cliente) { // Si reporta a un extra
             clientes = await Cliente.find();
             clientes.forEach(paciente => {
-                if(paciente.extra1 == idCliente || paciente.extra2 == idCliente){
+                if(String(paciente.extra1) == idCliente || String(paciente.extra2) == idCliente){
                     cliente = paciente;
                     return;
                 }
