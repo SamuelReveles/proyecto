@@ -859,7 +859,7 @@ const reportar = async (req, res = response) => {
         //Extraer tipo de reporte para saber el puntaje
         const { puntos, descripcion } = await Motivo.findById(idReporte);
 
-        const cliente = await Cliente.findById(idCliente);
+        let cliente = await Cliente.findById(idCliente);
         if(!cliente) { // Si reporta a un extra
             clientes = await Cliente.find();
             clientes.forEach(paciente => {
