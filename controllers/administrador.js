@@ -688,15 +688,21 @@ const borrarReporte = async (req, res = response) => {
         //Quitar baneo en caso de tener un puntaje menor al límite
         if(esCliente === true){
             if(to.puntajeBaneo < 5) {
-                notificacion = new Notificacion('Tu cuenta ha vuelto del baneo');
+                if(to.baneado){
+                    notificacion = new Notificacion('Tu cuenta ha vuelto del baneo');
+                    to.notificaciones.push(notificacion);
+                }
+
                 to.baneado = false;
                 to.fecha_desban = null;
-                to.notificaciones.push(notificacion);
             } 
         }
         else {
             if(to.puntajeBaneo < 15) {
-                notificacion = new Notificacion('Tu cuenta ha vuelto del baneo');
+                if(to.baneado){
+                    notificacion = new Notificacion('Tu cuenta ha vuelto del baneo');
+                    to.notificaciones.push(notificacion);
+                }
                 to.baneado = false;
                 to.fecha_desban = null;
                 to.notificaciones.push(notificacion);

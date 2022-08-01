@@ -1518,9 +1518,22 @@ const solicitarReagendacion = async (req, res = response) => {
         //Datos del servicio y reagendación
         let { id_servicio, dia, horaNueva, msg } = req.body;
 
-        const { id_nutriologo, hora, reagendar } = await Servicio.findById(id_servicio);
+        const { id_nutriologo, hora, reagendar, id_paciente } = await Servicio.findById(id_servicio);
+
+        let paciente = await Cliente.findById(id_paciente);
+        if(!paciente) paciente = await Extra.findById(id_paciente);
         
-        const nutriologo = await Nutriologo.findById(id_nutriologo);
+        let nutriologo = await Nutriologo.findById(id_nutriologo);
+        
+        const notificacion = new Notificacion('Tienes una nueva solicitud de reagendación de ' + paciente.nombre);
+
+        let notificaciones = [];
+        if(nutriologo.notificaciones) notificaciones = nutriologo.notificaciones;
+
+        notificaciones.push(notificacion);
+        nutriologo.notificaciones = notificaciones;
+
+        await Nutriologo.findByIdAndUpdate(id_nutriologo, nutriologo);
 
         let { fechaDisponible } = nutriologo;
 
