@@ -361,7 +361,7 @@ const llenarCalendario = async (req, res = response) => {
     try {
         const id_servicio = req.body.id_servicio;
         let tipo = 'Cliente';
-
+        let id_cliente;
         const servicio = await Servicio.findById(id_servicio);
 
         if(servicio.calendario === true) {
@@ -382,6 +382,7 @@ const llenarCalendario = async (req, res = response) => {
             for await (const client of clientes) {
                 if(String(client.extra1) == String(servicio.id_paciente) || String(client.extra2) == String(servicio.id_paciente)){
                     cliente = client;
+                    id_cliente = client._id;
                     break;
                 }
             }
@@ -389,8 +390,8 @@ const llenarCalendario = async (req, res = response) => {
 
         const dieta = req.body.calendario;
 
-        cliente.calendario.dieta = dieta;
-        cliente.calendario.notas = req.body.notas;
+        paciente.calendario.dieta = dieta;
+        paciente.calendario.notas = req.body.notas;
 
         //Crear el historial del cliente
         let ultimodato;
@@ -409,20 +410,27 @@ const llenarCalendario = async (req, res = response) => {
             datos: ultimodato
         });
 
-        if(tipo === 'Cliente') cliente.historial.push(historial);
+        if(tipo === 'Cliente') {
+            paciente.historial.push(historial);
+            //Enviar notificación
+            const notificacion = new Notificacion('Se ha actualizado el calendario de ' + paciente.nombre);
+            paciente.notificaciones.push(notificacion);
+            await Cliente.findByIdAndUpdate(paciente._id, paciente);
+        }
         
         else {
             paciente.calendario.dieta = dieta;
             paciente.calendario.notas = req.body.notas;
             paciente.historial.push(historial);
             await Extra.findByIdAndUpdate(paciente._id, paciente);
+
+            //Enviar notificación
+            const client = await Cliente.findById(id_cliente);
+            const notificacion = new Notificacion('Se ha actualizado el calendario de ' + paciente.nombre);
+            client.notificaciones.push(notificacion);
+            await Cliente.findByIdAndUpdate(client._id, client);
         }
         historial.save();
-
-        //Enviar notificación
-        const notificacion = new Notificacion('Se ha actualizado el calendario de ' + paciente.nombre);
-        cliente.notificaciones.push(notificacion);
-        await Cliente.findByIdAndUpdate(cliente._id, cliente);
 
         res.status(200).json(dieta);
 
