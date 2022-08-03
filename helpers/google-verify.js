@@ -44,7 +44,8 @@ async function crearEvento(hora_inicio = new Date(), idCliente, idNutriologo, id
 
     let calendario_nutriologo = nutriologo.calendario;
 
-    let nombre = cliente.nombre + ' ' + cliente.apellid;
+    let nombre = cliente.nombre + ' ' + cliente.apellidos;
+    console.log(nombre);
 
     if(extra != '') nombre = extra;
   
@@ -256,18 +257,18 @@ async function cambiarFecha (idServicio, hora_nueva) {
         let fechaArr = format(fecha_cita, 'dd-MMMM-yyyy', {locale: es}).split('-');
         let fechaString = fechaArr[0] + ' de ' + fechaArr[1] + ' del ' + fechaArr[2];
 
-        let nombre, apellidos;
+        let nombrePaciente, apellidosPaciente;
 
-        let cliente = await Cliente.findById(servicio.id_paciente);
+        let clienteCalendario = await Cliente.findById(servicio.id_paciente);
 
-        if(!cliente) { 
+        if(!clienteCalendario) { 
             let extra = await Extra.findById(servicio.id_paciente);
-            nombre = extra.nombre;
-            apellidos = extra.apellidos;
+            nombrePaciente = extra.nombre;
+            apellidosPaciente = extra.apellidos;
         }
         else {
-          nombre = cliente.nombre;
-          apellidos = cliente.apellidos;
+          nombrePaciente = clienteCalendario.nombre;
+          apellidosPaciente = clienteCalendario.apellidos;
         }
 
         let encontrado = false;
@@ -285,7 +286,7 @@ async function cambiarFecha (idServicio, hora_nueva) {
                     hora,
                     servicio: servicio._id,
                     llamada: event.data.hangoutLink,
-                    paciente: nombre + ' ' + apellidos
+                    paciente: nombrePaciente + ' ' + apellidosPaciente
                 });
                 calendario_nutriologo[i].pacientes = calendario_nutriologo[i].pacientes.sort(comparar);
                 break;
@@ -301,7 +302,7 @@ async function cambiarFecha (idServicio, hora_nueva) {
                     hora,
                     servicio: servicio._id,
                     llamada: event.data.hangoutLink,
-                    paciente: nombre + ' ' + apellidos
+                    paciente: nombrePaciente + ' ' + apellidosPaciente
                 }]
             });
         }
@@ -310,11 +311,11 @@ async function cambiarFecha (idServicio, hora_nueva) {
         await Nutriologo.findByIdAndUpdate(nutriologo._id, {calendario: calendario_nutriologo});
 
         //Actualizar calendario del cliente
-        if(cliente) {
-          cliente.calendario.linkMeet = event.data.hangoutLink;
-          cliente.calendario.fecha_cita = hora_nueva;
+        if(clienteCalendario) {
+          clienteCalendario.calendario.linkMeet = event.data.hangoutLink;
+          clienteCalendario.calendario.fecha_cita = hora_nueva;
 
-          await Cliente.findByIdAndUpdate(servicio.id_paciente, cliente);
+          await Cliente.findByIdAndUpdate(servicio.id_paciente, clienteCalendario);
         }
         else {
           const extra = await Extra.findById(servicio.id_paciente);

@@ -241,7 +241,7 @@ const ordenPagada = async(id, id_extra = '', id_nutriologo, dia, hora) => {
         if(id_extra !== ''){
             const { nombre, apellidos } = await Extra.findById(id_extra);
             nombreExtra = nombre + ' ' + apellidos;
-            await crearEvento(fecha_cita, id, id_nutriologo, servicio._id, nombre);
+            await crearEvento(fecha_cita, id, id_nutriologo, servicio._id, nombreExtra);
         }
         else 
             await crearEvento(fecha_cita, id, id_nutriologo, servicio._id);
