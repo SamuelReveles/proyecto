@@ -68,7 +68,7 @@ const logIn = async (req, res = response) => {
 
 const verificarCorreo = async (req = request, res = response, next) => {
     //Extraer correo del body
-    const correo = req.body.correo;
+    const correo = req.query.correo;
 
     //Validar que no esté en la base de datos
     let existeEmail = await Cliente.findOne({correo});
