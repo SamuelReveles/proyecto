@@ -681,7 +681,7 @@ const getProgreso = async (req, res = response) => {
             const dato = await Dato.findById(_id)
             masa.push(dato.peso);
             estatura.push(dato.altura);
-            fechas.push(dato.fecha);
+            
             let imc = dato.peso / ((dato.altura / 100) * (dato.altura / 100));
             IMC.push(imc);
         }
